@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Header now uses SVG logo instead of text. Files: `src/app/components/layout/Header.tsx`.
 - Download button shows "Download" for single image, "Download All (n)" for multiple. Files: `src/app/components/download/DownloadSection.tsx`, `src/app/App.tsx`.
 - Single image downloads directly instead of as ZIP. Files: `src/app/App.tsx`.
+- Header padding-top increased to `var(--spacing-12)`. Files: `src/app/components/layout/Header.tsx`.
 
 ### Fixed
 - Icon-only buttons now center icons properly (removed margin when no visible text). Files: `src/app/components/ui/Button.tsx`.
