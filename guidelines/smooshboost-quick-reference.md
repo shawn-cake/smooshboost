@@ -7,16 +7,23 @@ An image optimization suite for digital marketing agencies. Compress images for 
 
 ---
 
-## Two-Phase Workflow
+## Workflow Modes
+
+| Mode | Flow | Use Case |
+|------|------|----------|
+| **Smoosh + Boost** (default) | Upload → Auto-Compress → Per-Image Metadata → Download | Full optimization |
+| **Boost Only** | Upload → Per-Image Metadata → Download | Metadata only (no compression) |
+
+## Streamlined Workflow
 
 ```
-Upload → SMOOSH (compress) → BOOST (metadata) → Download
+Upload → [Auto-Compress] → [🚀 Boost Options per image] → [Apply Metadata] → Download
 ```
 
-| Phase | What Happens |
-|-------|--------------|
-| Smoosh | Compress via TinyPNG/Squoosh, strips existing metadata |
-| Boost | Inject geo-tags, copyright, title/description |
+| Phase | What Happens | Trigger |
+|-------|--------------|---------|
+| Smoosh | Auto-compress via Squoosh, strips existing metadata | Automatic on upload |
+| Boost | Configure geo-tags, copyright, title/description per image | Click 🚀 accordion |
 
 ---
 
@@ -33,11 +40,16 @@ Upload → SMOOSH (compress) → BOOST (metadata) → Download
 
 ## Metadata Options (Boost Phase)
 
-| Option | Format Support | SEO Value |
-|--------|----------------|-----------|
-| Geo-tagging | JPG only | Local SEO |
-| Copyright | JPG (full), PNG/WebP (limited) | Attribution |
-| Title/Description | JPG (full), PNG/WebP (limited) | Image search |
+| Metadata Type | JPG/MozJPG | PNG | WebP | SEO Value |
+|---------------|------------|-----|------|-----------|
+| Geo-tagging (GPS) | ✅ Full EXIF | ❌ No support | ✅ Full EXIF | Local SEO |
+| Copyright | ✅ Full EXIF | ✅ tEXt chunks | ✅ Full EXIF | Attribution |
+| Title/Description | ✅ Full EXIF | ✅ tEXt chunks | ✅ Full EXIF | Image search |
+
+**Notes:**
+- JPG and WebP have full EXIF support including GPS coordinates
+- PNG supports text metadata via tEXt chunks but cannot store GPS coordinates
+- GPS metadata is supported in JPG and WebP formats (not PNG)
 
 ---
 
@@ -58,47 +70,69 @@ Upload → SMOOSH (compress) → BOOST (metadata) → Download
 **Upload**
 - [x] Drag and drop
 - [x] File picker
-- [x] Bulk URL import
+- [x] Boost Only toggle (skip compression)
 
 **Smoosh (Compression)**
-- [x] Auto engine routing
-- [x] TinyPNG quota fallback
-- [x] Savings display
+- [x] Auto-compression on upload
+- [x] Auto engine routing (MozJPG, OxiPNG, WebP)
+- [x] Savings display per image
+- [x] Progress indicator in status bar
 
-**Boost (Metadata)**
-- [x] Geo-tagging (address autocomplete)
-- [x] Copyright text
-- [x] Title/description
-- [x] Apply to all toggle
+**Boost (Metadata) - Per Image**
+- [x] 🚀 Accordion per image in queue
+- [x] Geo-tagging via Google Maps link parsing (no API cost)
+- [x] Geo-tagging via manual coordinates
+- [x] Copyright and Author fields (separate)
+- [x] Title/description with character counters
+- [x] Apply Metadata button per image
+- [x] Apply to All Images button
+- [x] Read-only mode after applying (with Reset option)
+- [x] Format compatibility warnings (PNG no GPS)
 - [ ] Client presets (future)
 
 **Download**
-- [x] Individual downloads
-- [x] ZIP download
+- [x] Individual downloads per image
+- [x] ZIP download ("Download All")
 - [x] Filename preservation
+- [x] Format conversion summary in summary bar
 
 ---
 
 ## UI Sections
 
-1. **Header** — Logo + tagline
-2. **Upload Zone** — Drag/drop + file picker + URL import
-3. **Metadata Panel** — Collapsible options (geo, copyright, title)
-4. **Queue** — Images with status and savings
-5. **Summary Bar** — Total savings
-6. **Download Section** — ZIP + clear queue
+1. **Header** — Logo + info tooltip (top right)
+2. **Upload Zone** — Drag/drop + file picker
+3. **Format Selector** — Format mode + Boost Only toggle (hidden when images in queue)
+4. **Queue** — Images with status, savings, 🚀 Boost accordion per image
+5. **Processing Status** — Compression progress bar
+6. **Summary Bar** — Total savings + format conversion info
+7. **Download Section** — Download All + Clear Queue buttons
 
 ---
 
 ## Status States
 
-| Status | Icon | Color |
-|--------|------|-------|
-| Queued | ○ | Gray 400 (`#9CA3AF`) |
-| Compressing | ● | Cake Blue (`#4074A8`) |
-| Boosting | ● + tag | Cake Blue (`#4074A8`) |
-| Complete | ✓ | Success (`#059669`) |
-| Error | ✗ | Error (`#DC2626`) |
+| Status | Icon | Color | Description |
+|--------|------|-------|-------------|
+| Queued | ○ | Gray 400 | Waiting to compress |
+| Compressing | ● | Cake Blue | Compression in progress |
+| Complete | ✓ | Success | Ready for Boost or download |
+| Boosting | ● | Cake Blue | Applying metadata |
+| Boosted | ✓ + tag | Success | Metadata applied |
+| Boost Error | ✗ | Error | Metadata failed (image still downloadable) |
+| Error | ✗ | Error | Compression failed |
+
+---
+
+## Boost Status States
+
+| Status | Description |
+|--------|-------------|
+| `pending` | Not yet boosted |
+| `boosting` | Currently injecting metadata |
+| `boosted` | Metadata successfully applied |
+| `boost-skipped` | User skipped Boost phase |
+| `boost-failed` | Metadata injection failed |
 
 ---
 
@@ -150,8 +184,11 @@ Upload → SMOOSH (compress) → BOOST (metadata) → Download
 | Styling | Tailwind CSS |
 | Build | Vite |
 | Compression | TinyPNG + @aspect-image/squoosh |
-| Metadata | piexifjs |
-| Geocoding | Google Places API (optional) |
+| Metadata (JPG) | piexifjs (EXIF writing) |
+| Metadata (PNG) | png-chunk-text (tEXt chunks) |
+| Metadata (WebP) | node-webpmux (EXIF chunks) |
+| Geo Parsing | Google Maps link regex (primary, no API) |
+| Geocoding | Google Places API (optional enhancement) |
 | ZIP | JSZip |
 | Icons | FontAwesome |
 | Toasts | Sonner |
@@ -170,15 +207,22 @@ Original filename preserved. Extension changes if format changes:
 
 ## Error Types
 
-| Error | Cause |
-|-------|-------|
-| `file_too_large` | Exceeds 5MB |
-| `invalid_format` | Not PNG/JPG |
-| `batch_limit_exceeded` | More than 20 images |
-| `quota_exceeded` | TinyPNG limit reached |
-| `compression_failed` | Engine error |
-| `metadata_injection_failed` | EXIF write error |
-| `geocoding_failed` | Address lookup failed |
+| Error | Cause | Type |
+|-------|-------|------|
+| `file_too_large` | Exceeds 5MB | Error |
+| `invalid_format` | Not PNG/JPG | Error |
+| `batch_limit_exceeded` | More than 20 images | Error |
+| `quota_exceeded` | TinyPNG limit reached | Error |
+| `compression_failed` | Engine error | Error |
+| `metadata_injection_failed` | Technical error during EXIF/chunk write | Error |
+| `metadata_format_unsupported` | Format doesn't support requested metadata (e.g., PNG + GPS) | Warning |
+| `geocoding_failed` | Address lookup failed | Error |
+| `geocoding_parse_failed` | Google Maps link couldn't be parsed | Error |
+| `coordinate_out_of_range` | Lat/long outside valid range | Error |
+
+**Notes:**
+- `metadata_format_unsupported` is a non-blocking warning. Processing continues and unsupported metadata is skipped.
+- Boost errors don't prevent download—images are still available (compressed, without metadata).
 
 ---
 

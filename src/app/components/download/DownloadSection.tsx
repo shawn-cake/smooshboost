@@ -7,7 +7,9 @@ interface DownloadSectionProps {
   onClear: () => void;
   hasCompletedImages: boolean;
   isProcessing: boolean;
+  isBoosting?: boolean;
   completedCount: number;
+  hasMetadata?: boolean;
 }
 
 export function DownloadSection({
@@ -15,21 +17,34 @@ export function DownloadSection({
   onClear,
   hasCompletedImages,
   isProcessing,
+  isBoosting = false,
   completedCount,
+  hasMetadata = false,
 }: DownloadSectionProps) {
   const isSingleImage = completedCount === 1;
-  const buttonText = isSingleImage ? 'Download' : `Download All (${completedCount})`;
+
+  // Build button text based on count and metadata status
+  const getDownloadButtonText = () => {
+    if (isSingleImage) {
+      return hasMetadata ? 'Download with Metadata' : 'Download';
+    }
+    return hasMetadata
+      ? `Download All with Metadata (${completedCount})`
+      : `Download All (${completedCount})`;
+  };
 
   return (
     <div className="flex items-center justify-between gap-4">
-      <Button
-        variant="accent"
-        onClick={onDownload}
-        disabled={!hasCompletedImages || isProcessing}
-        icon={faDownload}
-      >
-        {buttonText}
-      </Button>
+      <div className="flex items-center gap-3">
+        <Button
+          variant="accent"
+          onClick={onDownload}
+          disabled={!hasCompletedImages || isProcessing || isBoosting}
+          icon={faDownload}
+        >
+          {getDownloadButtonText()}
+        </Button>
+      </div>
 
       <Button
         variant="ghost"

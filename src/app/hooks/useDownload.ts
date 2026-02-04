@@ -3,6 +3,16 @@ import type { ImageItem } from '../types';
 import { downloadAsZip, downloadSingleImage } from '../services/download';
 
 /**
+ * Get the best blob for download - prefer finalBlob (with metadata) over compressedBlob
+ */
+function getDownloadBlob(image: ImageItem): Blob | null {
+  // After boost: use finalBlob (has metadata)
+  // After compression only: use compressedBlob
+  // Boost-only mode: use finalBlob or original file
+  return image.finalBlob || image.compressedBlob || null;
+}
+
+/**
  * Hook for handling downloads
  */
 export function useDownload() {
@@ -11,7 +21,7 @@ export function useDownload() {
    */
   const downloadAll = useCallback(async (images: ImageItem[]) => {
     const completed = images.filter(
-      (img) => img.status === 'complete' && img.compressedBlob
+      (img) => img.status === 'complete' && getDownloadBlob(img)
     );
 
     if (completed.length === 0) {
@@ -25,7 +35,8 @@ export function useDownload() {
    * Downloads a single image
    */
   const downloadOne = useCallback((image: ImageItem) => {
-    if (image.status !== 'complete' || !image.compressedBlob) {
+    const blob = getDownloadBlob(image);
+    if (image.status !== 'complete' || !blob) {
       throw new Error('Image is not ready for download');
     }
 

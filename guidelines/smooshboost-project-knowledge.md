@@ -16,39 +16,78 @@ Provide an efficient, agency-focused interface for batch image optimization that
 
 ---
 
-## Two-Phase Workflow
+## Workflow Modes
+
+SmooshBoost supports two workflow modes:
+
+### Mode 1: Smoosh + Boost (Default)
+Complete optimization: auto-compress images, then optionally add metadata per image.
+```
+Upload → [Auto-Compress] → [🚀 Boost per image] → Download
+```
+
+### Mode 2: Boost Only
+Metadata only, skip compression (keeps original format/quality).
+```
+Upload → [🚀 Boost per image] → Download
+```
+
+---
+
+## Streamlined Workflow
 
 ### Phase 1: Smoosh (Compression)
 Strip images down to optimal file size using intelligent compression routing.
 
+- **Auto-starts on upload** — No button click required
 - Compression removes existing metadata (clean slate)
 - Automatic engine selection based on format
 - Batch processing up to 20 images
+- Progress shown in status bar
 
 ### Phase 2: Boost (Metadata Injection)
-Selectively re-inject only the metadata that matters for SEO and attribution.
+Selectively inject metadata per image via the 🚀 accordion.
 
-- Geo-tagging for local SEO
-- Copyright and attribution
-- Title and description
-- Client presets for repeated workflows
+- **Per-image configuration** — Each image has its own Boost accordion
+- Geo-tagging for local SEO (JPG/WebP only, disabled for PNG)
+- Copyright and Author (separate fields)
+- Title and description with character counters
+- **Apply Metadata** button per image
+- **Apply to All Images** to copy settings across batch
+- **Read-only after apply** with Reset option
+- Client presets for repeated workflows (future)
 
 ```
 WORKFLOW DIAGRAM
 
 Upload Images
     ↓
-[SMOOSH PHASE]
-Compress via TinyPNG/Squoosh
+[FORMAT SELECTOR + BOOST ONLY TOGGLE]
+(hidden once images are in queue)
     ↓
-Metadata stripped (clean slate)
+┌─────────────────────────────────────────────┐
+│ [AUTO-COMPRESS] (if not Boost Only)         │
+│ Compression starts automatically            │
+│ Progress shown in status bar                │
+│ Metadata stripped (clean slate)             │
+└─────────────────────────────────────────────┘
     ↓
-[BOOST PHASE]
-Inject selected metadata
-    ├── Geo-location (lat/long)
-    ├── Copyright text
-    ├── Title/Description
-    └── Custom fields (future)
+┌─────────────────────────────────────────────┐
+│ [QUEUE WITH 🚀 BOOST ACCORDIONS]            │
+│ Each image shows:                           │
+│   ├── Thumbnail + filename                  │
+│   ├── Status + savings                      │
+│   └── 🚀 Boost Options accordion            │
+│                                             │
+│ Click accordion to configure:               │
+│   ├── Geo-location (JPG/WebP only)          │
+│   ├── Copyright + Author                    │
+│   └── Title + Description                   │
+│                                             │
+│ [Apply Metadata] per image                  │
+│ [Apply to All Images] to copy settings      │
+│ [Reset & Edit Metadata] after applying      │
+└─────────────────────────────────────────────┘
     ↓
 Download optimized + tagged images
 ```
@@ -114,29 +153,99 @@ Display a list of queued images showing:
   - **Primary:** Percentage saved (e.g., "72% smaller")
   - **Secondary:** Absolute size reduction (e.g., "1.2 MB → 340 KB")
 
+#### Metadata Status Badges (Per Image)
+Below compression details, show metadata status:
+- `📍 Geo: Not set` / `📍 Geo: 35.59°N, 82.55°W`
+- `©: Not set` / `©: © 2026 Client`
+- `📝: Not set` / `📝: Title set`
+
+**Badge Colors:**
+- Not set: Gray 400
+- Set: Primary Blue (before boost) / Success Green (after boost)
+
+#### Per-Image Metadata Editing
+- "Edit" button on each queue item (Per Image mode)
+- Expandable inline form with compact fields
+- "Save" and "Cancel" buttons
+- Form collapses after save
+
+#### Expandable Metadata Details
+- Click badge row to expand full metadata view
+- Shows complete values (not truncated)
+- Chevron indicator for expand/collapse state
+
 ### 4. Metadata Options Panel (Boost Phase)
-Collapsible panel with toggle-enabled options:
+Collapsible panel (collapsed by default) with toggle-enabled options.
+
+#### Metadata Application Modes
+
+**Apply to All (Default):**
+- Global metadata settings applied to entire batch
+- Single form for all images
+- Inline warning banners for format compatibility issues
+
+**Per Image:**
+- Expandable form per queue item
+- Each image can have different metadata
+- Format-specific validation per image
+- "Edit" button on each queue item
 
 #### Geo-tagging
-- Address input field with autocomplete (Google Places API)
-- Auto-populated coordinates display
-- Manual lat/long override option
-- Apply to all images toggle
+
+**Primary Method: Google Maps/Place Link Parsing (No API Cost)**
+- Paste Google Maps or Google Place URL
+- Click "Parse Location" button to extract coordinates
+- Supports URL patterns:
+  - `maps.google.com/?q=LAT,LNG`
+  - `google.com/maps/@LAT,LNG,ZOOM`
+  - `google.com/maps/place/NAME/@LAT,LNG`
+  - Plus codes
+
+**Alternative Method: Manual Coordinate Entry**
+- Latitude field: -90 to 90 (decimal degrees)
+- Longitude field: -180 to 180 (decimal degrees)
+
+**Optional Enhancement: Google Places API**
+- Address autocomplete (requires API key)
+- Auto-populated coordinates from address
+- Fallback to manual entry if not configured
+
+**Current Coordinates Display:**
+- Format: `35.5951° N, 82.5515° W`
+- Monospace font, Primary Blue color
 
 #### Copyright/Attribution
 - Text field for copyright notice
 - Template variables: `{year}`, `{client}`
 - Example: "© {year} {client}. All rights reserved."
+- Character counter: X / 160 characters
 
 #### Title & Description
-- Per-image or bulk apply
-- Character count indicators
-- SEO-friendly length guidelines
+- Title field: 60 character soft limit (SEO recommendation)
+- Description textarea: 160 character soft limit
+- Character counters with color indicators:
+  - Normal: Gray
+  - Over soft limit: Yellow 700
+  - Over hard limit: Error Red
+- SEO guideline tooltip
 
 #### Client Presets (Future)
 - Save metadata configurations per client
 - Quick-select dropdown
 - Edit/delete preset management
+
+#### Format Compatibility Warnings
+
+When metadata type isn't supported by output format:
+
+**Apply to All Mode:**
+- Inline warning banner in geo-tagging section
+- Yellow background, warning icon
+- Non-blocking: user can still process
+
+**Per Image Mode:**
+- Disabled checkbox for unsupported metadata types
+- Tooltip explaining limitation
 
 ### 5. Summary Statistics
 After batch completion, display:
@@ -144,24 +253,39 @@ After batch completion, display:
 - Total compressed size
 - Total savings percentage (primary)
 - Total savings in MB/KB (secondary)
-- Metadata applied count
+
+**Metadata Summary Line (after Boost):**
+- Format: `Metadata: X geo-tagged · Y with copyright · Z with titles`
+- Only show counts for enabled/applied metadata types
+- Font: 13px regular, Gray 600
 
 ### 6. Download Options
-- **Individual downloads** - Button per image
+- **Individual downloads** - Button per image with metadata indicators
 - **Download all as ZIP** - Single button for entire batch
+  - Button text: "Download All with Metadata (ZIP)" (if metadata applied)
+  - Button text: "Download All (ZIP)" (if no metadata)
 - **Filename handling:**
   - Preserve original filenames
   - Change extension if format changed
   - Optional: SEO-friendly rename (slugify)
 
+**Individual Download List:**
+- Format: `filename.ext (size, metadata-tags)`
+- Tags shown: `geo-tagged`, `©`, `title`
+
 ### 7. Error Handling
+
+**Blocking Errors (stop processing):**
 - **File too large:** Display notification if image exceeds 5MB
 - **Invalid format:** Notify if uploaded file is not PNG/JPG
 - **API quota exceeded:** Automatically switch to Squoosh, notify user
 - **Network errors:** Display retry option
 - **URL fetch failures:** Show which URLs failed to import
-- **Metadata injection failed:** Indicate which images failed boost phase
+- **Metadata injection failed:** Technical error during EXIF/chunk write
 - **Geocoding failed:** Show address lookup errors
+
+**Non-Blocking Warnings (processing continues):**
+- **Metadata format unsupported:** When format doesn't support requested metadata (e.g., PNG + GPS). Display inline warning, skip unsupported metadata, continue processing.
 
 ---
 
@@ -239,6 +363,9 @@ Error Light:     #FEE2E2  (error backgrounds)
 │ SmooshBoost              [minimal branding]                     │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
+│ WORKFLOW MODE TOGGLE                                            │
+│ Mode: ● Smoosh + Boost   ○ Smoosh Only   ○ Boost Only          │
+│                                                                 │
 │ UPLOAD ZONE                                                     │
 │ ┌─────────────────────────────────────────────────────────────┐ │
 │ │                                                             │ │
@@ -249,35 +376,50 @@ Error Light:     #FEE2E2  (error backgrounds)
 │ │  ▸ Import from URLs                                         │ │
 │ └─────────────────────────────────────────────────────────────┘ │
 │                                                                 │
-│ METADATA OPTIONS (collapsible)                                  │
+│ BOOST-ONLY MODE INDICATOR (when active)                         │
 │ ┌─────────────────────────────────────────────────────────────┐ │
-│ │ ☑ Add geo-location                                         │ │
-│ │   [Address field with autocomplete        ]                │ │
-│ │   35.5951° N, 82.5515° W                                   │ │
+│ │ ℹ️ Compression skipped - Images will keep original format   │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│ PROCESSING BUTTONS                                              │
+│ [Compress Images] → [Add Metadata (Boost)] [Skip & Download]   │
+│                                                                 │
+│ METADATA OPTIONS (collapsible, collapsed by default)            │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ ▸ Metadata Options (Optional - Boost Phase)          (0/3) │ │
+│ │ ─────────────────────────────────────────────────────────── │ │
+│ │ Apply settings: ● To all images  ○ Per image               │ │
 │ │                                                             │ │
-│ │ ☑ Add copyright                                            │ │
+│ │ ☑ Add geo-location (Local SEO)                             │ │
+│ │   Google Maps/Place Link: [_______________] [🎯]           │ │
+│ │   Or manually: Lat [____] Long [____]                      │ │
+│ │   Current: 35.5951° N, 82.5515° W                          │ │
+│ │                                                             │ │
+│ │ ☑ Add copyright notice                                     │ │
 │ │   [© 2026 Client Name. All rights reserved.]               │ │
 │ │                                                             │ │
-│ │ ☐ Add title/description                                    │ │
+│ │ ☐ Add title & description (Image SEO)                      │ │
 │ └─────────────────────────────────────────────────────────────┘ │
 │                                                                 │
 │ QUEUE                                                           │
 │ ┌─────────────────────────────────────────────────────────────┐ │
 │ │ [thumb] filename.png                                       │ │
 │ │         1.4 MB → 448 KB (68% smaller)                      │ │
-│ │         ✓ Complete · TinyPNG · Geo-tagged          [↓]     │ │
+│ │         ✓ Compressed · TinyPNG                             │ │
+│ │         📍 Geo: 35.59°N · ©: Client · 📝: Title     [Edit] │ │
 │ ├─────────────────────────────────────────────────────────────┤ │
 │ │ [thumb] photo.jpg                                          │ │
-│ │         Processing...                              ●       │ │
+│ │         Boosting... Adding metadata                  ●     │ │
 │ └─────────────────────────────────────────────────────────────┘ │
 │                                                                 │
 │ SUMMARY BAR                                                     │
 │ ┌─────────────────────────────────────────────────────────────┐ │
 │ │ 5 images · 8.2 MB → 2.1 MB · 74% total savings             │ │
+│ │ Metadata: 5 geo-tagged · 5 with copyright · 3 with titles  │ │
 │ └─────────────────────────────────────────────────────────────┘ │
 │                                                                 │
 │ DOWNLOAD SECTION                                                │
-│         [Download All as ZIP]    [Clear Queue]                  │
+│   [Download All with Metadata (ZIP)]    [Clear Queue]           │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -296,23 +438,59 @@ Error Light:     #FEE2E2  (error backgrounds)
 
 ### Queue Item States
 
-**Processing state:**
+**Compressing state:**
 ```
 [thumb] filename.png
         Compressing...                              ●
 ```
 
-**Complete state:**
+**Compressed (awaiting Boost):**
 ```
 [thumb] filename.png
         1.4 MB → 448 KB (68% smaller)
-        ✓ Complete · TinyPNG · Geo-tagged          [↓]
+        ✓ Compressed · TinyPNG
+        📍 Geo: Not set · ©: Not set · 📝: Not set  [Edit]
 ```
 
-**Error state:**
+**Boosting state:**
+```
+[thumb] filename.png
+        1.4 MB → 448 KB (68% smaller)
+        Boosting... Adding metadata                 ●
+```
+
+**Complete (with metadata):**
+```
+[thumb] filename.png
+        1.4 MB → 448 KB (68% smaller)
+        ✓ Complete · TinyPNG · Geo-tagged
+        📍 35.59°N · © Client · 📝 Title           [▾]
+```
+
+**Metadata Details (expanded):**
+```
+[thumb] filename.png
+        1.4 MB → 448 KB (68% smaller)
+        ✓ Complete · TinyPNG
+        ▾ Metadata Applied                         [↓]
+        ─────────────────────────────────────────────
+        📍 Geo-location: 35.5951° N, 82.5515° W
+        © Copyright: © 2026 Client Name. All rights...
+        📝 Title: Professional landscape photo
+           Description: High-quality image optimized...
+```
+
+**Compression error state:**
 ```
 [thumb] filename.png
         ✗ Compression failed: Network error       [Retry]
+```
+
+**Boost error state:**
+```
+[thumb] filename.png
+        1.4 MB → 448 KB (68% smaller)
+        ✗ Metadata failed: EXIF write error       [Retry]
 ```
 
 ---
@@ -328,10 +506,22 @@ Error Light:     #FEE2E2  (error backgrounds)
 - Response: JSON with compressed image URL
 - Track `Compression-Count` header for quota monitoring
 
-#### Google Places API (Optional)
+#### Google Maps Link Parsing (Primary - No API Cost)
+Extract coordinates directly from Google Maps/Place URLs:
+- URL patterns supported:
+  - `maps.google.com/?q=LAT,LNG`
+  - `google.com/maps/@LAT,LNG,ZOOM`
+  - `google.com/maps/place/NAME/@LAT,LNG`
+  - Plus codes: `google.com/maps/place/849V+XW`
+- User pastes URL, clicks "Parse Location" button
+- Coordinates extracted via regex parsing
+- No API costs or rate limits
+
+#### Google Places API (Optional Enhancement)
 - Address autocomplete for geo-tagging
 - Geocoding to convert address → coordinates
 - Requires API key with Places and Geocoding enabled
+- Fallback: Manual coordinate entry or Maps link parsing
 
 #### Squoosh
 - Use `@aspect-image/squoosh` or official WASM modules
@@ -342,20 +532,40 @@ Error Light:     #FEE2E2  (error backgrounds)
 
 ### Metadata Injection
 
-#### Library: piexifjs (for JPG/JPEG)
-- Read/write EXIF data
-- GPS coordinate injection
-- Copyright and description fields
+#### Libraries by Format
+- **JPG/JPEG:** piexifjs (full EXIF read/write)
+- **PNG:** png-chunk-text / png-chunks-encode (tEXt chunks)
+- **WebP:** node-webpmux (EXIF chunk injection)
 
 #### Supported Metadata by Format
 
-| Format | GPS | Copyright | Title/Desc | Library |
-|--------|-----|-----------|------------|---------|
-| JPG | ✓ | ✓ | ✓ | piexifjs |
-| PNG | ✗ | Limited | Limited | png-metadata |
-| WebP | Limited | Limited | Limited | Custom XMP |
+| Metadata Type | JPG/MozJPG | PNG | WebP |
+|---------------|------------|-----|------|
+| Geo-tagging (GPS) | ✅ Full support via EXIF | ❌ No support | ✅ Full support via EXIF chunk |
+| Copyright | ✅ Full support via EXIF | ✅ Supported via tEXt chunks | ✅ Full support via EXIF chunk |
+| Title/Description | ✅ Full support via EXIF | ✅ Supported via tEXt chunks | ✅ Full support via EXIF chunk |
 
-**Note:** GPS metadata is best supported in JPG. For local SEO use cases requiring geo-tagging, recommend JPG output format.
+**Technical Notes:**
+- JPG and WebP have full EXIF support including GPS coordinates
+- PNG supports text metadata via tEXt chunks but cannot store GPS coordinates
+- GPS metadata is supported in JPG and WebP formats (not PNG)
+
+#### Metadata Format Warnings (Non-Blocking)
+
+When users enable metadata options that aren't supported by their selected output format, the UI displays inline warnings. Processing continues (non-blocking) and unsupported metadata is skipped.
+
+**Warning Trigger:**
+- Geo-tagging enabled + PNG output format selected
+
+**Warning Style:**
+- Background: Yellow 50 (`#FEF7E6`)
+- Text: Yellow 700 (`#B87D0E`)
+- Icon: Warning triangle
+
+**Warning Message:**
+```
+PNG does not support GPS coordinates. Switch to JPG or WebP for geo-tagged images, or disable geo-tagging to proceed.
+```
 
 ### State Management
 - Track each image through both phases

@@ -20,21 +20,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **README.md** for GitHub repository with project overview, features, and usage guide. Files: `README.md`.
+- **Boost Phase** - Complete metadata injection system with geo-tagging, copyright, author, title, and description. Files: `src/app/services/metadata/`, `src/app/hooks/useMetadataInjection.ts`.
+- **Per-image metadata** - Each image has its own 🚀 Boost Options accordion with individual metadata controls. Files: `src/app/components/queue/ImageMetadataAccordion.tsx`, `src/app/components/metadata/`.
+- **Auto-compression** - Images compress automatically on upload (no button click required). Files: `src/app/hooks/useCompression.ts`, `src/app/App.tsx`.
+- **Info tooltip** in top right corner explaining the tool's purpose. Files: `src/app/components/layout/Header.tsx`.
+- **Metadata status badges** showing geo-tag, copyright, and title status per image. Files: `src/app/components/queue/MetadataStatusBadges.tsx`.
+- **Google Maps link parser** for extracting GPS coordinates from URLs. Files: `src/app/utils/googleMapsParser.ts`.
+- **Format conversion summary** in SummaryBar showing output format breakdown. Files: `src/app/components/summary/SummaryBar.tsx`.
+- **Read-only mode** for metadata fields after Apply Metadata with Reset button. Files: `src/app/components/metadata/GeoTagSection.tsx`, `src/app/components/metadata/CopyrightSection.tsx`, `src/app/components/metadata/TitleDescSection.tsx`.
 - Log File Genius documentation system. Files: `logs/`, `.augment/rules/`, `.logfile-config.yml`.
 - Footer component with version number. Files: `src/app/components/layout/Footer.tsx`.
 - Sticky footer layout. Files: `src/app/App.tsx`.
 - SVG logo in header. Files: `src/assets/logo.svg`, `src/app/components/layout/Header.tsx`.
 
 ### Changed
+- **Workflow simplified** - Removed Smoosh Only mode, merged into default flow with optional per-image Boost. Files: `src/app/types.ts`, `src/app/App.tsx`.
+- **Per-image metadata options** - Each image stores its own MetadataOptions instead of global settings. Files: `src/app/types.ts`, `src/app/hooks/useImageQueue.ts`.
+- **Boost accordion header** - Rocket icon with enabled count (e.g., "🚀 Boost Options (2/3)"). Files: `src/app/components/queue/ImageMetadataAccordion.tsx`.
+- **PNG geo-location disabled** - Shows warning message only, no checkbox for unsupported format. Files: `src/app/components/metadata/GeoTagSection.tsx`.
 - Format selector now inline with label. Files: `src/app/components/format/FormatSelector.tsx`.
 - Format dropdown always reserves space (no layout shift). Files: `src/app/components/format/FormatSelector.tsx`.
 - Header now uses SVG logo instead of text. Files: `src/app/components/layout/Header.tsx`.
 - Download button shows "Download" for single image, "Download All (n)" for multiple. Files: `src/app/components/download/DownloadSection.tsx`, `src/app/App.tsx`.
 - Single image downloads directly instead of as ZIP. Files: `src/app/App.tsx`.
 - Header padding-top increased to `var(--spacing-12)`. Files: `src/app/components/layout/Header.tsx`.
+- Updated guidelines documents to match current workflow. Files: `guidelines/smooshboost-quick-reference.md`, `guidelines/smooshboost-project-knowledge.md`, `guidelines/smooshboost-technical-spec.md`.
+
+### Removed
+- Explicit "Compress Images" button (replaced with auto-compression). Files: `src/app/App.tsx`.
+- Global MetadataPanel (replaced with per-image accordions). Files: `src/app/App.tsx`.
+- WorkflowModeToggle component usage. Files: `src/app/App.tsx`.
+- "Add coordinates to enable geo-tagging" alert. Files: `src/app/components/metadata/GeoTagSection.tsx`.
+- Variables messaging ({year}, {client}) for Copyright field. Files: `src/app/components/metadata/CopyrightSection.tsx`.
+- Old claude-plan.md file. Files: `guidelines/claude-plan.md`.
 
 ### Fixed
 - Icon-only buttons now center icons properly (removed margin when no visible text). Files: `src/app/components/ui/Button.tsx`.
+- Title metadata injection now uses proper EXIF field (DocumentName). Files: `src/app/services/metadata/`.
+- Google Maps link auto-fill for geo-coordinates. Files: `src/app/utils/googleMapsParser.ts`.
 
 ---
 

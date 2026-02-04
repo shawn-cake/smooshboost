@@ -3,6 +3,16 @@ import type { ImageItem } from '../../types';
 import { getOutputFilename, downloadBlob } from '../../utils';
 
 /**
+ * Get the best blob for download - prefer finalBlob (with metadata) over compressedBlob
+ */
+function getDownloadBlob(image: ImageItem): Blob | null {
+  // After boost: use finalBlob (has metadata)
+  // After compression only: use compressedBlob
+  // Boost-only mode: use finalBlob or original file
+  return image.finalBlob || image.compressedBlob || null;
+}
+
+/**
  * Generates a unique filename by appending -1, -2, etc. if needed
  */
 function getUniqueFilename(filename: string, usedNames: Set<string>): string {
@@ -52,6 +62,7 @@ function formatZipFilename(): string {
 
 /**
  * Creates a ZIP file from completed images and triggers download
+ * Uses finalBlob (with metadata) when available, falls back to compressedBlob
  */
 export async function downloadAsZip(images: ImageItem[]): Promise<void> {
   const zip = new JSZip();
@@ -59,12 +70,13 @@ export async function downloadAsZip(images: ImageItem[]): Promise<void> {
 
   console.log(`[ZIP] Input images: ${images.length}`);
   images.forEach((img, i) => {
-    console.log(`[ZIP] Image ${i}: ${img.name}, status=${img.status}, hasBlob=${!!img.compressedBlob}, blobSize=${img.compressedBlob?.size || 0}`);
+    const blob = getDownloadBlob(img);
+    console.log(`[ZIP] Image ${i}: ${img.name}, status=${img.status}, boostStatus=${img.boostStatus}, hasFinalBlob=${!!img.finalBlob}, hasCompressedBlob=${!!img.compressedBlob}, blobSize=${blob?.size || 0}`);
   });
 
   // Filter to only completed images with blobs
   const completedImages = images.filter(
-    (img) => img.status === 'complete' && img.compressedBlob
+    (img) => img.status === 'complete' && getDownloadBlob(img)
   );
 
   console.log(`[ZIP] Completed images with blobs: ${completedImages.length}`);
@@ -75,13 +87,14 @@ export async function downloadAsZip(images: ImageItem[]): Promise<void> {
 
   // Add each image to the ZIP with unique filenames
   for (const image of completedImages) {
-    if (image.compressedBlob) {
+    const blob = getDownloadBlob(image);
+    if (blob) {
       const baseFilename = getOutputFilename(image.name, image.outputFormat);
       const uniqueFilename = getUniqueFilename(baseFilename, usedNames);
       usedNames.add(uniqueFilename);
 
-      console.log(`[ZIP] Adding: ${uniqueFilename} (${image.compressedBlob.size} bytes)`);
-      zip.file(uniqueFilename, image.compressedBlob);
+      console.log(`[ZIP] Adding: ${uniqueFilename} (${blob.size} bytes, hasMetadata=${!!image.finalBlob})`);
+      zip.file(uniqueFilename, blob);
     }
   }
 
@@ -102,13 +115,15 @@ export async function downloadAsZip(images: ImageItem[]): Promise<void> {
 }
 
 /**
- * Downloads a single compressed image
+ * Downloads a single image
+ * Uses finalBlob (with metadata) when available, falls back to compressedBlob
  */
 export function downloadSingleImage(image: ImageItem): void {
-  if (!image.compressedBlob) {
-    throw new Error('No compressed image to download');
+  const blob = getDownloadBlob(image);
+  if (!blob) {
+    throw new Error('No image to download');
   }
 
   const filename = getOutputFilename(image.name, image.outputFormat);
-  downloadBlob(image.compressedBlob, filename);
+  downloadBlob(blob, filename);
 }

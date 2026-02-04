@@ -4,17 +4,32 @@
 
 ## Architecture Overview
 
-SmooshBoost follows a two-phase processing pipeline:
+SmooshBoost follows a streamlined processing pipeline with auto-compression and per-image metadata:
 
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
 │   UPLOAD    │ →  │   SMOOSH    │ →  │    BOOST    │ →  Download
-│   Phase     │    │   Phase     │    │   Phase     │
+│   Phase     │    │   (Auto)    │    │  (Per Image)│
 └─────────────┘    └─────────────┘    └─────────────┘
-     Files          Compression        Metadata
-     URLs           Engine routing     Injection
-     Validation     Size reduction     GPS, Copyright
+     Files          Auto-compress      🚀 Accordion
+     Validation     Engine routing     per image
+                    Size reduction     GPS, Copyright
 ```
+
+### Workflow Modes
+
+| Mode | Smoosh Phase | Boost Phase | Use Case |
+|------|-------------|-------------|----------|
+| **Smoosh + Boost** (Default) | ✅ Auto | ✅ Per-image | Full optimization |
+| **Boost Only** | ❌ | ✅ Per-image | Metadata only (keeps original format) |
+
+### Streamlined Processing
+
+1. **Upload** — Files added to queue
+2. **Auto-Compress** — Compression starts automatically (unless Boost Only mode)
+3. **Per-Image Boost** — Each image has a 🚀 accordion with metadata options
+4. **Apply Metadata** — Click per image, fields become read-only
+5. **Download** — Individual or ZIP download
 
 ---
 
@@ -25,9 +40,10 @@ SmooshBoost follows a two-phase processing pipeline:
 | Frontend Framework | React 18 with TypeScript |
 | Build Tool | Vite |
 | Styling | Tailwind CSS |
-| Compression | TinyPNG API + @aspect-image/squoosh (WASM) |
-| Metadata | piexifjs (EXIF writing) |
-| Geocoding | Google Places/Geocoding API (optional) |
+| Compression | @jsquash libraries (MozJPEG, OxiPNG, WebP via WASM) |
+| Metadata (JPG/WebP) | piexifjs (EXIF writing) |
+| Metadata (PNG) | png-chunk-text, png-chunks-encode, png-chunks-extract (tEXt chunks) |
+| Geo Parsing | Google Maps link regex (no API required) |
 | ZIP Generation | JSZip |
 | Icons | FontAwesome |
 | Toasts | Sonner |
@@ -148,32 +164,46 @@ interface ImageItem {
   originalSize: number;                    // Size in bytes
   inputFormat: 'png' | 'jpg';              // Detected input format
   outputFormat: 'png' | 'mozjpg' | 'webp'; // Target output format
-  
+
   // Processing state
   status: ImageStatus;
   phase: 'upload' | 'smoosh' | 'boost' | 'complete' | 'error';
   engine: 'tinypng' | 'squoosh' | null;
-  
-  // Results
+
+  // Smoosh phase results
   compressedSize: number | null;
   compressedBlob: Blob | null;
+
+  // Boost phase tracking
+  boostStatus: BoostStatus;
+  boostError: string | null;
+
+  // Final results
   finalBlob: Blob | null;                  // After metadata injection
   thumbnail: string | null;                // Data URL for preview
-  
+
   // Metadata applied
   metadata: AppliedMetadata | null;
-  
+  metadataWarnings: string[];              // Format compatibility warnings
+
   // Error handling
   error: string | null;
 }
 
-type ImageStatus = 
+type ImageStatus =
   | 'queued'
   | 'compressing'
-  | 'compressed'
+  | 'compressed'       // Awaiting Boost phase
   | 'boosting'
   | 'complete'
   | 'error';
+
+type BoostStatus =
+  | 'pending'          // Not yet boosted
+  | 'boosting'         // Currently injecting metadata
+  | 'boosted'          // Metadata successfully applied
+  | 'boost-skipped'    // User skipped Boost phase
+  | 'boost-failed';    // Metadata injection failed
 
 interface AppliedMetadata {
   geoTag: GeoTag | null;
@@ -187,6 +217,7 @@ interface GeoTag {
   longitude: number;
   altitude?: number;
   address?: string;              // Human-readable address
+  source?: 'manual' | 'maps-link' | 'places-api';  // How coordinates were obtained
 }
 ```
 
@@ -195,23 +226,21 @@ interface GeoTag {
 interface MetadataOptions {
   geoTagEnabled: boolean;
   geoTag: {
-    address: string;             // User input (autocomplete)
+    mapsLink: string;            // Google Maps/Place URL for parsing
+    address: string;             // User input (autocomplete) or parsed
     latitude: number | null;
     longitude: number | null;
-    applyToAll: boolean;
   };
-  
+
   copyrightEnabled: boolean;
   copyright: {
     text: string;                // e.g., "© 2026 Client Name"
-    applyToAll: boolean;
   };
-  
+
   titleDescEnabled: boolean;
   titleDesc: {
     title: string;
     description: string;
-    applyToAll: boolean;
   };
 }
 ```
@@ -221,22 +250,34 @@ interface MetadataOptions {
 interface AppState {
   // Images
   images: ImageItem[];
-  
-  // Processing
+
+  // Workflow mode
+  workflowMode: 'smoosh-boost' | 'smoosh-only' | 'boost-only';
+
+  // Processing state
   isProcessing: boolean;
   currentPhase: 'idle' | 'smoosh' | 'boost';
-  
+  boostPhase: 'idle' | 'boosting' | 'complete' | 'error';
+
   // API state
   tinypngApiKey: string;
   tinypngQuotaExhausted: boolean;
   tinypngCompressionCount: number;
-  
-  // Metadata options
+
+  // Metadata options (global)
   metadataOptions: MetadataOptions;
-  
+
+  // Metadata application mode
+  metadataApplicationMode: 'apply-to-all' | 'per-image';
+
+  // Per-image metadata storage (when metadataApplicationMode === 'per-image')
+  perImageMetadata: Map<string, MetadataOptions>;  // Key = image.id
+
   // UI state
   metadataPanelExpanded: boolean;
   urlImportExpanded: boolean;
+  expandedQueueItems: Set<string>;                  // Image IDs with expanded details
+  editingMetadataForImage: string | null;           // Image ID currently being edited
 }
 ```
 
@@ -303,7 +344,85 @@ On 429 error or `Compression-Count >= 500`:
 - Route subsequent PNG→PNG to Squoosh
 - Notify user
 
-### Google Places API (Optional)
+### Google Maps Link Parsing (Primary - No API Cost)
+
+Extract coordinates from Google Maps/Place URLs without API calls.
+
+```typescript
+interface ParsedCoordinates {
+  latitude: number;
+  longitude: number;
+  address?: string;
+}
+
+/**
+ * Parse Google Maps/Place URL to extract coordinates
+ * Supports multiple URL patterns:
+ * - maps.google.com/?q=LAT,LNG
+ * - google.com/maps/@LAT,LNG,ZOOM
+ * - google.com/maps/place/NAME/@LAT,LNG
+ * - Plus codes: google.com/maps/place/849V+XW
+ */
+function parseGoogleMapsLink(url: string): ParsedCoordinates | null {
+  // Pattern 1: @LAT,LNG format (most common)
+  const atPattern = /@(-?\d+\.?\d*),(-?\d+\.?\d*)/;
+  const atMatch = url.match(atPattern);
+  if (atMatch) {
+    return {
+      latitude: parseFloat(atMatch[1]),
+      longitude: parseFloat(atMatch[2]),
+    };
+  }
+
+  // Pattern 2: ?q=LAT,LNG format
+  const qPattern = /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/;
+  const qMatch = url.match(qPattern);
+  if (qMatch) {
+    return {
+      latitude: parseFloat(qMatch[1]),
+      longitude: parseFloat(qMatch[2]),
+    };
+  }
+
+  // Pattern 3: !3d LAT !4d LNG format (embedded maps)
+  const embedPattern = /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/;
+  const embedMatch = url.match(embedPattern);
+  if (embedMatch) {
+    return {
+      latitude: parseFloat(embedMatch[1]),
+      longitude: parseFloat(embedMatch[2]),
+    };
+  }
+
+  // Pattern 4: ll=LAT,LNG format (legacy)
+  const llPattern = /ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/;
+  const llMatch = url.match(llPattern);
+  if (llMatch) {
+    return {
+      latitude: parseFloat(llMatch[1]),
+      longitude: parseFloat(llMatch[2]),
+    };
+  }
+
+  return null; // Could not parse coordinates
+}
+
+/**
+ * Validate parsed coordinates are within valid ranges
+ */
+function validateCoordinates(coords: ParsedCoordinates): boolean {
+  return (
+    coords.latitude >= -90 &&
+    coords.latitude <= 90 &&
+    coords.longitude >= -180 &&
+    coords.longitude <= 180
+  );
+}
+```
+
+### Google Places API (Optional Enhancement)
+
+For address autocomplete functionality (requires API key).
 
 #### Address Autocomplete
 ```javascript
@@ -326,13 +445,14 @@ async function geocodeAddress(address: string): Promise<GeoTag> {
     `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${API_KEY}`
   );
   const data = await response.json();
-  
+
   if (data.results.length > 0) {
     const { lat, lng } = data.results[0].geometry.location;
     return {
       latitude: lat,
       longitude: lng,
-      address: data.results[0].formatted_address
+      address: data.results[0].formatted_address,
+      source: 'places-api'
     };
   }
   throw new Error('Address not found');
@@ -372,7 +492,64 @@ const result = await encode(imageData, {
 
 ## Metadata Injection Implementation
 
-### GPS Coordinate Injection (piexifjs)
+### Format Capabilities Matrix
+
+| Metadata Type | JPG/MozJPG | PNG | WebP |
+|---------------|------------|-----|------|
+| Geo-tagging (GPS coordinates) | ✅ Full support via EXIF | ❌ No support | ✅ Full support via EXIF chunk |
+| Copyright | ✅ Full support via EXIF | ✅ Supported via tEXt chunks | ✅ Full support via EXIF chunk |
+| Title/Description | ✅ Full support via EXIF | ✅ Supported via tEXt chunks | ✅ Full support via EXIF chunk |
+
+**Technical Notes:**
+- **JPG/MozJPG:** Full EXIF support including GPS coordinates via piexifjs
+- **PNG:** Text metadata via tEXt chunks (copyright, title, description) but no GPS coordinate support
+- **WebP:** Full EXIF support including GPS coordinates via EXIF chunk injection
+
+---
+
+### Format Capability Validation
+
+```typescript
+interface FormatCapabilities {
+  geoTag: boolean;
+  copyright: boolean;
+  titleDesc: boolean;
+}
+
+const FORMAT_CAPABILITIES: Record<string, FormatCapabilities> = {
+  jpg: { geoTag: true, copyright: true, titleDesc: true },
+  mozjpg: { geoTag: true, copyright: true, titleDesc: true },
+  png: { geoTag: false, copyright: true, titleDesc: true },
+  webp: { geoTag: true, copyright: true, titleDesc: true },
+};
+
+interface ValidationResult {
+  warnings: string[];
+}
+
+function validateMetadataForFormat(
+  metadata: MetadataOptions,
+  outputFormat: string
+): ValidationResult {
+  const warnings: string[] = [];
+  const capabilities = FORMAT_CAPABILITIES[outputFormat] || FORMAT_CAPABILITIES.jpg;
+
+  // Check if geo-tagging is enabled but format doesn't support it
+  if (metadata.geoTagEnabled && metadata.geoTag.latitude && metadata.geoTag.longitude) {
+    if (!capabilities.geoTag) {
+      warnings.push(
+        `PNG does not support GPS coordinates. Switch to JPG or WebP for geo-tagged images, or disable geo-tagging to proceed.`
+      );
+    }
+  }
+
+  return { warnings };
+}
+```
+
+---
+
+### GPS Coordinate Injection (JPG/WebP via piexifjs)
 
 ```javascript
 import piexif from 'piexifjs';
@@ -383,13 +560,13 @@ function injectGeoTag(jpegBlob: Blob, geoTag: GeoTag): Promise<Blob> {
     reader.onload = () => {
       try {
         const dataUrl = reader.result as string;
-        
+
         // Convert decimal degrees to degrees/minutes/seconds
         const latDMS = decimalToDMS(Math.abs(geoTag.latitude));
         const lngDMS = decimalToDMS(Math.abs(geoTag.longitude));
-        
+
         const exifObj = piexif.load(dataUrl);
-        
+
         // Set GPS data
         exifObj.GPS = {
           [piexif.GPSIFD.GPSLatitudeRef]: geoTag.latitude >= 0 ? 'N' : 'S',
@@ -397,15 +574,15 @@ function injectGeoTag(jpegBlob: Blob, geoTag: GeoTag): Promise<Blob> {
           [piexif.GPSIFD.GPSLongitudeRef]: geoTag.longitude >= 0 ? 'E' : 'W',
           [piexif.GPSIFD.GPSLongitude]: lngDMS,
         };
-        
+
         if (geoTag.altitude !== undefined) {
           exifObj.GPS[piexif.GPSIFD.GPSAltitude] = [Math.abs(geoTag.altitude), 1];
           exifObj.GPS[piexif.GPSIFD.GPSAltitudeRef] = geoTag.altitude >= 0 ? 0 : 1;
         }
-        
+
         const exifBytes = piexif.dump(exifObj);
         const newDataUrl = piexif.insert(exifBytes, dataUrl);
-        
+
         // Convert back to blob
         const newBlob = dataURLtoBlob(newDataUrl);
         resolve(newBlob);
@@ -423,12 +600,12 @@ function decimalToDMS(decimal: number): [[number, number], [number, number], [nu
   const minutesDecimal = (decimal - degrees) * 60;
   const minutes = Math.floor(minutesDecimal);
   const seconds = Math.round((minutesDecimal - minutes) * 60 * 100);
-  
+
   return [[degrees, 1], [minutes, 1], [seconds, 100]];
 }
 ```
 
-### Copyright Injection
+### Copyright Injection (JPG via piexifjs)
 
 ```javascript
 function injectCopyright(jpegBlob: Blob, copyright: string): Promise<Blob> {
@@ -438,11 +615,11 @@ function injectCopyright(jpegBlob: Blob, copyright: string): Promise<Blob> {
       try {
         const dataUrl = reader.result as string;
         const exifObj = piexif.load(dataUrl);
-        
+
         exifObj['0th'] = exifObj['0th'] || {};
         exifObj['0th'][piexif.ImageIFD.Copyright] = copyright;
         exifObj['0th'][piexif.ImageIFD.Artist] = copyright.replace(/©\s*\d{4}\s*/, '');
-        
+
         const exifBytes = piexif.dump(exifObj);
         const newDataUrl = piexif.insert(exifBytes, dataUrl);
         const newBlob = dataURLtoBlob(newDataUrl);
@@ -457,12 +634,12 @@ function injectCopyright(jpegBlob: Blob, copyright: string): Promise<Blob> {
 }
 ```
 
-### Title/Description Injection
+### Title/Description Injection (JPG via piexifjs)
 
 ```javascript
 function injectTitleDescription(
-  jpegBlob: Blob, 
-  title: string, 
+  jpegBlob: Blob,
+  title: string,
   description: string
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -471,11 +648,11 @@ function injectTitleDescription(
       try {
         const dataUrl = reader.result as string;
         const exifObj = piexif.load(dataUrl);
-        
+
         exifObj['0th'] = exifObj['0th'] || {};
         exifObj['0th'][piexif.ImageIFD.ImageDescription] = description;
         exifObj['0th'][piexif.ImageIFD.XPTitle] = title;
-        
+
         const exifBytes = piexif.dump(exifObj);
         const newDataUrl = piexif.insert(exifBytes, dataUrl);
         const newBlob = dataURLtoBlob(newDataUrl);
@@ -490,58 +667,250 @@ function injectTitleDescription(
 }
 ```
 
-### Combined Metadata Injection
+---
+
+### PNG Text Chunk Injection (via png-chunk-text)
+
+PNG supports text metadata via tEXt chunks but does NOT support GPS coordinates.
 
 ```javascript
+import { encode as encodePng } from 'png-chunks-encode';
+import { decode as decodePng } from 'png-chunks-extract';
+import textChunk from 'png-chunk-text';
+
+async function injectPngTextMetadata(
+  pngBlob: Blob,
+  metadata: { copyright?: string; title?: string; description?: string }
+): Promise<Blob> {
+  const buffer = await pngBlob.arrayBuffer();
+  const uint8Array = new Uint8Array(buffer);
+
+  // Extract existing chunks
+  const chunks = decodePng(uint8Array);
+
+  // Find the position before IEND chunk
+  const iendIndex = chunks.findIndex(chunk => chunk.name === 'IEND');
+
+  // Create text chunks for metadata
+  const textChunks = [];
+
+  if (metadata.copyright) {
+    textChunks.push(textChunk.encode('Copyright', metadata.copyright));
+  }
+
+  if (metadata.title) {
+    textChunks.push(textChunk.encode('Title', metadata.title));
+  }
+
+  if (metadata.description) {
+    textChunks.push(textChunk.encode('Description', metadata.description));
+  }
+
+  // Insert text chunks before IEND
+  chunks.splice(iendIndex, 0, ...textChunks);
+
+  // Re-encode PNG
+  const newPngData = encodePng(chunks);
+  return new Blob([newPngData], { type: 'image/png' });
+}
+```
+
+---
+
+### WebP EXIF Chunk Injection (via node-webpmux)
+
+WebP supports full EXIF metadata including GPS coordinates via EXIF chunk injection.
+
+```javascript
+import WebP from 'node-webpmux';
+
+async function injectWebpExifMetadata(
+  webpBlob: Blob,
+  metadata: {
+    geoTag?: GeoTag;
+    copyright?: string;
+    title?: string;
+    description?: string;
+  }
+): Promise<Blob> {
+  const buffer = await webpBlob.arrayBuffer();
+  const image = new WebP.Image();
+  await image.load(Buffer.from(buffer));
+
+  // Build EXIF data structure
+  const exifData = buildExifData(metadata);
+
+  // Set EXIF chunk
+  await image.setExif(exifData);
+
+  // Save and return as blob
+  const outputBuffer = await image.save(null);
+  return new Blob([outputBuffer], { type: 'image/webp' });
+}
+
+function buildExifData(metadata: {
+  geoTag?: GeoTag;
+  copyright?: string;
+  title?: string;
+  description?: string;
+}): Buffer {
+  // Use piexifjs to build EXIF structure, then extract raw bytes
+  const exifObj = {
+    '0th': {},
+    'Exif': {},
+    'GPS': {},
+    '1st': {},
+    'thumbnail': null
+  };
+
+  if (metadata.copyright) {
+    exifObj['0th'][piexif.ImageIFD.Copyright] = metadata.copyright;
+  }
+
+  if (metadata.description) {
+    exifObj['0th'][piexif.ImageIFD.ImageDescription] = metadata.description;
+  }
+
+  if (metadata.title) {
+    exifObj['0th'][piexif.ImageIFD.XPTitle] = metadata.title;
+  }
+
+  if (metadata.geoTag) {
+    const latDMS = decimalToDMS(Math.abs(metadata.geoTag.latitude));
+    const lngDMS = decimalToDMS(Math.abs(metadata.geoTag.longitude));
+
+    exifObj.GPS = {
+      [piexif.GPSIFD.GPSLatitudeRef]: metadata.geoTag.latitude >= 0 ? 'N' : 'S',
+      [piexif.GPSIFD.GPSLatitude]: latDMS,
+      [piexif.GPSIFD.GPSLongitudeRef]: metadata.geoTag.longitude >= 0 ? 'E' : 'W',
+      [piexif.GPSIFD.GPSLongitude]: lngDMS,
+    };
+  }
+
+  const exifBytes = piexif.dump(exifObj);
+  return Buffer.from(exifBytes, 'binary');
+}
+```
+
+---
+
+### Combined Metadata Injection (All Formats)
+
+```javascript
+interface MetadataInjectionResult {
+  blob: Blob;
+  applied: AppliedMetadata;
+  warnings: string[];
+}
+
 async function injectAllMetadata(
   blob: Blob,
-  format: 'jpg' | 'png' | 'webp',
+  format: 'jpg' | 'mozjpg' | 'png' | 'webp',
   options: MetadataOptions
-): Promise<{ blob: Blob; applied: AppliedMetadata }> {
+): Promise<MetadataInjectionResult> {
   const applied: AppliedMetadata = {
     geoTag: null,
     copyright: null,
     title: null,
     description: null,
   };
-  
-  // Only JPG has full EXIF support
-  if (format !== 'jpg') {
-    console.warn(`Limited metadata support for ${format}`);
-    return { blob, applied };
-  }
-  
+
+  // Validate format capabilities and collect warnings
+  const normalizedFormat = format === 'mozjpg' ? 'jpg' : format;
+  const { warnings } = validateMetadataForFormat(options, normalizedFormat);
+
   let currentBlob = blob;
-  
-  if (options.geoTagEnabled && options.geoTag.latitude && options.geoTag.longitude) {
-    currentBlob = await injectGeoTag(currentBlob, {
-      latitude: options.geoTag.latitude,
-      longitude: options.geoTag.longitude,
-      address: options.geoTag.address,
-    });
-    applied.geoTag = {
-      latitude: options.geoTag.latitude,
-      longitude: options.geoTag.longitude,
-      address: options.geoTag.address,
-    };
+
+  // Handle JPG/MozJPG - Full EXIF support
+  if (normalizedFormat === 'jpg') {
+    if (options.geoTagEnabled && options.geoTag.latitude && options.geoTag.longitude) {
+      currentBlob = await injectGeoTag(currentBlob, {
+        latitude: options.geoTag.latitude,
+        longitude: options.geoTag.longitude,
+        address: options.geoTag.address,
+      });
+      applied.geoTag = {
+        latitude: options.geoTag.latitude,
+        longitude: options.geoTag.longitude,
+        address: options.geoTag.address,
+      };
+    }
+
+    if (options.copyrightEnabled && options.copyright.text) {
+      currentBlob = await injectCopyright(currentBlob, options.copyright.text);
+      applied.copyright = options.copyright.text;
+    }
+
+    if (options.titleDescEnabled) {
+      currentBlob = await injectTitleDescription(
+        currentBlob,
+        options.titleDesc.title,
+        options.titleDesc.description
+      );
+      applied.title = options.titleDesc.title;
+      applied.description = options.titleDesc.description;
+    }
   }
-  
-  if (options.copyrightEnabled && options.copyright.text) {
-    currentBlob = await injectCopyright(currentBlob, options.copyright.text);
-    applied.copyright = options.copyright.text;
+
+  // Handle PNG - Text metadata only, NO GPS support
+  else if (format === 'png') {
+    const pngMetadata: { copyright?: string; title?: string; description?: string } = {};
+
+    if (options.copyrightEnabled && options.copyright.text) {
+      pngMetadata.copyright = options.copyright.text;
+      applied.copyright = options.copyright.text;
+    }
+
+    if (options.titleDescEnabled) {
+      pngMetadata.title = options.titleDesc.title;
+      pngMetadata.description = options.titleDesc.description;
+      applied.title = options.titleDesc.title;
+      applied.description = options.titleDesc.description;
+    }
+
+    if (Object.keys(pngMetadata).length > 0) {
+      currentBlob = await injectPngTextMetadata(currentBlob, pngMetadata);
+    }
+
+    // Note: GPS coordinates are NOT injected for PNG - warning already added
   }
-  
-  if (options.titleDescEnabled) {
-    currentBlob = await injectTitleDescription(
-      currentBlob,
-      options.titleDesc.title,
-      options.titleDesc.description
-    );
-    applied.title = options.titleDesc.title;
-    applied.description = options.titleDesc.description;
+
+  // Handle WebP - Full EXIF support including GPS
+  else if (format === 'webp') {
+    const webpMetadata: {
+      geoTag?: GeoTag;
+      copyright?: string;
+      title?: string;
+      description?: string;
+    } = {};
+
+    if (options.geoTagEnabled && options.geoTag.latitude && options.geoTag.longitude) {
+      webpMetadata.geoTag = {
+        latitude: options.geoTag.latitude,
+        longitude: options.geoTag.longitude,
+        address: options.geoTag.address,
+      };
+      applied.geoTag = webpMetadata.geoTag;
+    }
+
+    if (options.copyrightEnabled && options.copyright.text) {
+      webpMetadata.copyright = options.copyright.text;
+      applied.copyright = options.copyright.text;
+    }
+
+    if (options.titleDescEnabled) {
+      webpMetadata.title = options.titleDesc.title;
+      webpMetadata.description = options.titleDesc.description;
+      applied.title = options.titleDesc.title;
+      applied.description = options.titleDesc.description;
+    }
+
+    if (Object.keys(webpMetadata).length > 0) {
+      currentBlob = await injectWebpExifMetadata(currentBlob, webpMetadata);
+    }
   }
-  
-  return { blob: currentBlob, applied };
+
+  return { blob: currentBlob, applied, warnings };
 }
 ```
 
@@ -571,64 +940,160 @@ function getCompressionEngine(
 
 ## Processing Pipeline
 
+### Two-Step Workflow
+
+The processing pipeline is now split into two explicit steps that require user action:
+
 ```typescript
-async function processImage(
-  image: ImageItem,
+// Step 1: Compression (Smoosh Phase) - triggered by "Compress Images" button
+async function compressImages(
+  images: ImageItem[],
   state: AppState,
   callbacks: {
-    onStatusChange: (status: ImageStatus, phase: string) => void;
-    onError: (error: string) => void;
+    onImageStatusChange: (imageId: string, status: ImageStatus) => void;
+    onImageError: (imageId: string, error: string) => void;
+    onProgress: (completed: number, total: number) => void;
   }
-): Promise<ImageItem> {
-  const { onStatusChange, onError } = callbacks;
-  
-  try {
-    // SMOOSH PHASE
-    onStatusChange('compressing', 'smoosh');
-    
-    const engine = getCompressionEngine(image, state);
-    let compressedBlob: Blob;
-    
-    if (engine === 'tinypng') {
-      compressedBlob = await compressWithTinyPNG(image.file!, state.tinypngApiKey);
-    } else {
-      compressedBlob = await compressWithSquoosh(image.file!, image.outputFormat);
+): Promise<ImageItem[]> {
+  const { onImageStatusChange, onImageError, onProgress } = callbacks;
+  const results: ImageItem[] = [];
+
+  for (let i = 0; i < images.length; i++) {
+    const image = images[i];
+
+    try {
+      onImageStatusChange(image.id, 'compressing');
+
+      const engine = getCompressionEngine(image, state);
+      let compressedBlob: Blob;
+
+      if (engine === 'tinypng') {
+        compressedBlob = await compressWithTinyPNG(image.file!, state.tinypngApiKey);
+      } else {
+        compressedBlob = await compressWithSquoosh(image.file!, image.outputFormat);
+      }
+
+      const compressedSize = compressedBlob.size;
+      onImageStatusChange(image.id, 'compressed');
+
+      results.push({
+        ...image,
+        status: 'compressed',
+        phase: 'smoosh',
+        engine,
+        compressedSize,
+        compressedBlob,
+        boostStatus: 'pending',
+      });
+    } catch (error) {
+      onImageError(image.id, error.message);
+      results.push({
+        ...image,
+        status: 'error',
+        phase: 'error',
+        error: error.message,
+      });
     }
-    
-    const compressedSize = compressedBlob.size;
-    onStatusChange('compressed', 'smoosh');
-    
-    // BOOST PHASE
-    onStatusChange('boosting', 'boost');
-    
-    const { blob: finalBlob, applied } = await injectAllMetadata(
-      compressedBlob,
-      image.outputFormat === 'mozjpg' ? 'jpg' : image.outputFormat,
-      state.metadataOptions
-    );
-    
-    onStatusChange('complete', 'complete');
-    
-    return {
-      ...image,
-      status: 'complete',
-      phase: 'complete',
-      engine,
-      compressedSize,
-      compressedBlob,
-      finalBlob,
-      metadata: applied,
-    };
-    
-  } catch (error) {
-    onError(error.message);
-    return {
-      ...image,
-      status: 'error',
-      phase: 'error',
-      error: error.message,
-    };
+
+    onProgress(i + 1, images.length);
   }
+
+  return results;
+}
+
+// Step 2: Metadata Injection (Boost Phase) - triggered by "Add Metadata (Boost)" button
+async function boostImages(
+  images: ImageItem[],
+  state: AppState,
+  callbacks: {
+    onImageStatusChange: (imageId: string, status: ImageStatus, boostStatus: BoostStatus) => void;
+    onImageError: (imageId: string, error: string) => void;
+    onProgress: (completed: number, total: number) => void;
+  }
+): Promise<ImageItem[]> {
+  const { onImageStatusChange, onImageError, onProgress } = callbacks;
+  const results: ImageItem[] = [];
+
+  for (let i = 0; i < images.length; i++) {
+    const image = images[i];
+
+    // Skip images that weren't successfully compressed
+    if (image.status === 'error' || !image.compressedBlob) {
+      results.push(image);
+      onProgress(i + 1, images.length);
+      continue;
+    }
+
+    try {
+      onImageStatusChange(image.id, 'boosting', 'boosting');
+
+      // Get metadata for this image (global or per-image based on mode)
+      const metadata = getMetadataForImage(image.id, state);
+
+      // Validate format capabilities
+      const { warnings } = validateMetadataForFormat(metadata, image.outputFormat);
+
+      // Inject metadata (skip unsupported types)
+      const { blob: finalBlob, applied } = await injectAllMetadata(
+        image.compressedBlob,
+        image.outputFormat === 'mozjpg' ? 'jpg' : image.outputFormat,
+        metadata
+      );
+
+      onImageStatusChange(image.id, 'complete', 'boosted');
+
+      results.push({
+        ...image,
+        status: 'complete',
+        phase: 'complete',
+        boostStatus: 'boosted',
+        finalBlob,
+        metadata: applied,
+        metadataWarnings: warnings,
+      });
+    } catch (error) {
+      onImageError(image.id, error.message);
+      results.push({
+        ...image,
+        boostStatus: 'boost-failed',
+        boostError: error.message,
+        // Image still downloadable with compressed blob
+        finalBlob: image.compressedBlob,
+      });
+    }
+
+    onProgress(i + 1, images.length);
+  }
+
+  return results;
+}
+
+// Helper: Get metadata for specific image based on application mode
+function getMetadataForImage(imageId: string, state: AppState): MetadataOptions {
+  if (state.metadataApplicationMode === 'per-image') {
+    return state.perImageMetadata.get(imageId) || state.metadataOptions;
+  }
+  return state.metadataOptions;
+}
+
+// Helper: Save per-image metadata
+function savePerImageMetadata(
+  imageId: string,
+  metadata: MetadataOptions,
+  state: AppState
+): void {
+  state.perImageMetadata.set(imageId, metadata);
+}
+
+// Skip Boost - mark images as complete without metadata
+function skipBoostPhase(images: ImageItem[]): ImageItem[] {
+  return images.map(image => ({
+    ...image,
+    status: image.status === 'compressed' ? 'complete' : image.status,
+    phase: image.phase === 'smoosh' ? 'complete' : image.phase,
+    boostStatus: 'boost-skipped',
+    finalBlob: image.compressedBlob || image.finalBlob,
+  }));
 }
 ```
 
@@ -779,6 +1244,13 @@ src/
 │   ├── App.tsx
 │   ├── components/
 │   │   ├── Header.tsx
+│   │   ├── WorkflowModeToggle.tsx          # NEW: Smoosh+Boost / Smoosh Only / Boost Only
+│   │   ├── BoostOnlyIndicator.tsx          # NEW: Info banner for Boost Only mode
+│   │   ├── ProcessingButtons/              # NEW: Two-step button controls
+│   │   │   ├── ProcessingButtons.tsx
+│   │   │   ├── CompressButton.tsx
+│   │   │   ├── BoostButton.tsx
+│   │   │   └── SkipDownloadButton.tsx
 │   │   ├── UploadZone/
 │   │   │   ├── UploadZone.tsx
 │   │   │   ├── DragDropArea.tsx
@@ -786,31 +1258,41 @@ src/
 │   │   │   └── UrlImportPanel.tsx
 │   │   ├── MetadataPanel/
 │   │   │   ├── MetadataPanel.tsx
+│   │   │   ├── MetadataApplicationToggle.tsx # NEW: Apply to All / Per Image toggle
 │   │   │   ├── GeoTagSection.tsx
+│   │   │   ├── GoogleMapsLinkParser.tsx    # NEW: Parse coords from Maps URLs
 │   │   │   ├── CopyrightSection.tsx
 │   │   │   ├── TitleDescSection.tsx
-│   │   │   └── AddressAutocomplete.tsx
+│   │   │   ├── AddressAutocomplete.tsx     # Optional: Google Places API
+│   │   │   └── FormatWarningBanner.tsx     # NEW: Format compatibility warnings
 │   │   ├── ImageQueue/
 │   │   │   ├── ImageQueue.tsx
 │   │   │   ├── ImageQueueItem.tsx
-│   │   │   └── StatusBadge.tsx
-│   │   ├── SummaryBar.tsx
-│   │   ├── DownloadSection.tsx
+│   │   │   ├── StatusBadge.tsx
+│   │   │   ├── MetadataStatusBadges.tsx    # NEW: Geo/Copyright/Title status badges
+│   │   │   ├── PerImageMetadataForm.tsx    # NEW: Inline per-image metadata form
+│   │   │   └── ExpandableMetadataDetails.tsx # NEW: Expandable full metadata view
+│   │   ├── SummaryBar.tsx                  # Updated: includes metadata summary
+│   │   ├── DownloadSection.tsx             # Updated: metadata indicators
 │   │   └── Notifications/
 │   │       ├── NotificationContainer.tsx
 │   │       └── NotificationToast.tsx
 │   ├── hooks/
 │   │   ├── useImageQueue.ts
+│   │   ├── useWorkflowMode.ts              # NEW: Workflow mode state
 │   │   ├── useCompression.ts
 │   │   ├── useTinyPng.ts
 │   │   ├── useSquoosh.ts
 │   │   ├── useMetadataInjection.ts
-│   │   ├── useGeocode.ts
+│   │   ├── usePerImageMetadata.ts          # NEW: Per-image metadata management
+│   │   ├── useGoogleMapsParser.ts          # NEW: Parse Maps links
+│   │   ├── useGeocode.ts                   # Optional: Google Places API
 │   │   └── useNotifications.ts
 │   ├── utils/
 │   │   ├── fileHelpers.ts
 │   │   ├── compressionRouter.ts
 │   │   ├── metadataInjector.ts
+│   │   ├── googleMapsParser.ts             # NEW: URL parsing utilities
 │   │   ├── geoHelpers.ts
 │   │   └── zipGenerator.ts
 │   └── types/
@@ -843,17 +1325,28 @@ type ErrorType =
   | 'network_error'
   | 'url_fetch_failed'
   | 'compression_failed'
-  | 'metadata_injection_failed'
-  | 'geocoding_failed';
+  | 'metadata_injection_failed'      // Technical error during EXIF/chunk write
+  | 'geocoding_failed'               // Address lookup failed
+  | 'geocoding_parse_failed'         // Google Maps link couldn't be parsed
+  | 'coordinate_out_of_range';       // Lat/long outside valid range
+
+type WarningType =
+  | 'metadata_format_unsupported';   // Format doesn't support requested metadata (non-blocking)
 
 interface AppNotification {
   id: string;
   type: 'error' | 'warning' | 'success' | 'info';
   errorType?: ErrorType;
+  warningType?: WarningType;
   message: string;
   dismissable: boolean;
   autoDismiss: number | false;
 }
+
+// Note: metadata_format_unsupported generates a WARNING notification, not an error.
+// Processing continues even when this warning is triggered.
+
+// Boost errors are non-fatal: image is still downloadable (compressed, without metadata)
 ```
 
 ---

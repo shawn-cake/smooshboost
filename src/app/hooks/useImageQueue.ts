@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { ImageItem, OutputFormat, Savings, FormatMode } from '../types';
-import { getMatchingOutputFormat } from '../types';
+import { getMatchingOutputFormat, DEFAULT_METADATA_OPTIONS } from '../types';
 import { generateId, generateThumbnail, detectInputFormat } from '../utils';
 
 /**
@@ -47,6 +47,14 @@ export function useImageQueue() {
           compressedBlob: null,
           compressedSize: null,
           error: null,
+          // Boost phase fields
+          boostStatus: 'pending',
+          boostError: null,
+          finalBlob: null,
+          metadata: null,
+          metadataWarnings: [],
+          // Per-image metadata options (deep copy to avoid shared references)
+          metadataOptions: JSON.parse(JSON.stringify(DEFAULT_METADATA_OPTIONS)),
         });
       }
 
@@ -70,6 +78,44 @@ export function useImageQueue() {
       setImages((prev) =>
         prev.map((img) => (img.id === id ? { ...img, ...updates } : img))
       );
+    },
+    []
+  );
+
+  /**
+   * Updates metadata options for a specific image
+   */
+  const updateImageMetadata = useCallback(
+    (id: string, metadataOptions: ImageItem['metadataOptions']) => {
+      setImages((prev) =>
+        prev.map((img) =>
+          img.id === id ? { ...img, metadataOptions } : img
+        )
+      );
+    },
+    []
+  );
+
+  /**
+   * Applies metadata options from one image to all other images
+   */
+  const applyMetadataToAll = useCallback(
+    (sourceId: string) => {
+      setImages((prev) => {
+        const sourceImage = prev.find((img) => img.id === sourceId);
+        if (!sourceImage) return prev;
+
+        return prev.map((img) =>
+          img.id === sourceId
+            ? img
+            : {
+                ...img,
+                metadataOptions: JSON.parse(
+                  JSON.stringify(sourceImage.metadataOptions)
+                ),
+              }
+        );
+      });
     },
     []
   );
@@ -139,6 +185,8 @@ export function useImageQueue() {
     addImages,
     removeImage,
     updateImage,
+    updateImageMetadata,
+    applyMetadataToAll,
     clearQueue,
     getCompletedImages,
     getQueuedImages,

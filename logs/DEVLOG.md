@@ -21,22 +21,56 @@ A narrative chronicle of the project journey - the decisions, discoveries, and p
 - **Project:** SmooshBoost
 - **Version:** v0.0.1
 - **Active Branch:** `main`
-- **Phase:** Initial development - MVP complete with TinyPNG integration
+- **Phase:** v1.0 Feature Complete - Smoosh + Boost workflow ready
 
 ### Current Objectives
 - [x] Implement TinyPNG API integration
 - [x] Create dual-mode format selector (match/convert)
 - [x] Add footer with branding
 - [x] Install Log File Genius documentation system
-- [x] Document Log File Genius installation in logs
-- [x] Create ADR for Log File Genius adoption (ADR-001)
+- [x] **Complete Boost Phase** - Per-image metadata injection with geo-tagging, copyright, author, title, description
+- [x] **Auto-compression workflow** - Images compress automatically on upload
+- [x] **Per-image metadata accordions** - 🚀 Boost Options for each image in queue
+- [x] **Read-only mode after Apply Metadata** - With Reset button to re-edit
+- [x] **Format conversion summary** - Shows output format breakdown in SummaryBar
+- [x] **README.md** - GitHub repository documentation
+- [ ] Deploy to production
 
 ### Known Risks & Blockers
 - TinyPNG API key currently in vite.config.ts (dev-only); needs serverless function for production
+- PNG format does not support GPS coordinates - warning shown to users
 
 ---
 
 ## Daily Log - Newest First
+
+### 2026-02-04: Completing the Boost Phase - v1.0 Feature Complete
+
+**The Situation:** SmooshBoost's core compression (Smoosh) was working, but we needed the second phase (Boost) for SEO metadata injection - geo-tagging, copyright, author, title, and description.
+
+**The Challenge:** How do we provide flexible metadata options per image without overwhelming users? The original design had a global metadata panel with explicit "Boost Images" button, but this felt disconnected from the image queue.
+
+**The Decision:** Multiple UX iterations led to the final design:
+1. **Auto-compression** - Images compress automatically on upload (no button)
+2. **Per-image metadata** - Each image has its own 🚀 Boost Options accordion
+3. **Accordion header** - Shows rocket icon with enabled count (e.g., "2/3")
+4. **Read-only after apply** - Fields lock after "Apply Metadata" with Reset option
+5. **PNG geo-tag disabled** - Warning message only (no checkbox for unsupported format)
+
+**Why This Matters:** Users can configure metadata per image or apply settings to all images at once. The accordion keeps the queue clean while providing easy access to boost options.
+
+**The Implementation:**
+- Created `ImageMetadataAccordion` component with collapsible sections
+- Built `GeoTagSection`, `CopyrightSection`, `TitleDescSection` components
+- Added `useMetadataInjection` hook for processing
+- Implemented metadata injection services for JPG (piexifjs), PNG (tEXt chunks), and WebP (EXIF chunks)
+- Added Google Maps link parser for coordinate extraction
+
+**The Result:** Complete Smoosh + Boost workflow ready for v1.0 release. Users can upload, auto-compress, configure per-image metadata, and download optimized images with SEO metadata.
+
+**Files Changed:** `src/app/components/metadata/`, `src/app/components/queue/`, `src/app/services/metadata/`, `src/app/hooks/`, `README.md`, `guidelines/`
+
+---
 
 ### 2026-02-04: Installing Log File Genius for Better AI Context Management
 
