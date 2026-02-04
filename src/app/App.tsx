@@ -96,16 +96,22 @@ function App() {
     [downloadOne]
   );
 
-  // Handle download all
-  const handleDownloadAll = useCallback(async () => {
+  // Handle download (single image or ZIP for multiple)
+  const handleDownload = useCallback(async () => {
     try {
       const completed = getCompletedImages();
-      await downloadAll(completed);
-      toast.success('Downloaded all images');
+      if (completed.length === 1) {
+        // Single image: download directly
+        downloadOne(completed[0]);
+      } else {
+        // Multiple images: download as ZIP
+        await downloadAll(completed);
+        toast.success('Downloaded all images');
+      }
     } catch {
       toast.error('Failed to download images');
     }
-  }, [getCompletedImages, downloadAll]);
+  }, [getCompletedImages, downloadOne, downloadAll]);
 
   // Handle clear queue
   const handleClearQueue = useCallback(() => {
@@ -159,7 +165,7 @@ function App() {
 
             {/* Download Section */}
             <DownloadSection
-              onDownloadAll={handleDownloadAll}
+              onDownload={handleDownload}
               onClear={handleClearQueue}
               hasCompletedImages={hasCompletedImages}
               isProcessing={isProcessing}

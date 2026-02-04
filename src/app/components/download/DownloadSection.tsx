@@ -3,7 +3,7 @@ import { faDownload, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '../ui';
 
 interface DownloadSectionProps {
-  onDownloadAll: () => void;
+  onDownload: () => void;
   onClear: () => void;
   hasCompletedImages: boolean;
   isProcessing: boolean;
@@ -11,21 +11,24 @@ interface DownloadSectionProps {
 }
 
 export function DownloadSection({
-  onDownloadAll,
+  onDownload,
   onClear,
   hasCompletedImages,
   isProcessing,
   completedCount,
 }: DownloadSectionProps) {
+  const isSingleImage = completedCount === 1;
+  const buttonText = isSingleImage ? 'Download' : `Download All (${completedCount})`;
+
   return (
     <div className="flex items-center justify-between gap-4">
       <Button
         variant="accent"
-        onClick={onDownloadAll}
+        onClick={onDownload}
         disabled={!hasCompletedImages || isProcessing}
         icon={faDownload}
       >
-        Download All ({completedCount})
+        {buttonText}
       </Button>
 
       <Button

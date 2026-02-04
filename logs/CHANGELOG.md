@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Format selector now inline with label. Files: `src/app/components/format/FormatSelector.tsx`.
 - Format dropdown always reserves space (no layout shift). Files: `src/app/components/format/FormatSelector.tsx`.
 - Header now uses SVG logo instead of text. Files: `src/app/components/layout/Header.tsx`.
+- Download button shows "Download" for single image, "Download All (n)" for multiple. Files: `src/app/components/download/DownloadSection.tsx`, `src/app/App.tsx`.
+- Single image downloads directly instead of as ZIP. Files: `src/app/App.tsx`.
+
+### Fixed
+- Icon-only buttons now center icons properly (removed margin when no visible text). Files: `src/app/components/ui/Button.tsx`.
 
 ---
 

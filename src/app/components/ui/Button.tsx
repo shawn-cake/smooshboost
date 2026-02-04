@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, forwardRef } from 'react';
+import { ButtonHTMLAttributes, forwardRef, Children, isValidElement } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { Spinner } from './Spinner';
@@ -12,6 +12,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
   icon?: IconDefinition;
   iconPosition?: 'left' | 'right';
+  iconOnly?: boolean;
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
@@ -41,6 +42,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       loading = false,
       icon,
       iconPosition = 'left',
+      iconOnly = false,
       children,
       disabled,
       className = '',
@@ -51,6 +53,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const baseClasses =
       'inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2 disabled:cursor-not-allowed';
 
+    // Determine if this is an icon-only button (no visible text content)
+    const isIconOnly = iconOnly || !Children.toArray(children).some(
+      (child) => typeof child === 'string' || (isValidElement(child) && child.props.className !== 'sr-only')
+    );
+
     return (
       <button
         ref={ref}
@@ -59,16 +66,16 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {loading && (
-          <span className="mr-2">
+          <span className={isIconOnly ? '' : 'mr-2'}>
             <Spinner size="sm" />
           </span>
         )}
         {!loading && icon && iconPosition === 'left' && (
-          <FontAwesomeIcon icon={icon} className="mr-2 h-4 w-4" />
+          <FontAwesomeIcon icon={icon} className={`h-4 w-4 ${isIconOnly ? '' : 'mr-2'}`} />
         )}
         {children}
         {!loading && icon && iconPosition === 'right' && (
-          <FontAwesomeIcon icon={icon} className="ml-2 h-4 w-4" />
+          <FontAwesomeIcon icon={icon} className={`h-4 w-4 ${isIconOnly ? '' : 'ml-2'}`} />
         )}
       </button>
     );
