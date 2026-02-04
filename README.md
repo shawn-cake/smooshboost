@@ -2,8 +2,6 @@
 
 **Smoosh & Boost Images** — A browser-based image optimization suite for digital marketing agencies.
 
-![SmooshBoost](public/favicon.svg)
-
 ## Overview
 
 SmooshBoost combines best-in-class lossless compression techniques with SEO metadata optimization. The tool follows a two-phase workflow:
