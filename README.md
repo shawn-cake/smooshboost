@@ -57,9 +57,33 @@ cd smooshboost
 # Install dependencies
 npm install
 
+# Set up environment variables (see below)
+cp .env.example .env.local
+
 # Start development server
 npm run dev
 ```
+
+### TinyPNG API Key Setup
+
+SmooshBoost uses the [TinyPNG API](https://tinypng.com/developers) for superior PNG compression. The API key is **not included** in this repository for security reasons.
+
+**To enable TinyPNG compression:**
+
+1. Get a free API key at [tinypng.com/developers](https://tinypng.com/developers) (500 free compressions/month)
+2. Copy the example environment file:
+   ```bash
+   cp .env.example .env.local
+   ```
+3. Edit `.env.local` and add your API key:
+   ```
+   TINYPNG_API_KEY=your_api_key_here
+   ```
+4. Restart the development server
+
+**Without an API key:** PNG compression will automatically fall back to OxiPNG (local WASM-based compression). This still provides good results but TinyPNG typically achieves better compression ratios.
+
+> **Security Note:** Never commit API keys to version control. The `.env.local` file is gitignored by default.
 
 ### Build for Production
 
