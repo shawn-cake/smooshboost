@@ -1,10 +1,18 @@
 import { memo } from 'react';
 import { faDownload, faTrash, faRotateRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button } from '../ui';
 import { StatusIndicator } from './StatusIndicator';
 import { ImageMetadataAccordion } from './ImageMetadataAccordion';
-import type { ImageItem, MetadataOptions } from '../../types';
+import type { ImageItem, MetadataOptions, OutputFormat } from '../../types';
 import { formatBytes, calculateSavingsPercentage } from '../../utils';
+
+// Format display labels for download button
+const FORMAT_LABELS: Record<OutputFormat, string> = {
+  png: 'PNG',
+  mozjpg: 'JPG',
+  webp: 'WebP',
+};
 
 interface QueueItemProps {
   image: ImageItem;
@@ -73,8 +81,8 @@ export const QueueItem = memo(function QueueItem({
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">{image.name}</p>
-          <p className="text-xs text-gray-500">
+          <p className="text-sm font-medium text-gray-900 truncate font-mono">{image.name}</p>
+          <p className="text-xs text-gray-500 font-mono">
             {formatBytes(image.originalSize)}
             {isComplete && image.compressedSize && (
               <>
@@ -86,7 +94,7 @@ export const QueueItem = memo(function QueueItem({
               </>
             )}
             {isError && image.error && (
-              <span className="text-red-500"> - {image.error}</span>
+              <span className="text-red-500 font-sans"> - {image.error}</span>
             )}
           </p>
         </div>
@@ -99,15 +107,15 @@ export const QueueItem = memo(function QueueItem({
         {/* Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {isComplete && (
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
+              type="button"
               onClick={onDownload}
-              icon={faDownload}
-              title="Download"
+              title={`Download as ${FORMAT_LABELS[image.outputFormat]}`}
+              className="inline-flex items-center gap-1.5 px-2 py-1.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-md transition-colors"
             >
-              <span className="sr-only">Download</span>
-            </Button>
+              <FontAwesomeIcon icon={faDownload} className="text-xs" />
+              <span className="font-mono text-xs font-medium">{FORMAT_LABELS[image.outputFormat]}</span>
+            </button>
           )}
           {isError && onRetry && (
             <Button

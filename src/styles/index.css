@@ -27,6 +27,7 @@
 
   /* Font family */
   --font-sans: 'Roboto', sans-serif;
+  --font-mono: 'Roboto Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
 
   /* Spacing (8px base) */
   --spacing-1: 4px;
@@ -38,6 +39,11 @@
   --spacing-8: 32px;
   --spacing-10: 40px;
   --spacing-12: 48px;
+}
+
+html {
+  /* Prevent layout shift when scrollbar appears/disappears */
+  overflow-y: scroll;
 }
 
 body {

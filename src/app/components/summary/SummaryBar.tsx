@@ -80,7 +80,7 @@ export function SummaryBar({
         <div className="flex items-center gap-6">
           <div>
             <p className="text-xs text-gray-500 uppercase tracking-wide">Images</p>
-            <p className="text-lg font-semibold text-gray-900">
+            <p className="text-lg font-semibold text-gray-900 font-mono">
               {completedCount}/{totalCount}
             </p>
           </div>
@@ -91,7 +91,7 @@ export function SummaryBar({
 
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Original</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-lg font-semibold text-gray-900 font-mono">
                   {formatBytes(savings.originalSize)}
                 </p>
               </div>
@@ -100,7 +100,7 @@ export function SummaryBar({
 
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Compressed</p>
-                <p className="text-lg font-semibold text-green-600">
+                <p className="text-lg font-semibold text-green-600 font-mono">
                   {formatBytes(savings.compressedSize)}
                 </p>
               </div>
@@ -109,7 +109,7 @@ export function SummaryBar({
 
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Saved</p>
-                <p className="text-lg font-semibold text-green-600">
+                <p className="text-lg font-semibold text-green-600 font-mono">
                   {savings.percentage}%
                 </p>
               </div>

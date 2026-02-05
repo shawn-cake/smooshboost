@@ -1,7 +1,6 @@
 import { useCallback, useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCloudUploadAlt, faFileImage } from '@fortawesome/free-solid-svg-icons';
-import { Button } from '../ui';
 
 interface UploadZoneProps {
   onFilesSelected: (files: File[]) => void;
@@ -18,17 +17,24 @@ export function UploadZone({
 }: UploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounterRef = useRef(0);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(true);
+    dragCounterRef.current++;
+    if (dragCounterRef.current === 1) {
+      setIsDragging(true);
+    }
   }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(false);
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragging(false);
+    }
   }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -40,6 +46,7 @@ export function UploadZone({
     (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      dragCounterRef.current = 0;
       setIsDragging(false);
 
       if (disabled) return;
@@ -69,21 +76,24 @@ export function UploadZone({
     [onFilesSelected]
   );
 
-  const handleButtonClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
-
   const remaining = maxFiles - currentCount;
   const isAtLimit = remaining <= 0;
 
+  const handleContainerClick = useCallback(() => {
+    if (!disabled && !isAtLimit) {
+      fileInputRef.current?.click();
+    }
+  }, [disabled, isAtLimit]);
+
   return (
     <div
+      onClick={handleContainerClick}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
       className={`
-        relative border-2 border-dashed rounded-lg p-8 text-center transition-colors
+        relative border-2 border-dashed rounded-lg pt-12 pb-16 px-8 text-center transition-colors
         ${
           isDragging
             ? 'border-primary-500 bg-primary-50'
@@ -102,7 +112,7 @@ export function UploadZone({
         className="hidden"
       />
 
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center gap-5">
         <div
           className={`
             w-16 h-16 rounded-full flex items-center justify-center
@@ -116,23 +126,15 @@ export function UploadZone({
         </div>
 
         <div>
-          <p className="text-gray-700 font-medium">
-            {isDragging ? 'Drop images here' : 'Drag & drop images here'}
+          <p className="text-gray-700 font-medium text-2xl">
+            Upload Images
           </p>
-          <p className="text-gray-500 text-sm mt-1">
-            or click to browse (PNG, JPG)
+          <p className="text-gray-500 text-sm mt-2">
+            Drag and drop or click to browse (PNG, JPG only)
           </p>
         </div>
 
-        <Button
-          variant="secondary"
-          onClick={handleButtonClick}
-          disabled={disabled || isAtLimit}
-        >
-          Select Files
-        </Button>
-
-        <p className="text-gray-400 text-xs">
+        <p className="text-gray-400 text-xs mt-1">
           {isAtLimit
             ? `Maximum ${maxFiles} images reached`
             : `Up to ${remaining} more image${remaining !== 1 ? 's' : ''} (max 5MB each)`}

@@ -382,7 +382,7 @@ Error Light:     #FEE2E2  (error backgrounds)
 │ │   Current: 35.5951° N, 82.5515° W                          │ │
 │ │                                                             │ │
 │ │ ☑ Add copyright notice                                     │ │
-│ │   [© 2026 Client Name. All rights reserved.]               │ │
+│ │   [© 2026 Cake Websites. All rights reserved.]               │ │
 │ │                                                             │ │
 │ │ ☐ Add title & description (Image SEO)                      │ │
 │ └─────────────────────────────────────────────────────────────┘ │

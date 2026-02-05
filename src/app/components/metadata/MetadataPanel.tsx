@@ -56,7 +56,7 @@ export function MetadataPanel({
         <span className="text-base font-semibold text-gray-800">
           Boost Options
         </span>
-        <span className="text-sm text-gray-500">({enabledCount}/3)</span>
+        <span className="text-sm text-gray-500 font-mono">({enabledCount}/3)</span>
       </div>
 
       {/* Body - always visible */}

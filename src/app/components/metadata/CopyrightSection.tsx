@@ -51,7 +51,7 @@ export function CopyrightSection({
               type="text"
               value={copyright.text}
               onChange={(e) => onCopyrightChange({ ...copyright, text: e.target.value })}
-              placeholder="© 2026 Client Name. All rights reserved."
+              placeholder="© 2026 Cake Websites. All rights reserved."
               maxLength={MAX_COPYRIGHT_LENGTH + 50}
               disabled={disabled}
               readOnly={disabled}
@@ -82,7 +82,7 @@ export function CopyrightSection({
               type="text"
               value={copyright.author}
               onChange={(e) => onCopyrightChange({ ...copyright, author: e.target.value })}
-              placeholder="Photographer or company name"
+              placeholder="Company name, photographer name, artist name, etc."
               maxLength={MAX_AUTHOR_LENGTH + 20}
               disabled={disabled}
               readOnly={disabled}

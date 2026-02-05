@@ -102,7 +102,7 @@ export function ImageMetadataAccordion({
           <span className="text-sm font-medium text-gray-700">
             Boost Options
           </span>
-          <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
+          <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full font-mono">
             {enabledCount}/3
           </span>
           <FontAwesomeIcon

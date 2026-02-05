@@ -77,7 +77,7 @@ export function TitleDescSection({
               onChange={(e) =>
                 onTitleDescChange({ ...titleDesc, title: e.target.value })
               }
-              placeholder="Professional landscape photo by Cake Agency"
+              placeholder="Professional landscape photo by Cake Websites"
               disabled={disabled}
               readOnly={disabled}
               className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-md
@@ -102,7 +102,7 @@ export function TitleDescSection({
               onChange={(e) =>
                 onTitleDescChange({ ...titleDesc, description: e.target.value })
               }
-              placeholder="High-quality image optimized for web performance and local SEO"
+              placeholder="High-quality image of the Blue Ridge Mountains landscape looking west during sunset in Autumn."
               rows={3}
               disabled={disabled}
               readOnly={disabled}

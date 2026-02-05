@@ -20,6 +20,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Roboto Mono font** - Loaded from Google Fonts for monospace UI elements. Files: `index.html`, `src/styles/index.css`.
+- **Download button format label** - Per-image download button now shows output format (PNG, JPG, WebP) next to icon. Files: `src/app/components/queue/QueueItem.tsx`.
+
+### Changed
+- **Upload zone redesign** - Simplified uploader with "Upload Images" title (24px), clickable container (removed Select Files button), and improved drag-and-drop stability using counter-based approach. Increased bottom padding to 64px for better whitespace balance. Files: `src/app/components/upload/UploadZone.tsx`.
+- **Monospace typography** - Applied `font-mono` to file names, file sizes, savings percentages, coordinates, progress counters, and metadata counts for better data readability. Files: `src/app/components/queue/QueueItem.tsx`, `src/app/components/summary/SummaryBar.tsx`, `src/app/components/processing/ProcessingButtons.tsx`, `src/app/components/metadata/MetadataPanel.tsx`, `src/app/components/queue/ImageMetadataAccordion.tsx`.
+
+### Fixed
+- **Scrollbar layout shift** - Added `overflow-y: scroll` to html element to prevent content shift when scrollbar appears/disappears. Files: `src/styles/index.css`.
+
+### Previously Added
 - **README.md** for GitHub repository with project overview, features, and usage guide. Files: `README.md`.
 - **Magic byte file validation** - Two-layer security validation (MIME type + magic byte verification) to prevent spoofed file uploads. Files: `src/app/hooks/useFileValidation.ts`.
 - **Metadata text sanitization** - Control character removal and length limits for all metadata fields (title: 100, description: 500, copyright: 200, author: 150). Files: `src/app/services/metadata/metadataInjector.ts`.

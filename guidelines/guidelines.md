@@ -493,7 +493,7 @@ Extract from URL patterns:
 ```
 ☑ Add copyright notice
 
-  [© 2026 Client Name. All rights reserved.______]
+  [© 2026 Cake Websites. All rights reserved.______]
 
   Variables: {year} {client}
   12 / 160 characters
@@ -501,7 +501,7 @@ Extract from URL patterns:
 
 **Input Field:**
 - Type: Text input, full width
-- Placeholder: "© 2026 Client Name. All rights reserved."
+- Placeholder: "© 2026 Cake Websites. All rights reserved."
 - Max length: 160 characters
 - Character counter: `X / 160 characters` (Gray 500, 12px)
 
@@ -537,14 +537,14 @@ Extract from URL patterns:
 
 **Title Field:**
 - Type: Text input, full width
-- Placeholder: "Professional landscape photo by Cake Agency"
+- Placeholder: "Professional landscape photo by Cake Websites"
 - Max length: 60 characters (soft limit, SEO recommendation)
 - Character counter: `X / 60 characters (recommended max)` (Gray 500, 12px)
 - Counter turns Yellow 700 if >60, Error Red if >100
 
 **Description Field:**
 - Type: Textarea, 3 rows
-- Placeholder: "High-quality image optimized for web performance and local SEO"
+- Placeholder: "High-quality image of the Blue Ridge Mountains landscape looking west during sunset in Autumn."
 - Max length: 160 characters (soft limit)
 - Character counter: `X / 160 characters (recommended max)` (Gray 500, 12px)
 - Counter turns Yellow 700 if >160, Error Red if >300

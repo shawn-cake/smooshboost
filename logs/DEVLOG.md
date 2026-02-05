@@ -15,13 +15,13 @@ A narrative chronicle of the project journey - the decisions, discoveries, and p
 
 ## Current Context
 
-**Last Updated:** 2026-02-04
+**Last Updated:** 2026-02-05
 
 ### Project State
 - **Project:** SmooshBoost
 - **Version:** v0.0.1
 - **Active Branch:** `main`
-- **Phase:** Production-Ready - Security audit complete, performance optimized
+- **Phase:** Production-Ready - UI polish complete, ready for deployment
 
 ### Current Objectives
 - [x] Implement TinyPNG API integration
@@ -36,6 +36,7 @@ A narrative chronicle of the project journey - the decisions, discoveries, and p
 - [x] **README.md** - GitHub repository documentation
 - [x] **Security Audit** - API key secured, magic byte validation, metadata sanitization
 - [x] **Performance Optimization** - Dynamic WASM imports, React.memo, TypeScript 5.9
+- [x] **Typography polish** - Roboto Mono for data elements, format labels on download buttons
 - [ ] Deploy to production
 
 ### Known Risks & Blockers
@@ -45,6 +46,25 @@ A narrative chronicle of the project journey - the decisions, discoveries, and p
 ---
 
 ## Daily Log - Newest First
+
+### 2026-02-05: Typography Polish & UI Refinements
+
+**The Situation:** With SmooshBoost feature-complete and security-audited, we focused on UI polish to improve the visual hierarchy and data readability.
+
+**The Challenge:** Technical data like file sizes, percentages, and coordinates were displayed in the same font as body text, making them harder to scan. Additionally, the download button didn't indicate what format the file would be downloaded as.
+
+**The Decision:** Implemented three improvements:
+1. **Roboto Mono font** - Added to Google Fonts import and CSS theme for monospace elements
+2. **Monospace data elements** - Applied `font-mono` to file names, sizes, savings percentages, coordinates, progress counters, and metadata counts
+3. **Format-aware download button** - Per-image download now shows format label (PNG, JPG, WebP) next to the download icon
+
+**Why This Matters:** Monospace fonts improve data readability by ensuring consistent character widths. Users can quickly scan file sizes and percentages. The format label on download buttons provides clarity about what format each image will be downloaded as.
+
+**The Fix:** Also resolved a layout shift issue where content would jump when the scrollbar appeared. Added `overflow-y: scroll` to the html element to always reserve scrollbar space.
+
+**Files Changed:** `index.html`, `src/styles/index.css`, `src/app/components/queue/QueueItem.tsx`, `src/app/components/summary/SummaryBar.tsx`, `src/app/components/processing/ProcessingButtons.tsx`, `src/app/components/metadata/MetadataPanel.tsx`, `src/app/components/queue/ImageMetadataAccordion.tsx`
+
+---
 
 ### 2026-02-04: Security & Performance Audit - Production Hardening
 

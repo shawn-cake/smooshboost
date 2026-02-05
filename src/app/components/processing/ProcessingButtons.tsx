@@ -37,7 +37,7 @@ export function ProcessingButtons({
             />
             <span>Compressing images...</span>
           </div>
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-gray-700 font-mono">
             {compressProgress.current} of {compressProgress.total}
           </span>
         </div>
