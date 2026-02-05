@@ -54,7 +54,7 @@ Upload → [Auto-Compress] → [🚀 Boost Options per image] → [Apply Metadat
 |------------|-------|
 | Max batch size | 20 images |
 | Max file size | 5 MB per image |
-| Supported inputs | PNG, JPG, JPEG |
+| Supported inputs | PNG, JPG, JPEG, WebP |
 | Supported outputs | PNG, WebP, MozJPG |
 | TinyPNG free quota | 500/month |
 

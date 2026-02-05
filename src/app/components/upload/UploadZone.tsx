@@ -105,7 +105,7 @@ export function UploadZone({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/png,image/jpeg,image/jpg"
+        accept="image/png,image/jpeg,image/jpg,image/webp"
         multiple
         onChange={handleFileSelect}
         disabled={disabled || isAtLimit}
@@ -130,7 +130,7 @@ export function UploadZone({
             Upload Images
           </p>
           <p className="text-gray-500 text-sm mt-2">
-            Drag and drop or click to browse (PNG, JPG only)
+            Drag and drop or click to browse (PNG, JPG, WebP)
           </p>
         </div>
 

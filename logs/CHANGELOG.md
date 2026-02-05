@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **WebP import/upload support** - WebP files can now be imported for both compression and metadata injection workflows. Includes magic byte validation (RIFF/WEBP headers), MIME type detection, and format routing. WebP inputs are compressed to optimized WebP output when "Keep Original" format mode is selected. Files: `src/app/types.ts`, `src/app/hooks/useFileValidation.ts`, `src/app/utils/detectFormat.ts`, `src/app/components/upload/UploadZone.tsx`.
 - **Roboto Mono font** - Loaded from Google Fonts for monospace UI elements. Files: `index.html`, `src/styles/index.css`.
 - **Download button format label** - Per-image download button now shows output format (PNG, JPG, WebP) next to icon. Files: `src/app/components/queue/QueueItem.tsx`.
 

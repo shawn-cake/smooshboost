@@ -66,7 +66,7 @@ npm run dev
 
 ### TinyPNG API Key Setup
 
-SmooshBoost uses the [TinyPNG API](https://tinypng.com/developers) for superior PNG compression. The API key is **not included** in this repository for security reasons.
+SmooshBoost uses the [TinyPNG API](https://tinypng.com/developers) for optimal PNG compression. The API key is **not included** in this repository for security reasons.
 
 **To enable TinyPNG compression:**
 

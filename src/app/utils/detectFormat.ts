@@ -14,6 +14,10 @@ export function detectInputFormat(file: File): InputFormat | null {
     return 'jpg';
   }
 
+  if (type === 'image/webp') {
+    return 'webp';
+  }
+
   return null;
 }
 

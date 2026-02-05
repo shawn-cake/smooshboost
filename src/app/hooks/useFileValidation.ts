@@ -7,16 +7,19 @@ import { formatBytes } from '../utils';
  * Magic bytes for supported image formats
  * PNG: 89 50 4E 47 0D 0A 1A 0A (8 bytes)
  * JPEG: FF D8 FF (3 bytes)
+ * WebP: 52 49 46 46 (RIFF) + 57 45 42 50 (WEBP) at bytes 8-11
  */
 const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 const JPEG_MAGIC = [0xff, 0xd8, 0xff];
+const RIFF_MAGIC = [0x52, 0x49, 0x46, 0x46]; // "RIFF"
+const WEBP_MAGIC = [0x57, 0x45, 0x42, 0x50]; // "WEBP"
 
 /**
  * Validates file magic bytes to ensure it's a real image
  */
 async function validateMagicBytes(file: File): Promise<boolean> {
   try {
-    const buffer = await file.slice(0, 8).arrayBuffer();
+    const buffer = await file.slice(0, 12).arrayBuffer();
     const bytes = new Uint8Array(buffer);
 
     // Check for PNG magic bytes
@@ -26,6 +29,11 @@ async function validateMagicBytes(file: File): Promise<boolean> {
     // Check for JPEG magic bytes
     const isJPEG = JPEG_MAGIC.every((byte, i) => bytes[i] === byte);
     if (isJPEG) return true;
+
+    // Check for WebP magic bytes (RIFF header at 0-3, WEBP at 8-11)
+    const isRIFF = RIFF_MAGIC.every((byte, i) => bytes[i] === byte);
+    const isWEBP = WEBP_MAGIC.every((byte, i) => bytes[i + 8] === byte);
+    if (isRIFF && isWEBP) return true;
 
     return false;
   } catch {
@@ -45,7 +53,7 @@ export function useFileValidation() {
 
     // Check file type (MIME type - fast but can be spoofed)
     if (!VALID_MIME_TYPES.includes(file.type)) {
-      errors.push(`"${file.name}" is not a valid image format (PNG or JPG only)`);
+      errors.push(`"${file.name}" is not a valid image format (PNG, JPG, or WebP only)`);
     }
 
     // Check file size

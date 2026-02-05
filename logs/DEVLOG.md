@@ -47,6 +47,30 @@ A narrative chronicle of the project journey - the decisions, discoveries, and p
 
 ## Daily Log - Newest First
 
+### 2026-02-05: WebP Import Support Added
+
+**The Situation:** SmooshBoost already supported WebP as an output format for compression and metadata injection, but users could not import WebP files as input. This limited the tool's usefulness for workflows involving existing WebP images.
+
+**The Challenge:** Adding WebP input support required updates across multiple layers: file validation (magic bytes), type definitions, format detection, and UI messaging.
+
+**The Decision:** Implemented full WebP import support with the same security validation as PNG/JPG:
+1. **Magic byte validation** - Added RIFF/WEBP header verification (bytes 0-3 for RIFF, bytes 8-11 for WEBP)
+2. **InputFormat type** - Extended to include 'webp' alongside 'png' and 'jpg'
+3. **MIME type validation** - Added 'image/webp' to valid types
+4. **Format routing** - WebP inputs route to WebP output when "Keep Original" mode is selected
+5. **UI updates** - Upload zone now accepts and displays WebP support
+
+**Why This Matters:** Users can now bring existing WebP images into SmooshBoost for re-compression (optimization) and metadata injection. This completes the format support matrix - all three modern web image formats (PNG, JPG, WebP) are now supported as both input and output.
+
+**Technical Notes:**
+- WebP magic bytes use a 12-byte check: RIFF header at bytes 0-3, WEBP signature at bytes 8-11
+- No changes needed to compression service - jSquash already supports WebP input via canvas decoding
+- Metadata injection for WebP was already fully implemented
+
+**Files Changed:** `src/app/types.ts`, `src/app/hooks/useFileValidation.ts`, `src/app/utils/detectFormat.ts`, `src/app/components/upload/UploadZone.tsx`, `guidelines/smooshboost-quick-reference.md`, `guidelines/smooshboost-technical-spec.md`, `guidelines/smooshboost-project-knowledge.md`
+
+---
+
 ### 2026-02-05: Typography Polish & UI Refinements
 
 **The Situation:** With SmooshBoost feature-complete and security-audited, we focused on UI polish to improve the visual hierarchy and data readability.

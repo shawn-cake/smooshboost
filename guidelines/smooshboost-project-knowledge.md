@@ -125,7 +125,7 @@ INPUT IMAGE
 - **File picker button** - Secondary method ("Select Files")
 - **URL import** - Bulk URLs in a textarea (one URL per line)
 - **Batch limit:** 20 images maximum per session
-- **Supported input formats:** PNG, JPG, JPEG
+- **Supported input formats:** PNG, JPG, JPEG, WebP
 - **Security validation:** Two-layer validation (MIME type + magic byte verification)
 
 ### 2. Output Format Selection

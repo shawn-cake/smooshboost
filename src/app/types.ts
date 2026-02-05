@@ -1,5 +1,5 @@
 // Input format detected from file MIME type
-export type InputFormat = 'png' | 'jpg';
+export type InputFormat = 'png' | 'jpg' | 'webp';
 
 // Output format user selects
 export type OutputFormat = 'png' | 'mozjpg' | 'webp';
@@ -190,7 +190,7 @@ export interface MetadataSummary {
 // Validation constants
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 export const MAX_BATCH_SIZE = 20;
-export const VALID_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
+export const VALID_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
 
 // Format options for the selector (no descriptions - keep it clean)
 export const FORMAT_OPTIONS: FormatOption[] = [
@@ -215,7 +215,16 @@ export const FORMAT_OPTIONS: FormatOption[] = [
  * Maps input format to the matching output format
  * JPG input -> MozJPG output (optimized JPEG)
  * PNG input -> PNG output (optimized PNG)
+ * WebP input -> WebP output (optimized WebP)
  */
 export function getMatchingOutputFormat(inputFormat: InputFormat): OutputFormat {
-  return inputFormat === 'jpg' ? 'mozjpg' : 'png';
+  switch (inputFormat) {
+    case 'jpg':
+      return 'mozjpg';
+    case 'webp':
+      return 'webp';
+    case 'png':
+    default:
+      return 'png';
+  }
 }

@@ -162,7 +162,7 @@ interface ImageItem {
   sourceUrl: string | null;                // Source URL (null if uploaded)
   filename: string;                        // Original filename
   originalSize: number;                    // Size in bytes
-  inputFormat: 'png' | 'jpg';              // Detected input format
+  inputFormat: 'png' | 'jpg' | 'webp';     // Detected input format
   outputFormat: 'png' | 'mozjpg' | 'webp'; // Target output format
 
   // Processing state
@@ -1151,11 +1151,13 @@ File validation uses a two-layer approach for security:
 ```typescript
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_BATCH_SIZE = 20;
-const VALID_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
+const VALID_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
 
 // Magic bytes for format verification
 const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]; // PNG header
 const JPEG_MAGIC = [0xff, 0xd8, 0xff]; // JPEG header
+const RIFF_MAGIC = [0x52, 0x49, 0x46, 0x46]; // "RIFF" for WebP
+const WEBP_MAGIC = [0x57, 0x45, 0x42, 0x50]; // "WEBP" at bytes 8-11
 
 interface ValidationResult {
   valid: boolean;
@@ -1166,14 +1168,19 @@ interface ValidationResult {
  * Validates file magic bytes to prevent spoofed file extensions
  */
 async function validateMagicBytes(file: File): Promise<boolean> {
-  const buffer = await file.slice(0, 8).arrayBuffer();
+  const buffer = await file.slice(0, 12).arrayBuffer();
   const bytes = new Uint8Array(buffer);
 
   const isPNG = PNG_MAGIC.every((byte, i) => bytes[i] === byte);
   if (isPNG) return true;
 
   const isJPEG = JPEG_MAGIC.every((byte, i) => bytes[i] === byte);
-  return isJPEG;
+  if (isJPEG) return true;
+
+  // Check for WebP (RIFF header at 0-3, WEBP at 8-11)
+  const isRIFF = RIFF_MAGIC.every((byte, i) => bytes[i] === byte);
+  const isWEBP = WEBP_MAGIC.every((byte, i) => bytes[i + 8] === byte);
+  return isRIFF && isWEBP;
 }
 
 async function validateFile(file: File): Promise<ValidationResult> {
@@ -1184,7 +1191,7 @@ async function validateFile(file: File): Promise<ValidationResult> {
   }
 
   if (!VALID_TYPES.includes(file.type)) {
-    errors.push(`"${file.name}" is not a supported format (PNG or JPG only)`);
+    errors.push(`"${file.name}" is not a supported format (PNG, JPG, or WebP only)`);
   }
 
   // Verify magic bytes match claimed type
