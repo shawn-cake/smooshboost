@@ -1,6 +1,3 @@
-import { encode as encodeJpeg } from '@jsquash/jpeg';
-import { encode as encodeWebp } from '@jsquash/webp';
-import { optimise as optimisePng } from '@jsquash/oxipng';
 import { decodeImageToImageData } from '../../utils/fileHelpers';
 import type { OutputFormat, CompressionEngine } from '../../types';
 
@@ -42,7 +39,39 @@ const OXIPNG_OPTIONS = {
 };
 
 /**
+ * Dynamically imports and encodes image as MozJPEG
+ */
+async function encodeToJpeg(imageData: ImageData): Promise<ArrayBuffer> {
+  const { encode } = await import('@jsquash/jpeg');
+  return encode(imageData, MOZJPEG_OPTIONS);
+}
+
+/**
+ * Dynamically imports and encodes image as WebP
+ */
+async function encodeToWebp(imageData: ImageData): Promise<ArrayBuffer> {
+  const { encode } = await import('@jsquash/webp');
+  return encode(imageData, WEBP_OPTIONS);
+}
+
+/**
+ * Dynamically imports and optimizes PNG with OxiPNG
+ * Returns ArrayBuffer for consistent typing with other encoders
+ */
+async function optimizePng(pngBuffer: ArrayBuffer): Promise<ArrayBuffer> {
+  const { optimise } = await import('@jsquash/oxipng');
+  // oxipng accepts ArrayBuffer directly
+  const result = await optimise(pngBuffer, OXIPNG_OPTIONS);
+  // Copy result to a new ArrayBuffer (avoids SharedArrayBuffer issues in TS 5.9)
+  const resultArray = new Uint8Array(result);
+  const outputBuffer = new ArrayBuffer(resultArray.byteLength);
+  new Uint8Array(outputBuffer).set(resultArray);
+  return outputBuffer;
+}
+
+/**
  * Compresses an image using the appropriate jSquash codec
+ * Codecs are dynamically imported to reduce initial bundle size
  */
 export async function compressWithSquoosh(
   file: File,
@@ -54,22 +83,22 @@ export async function compressWithSquoosh(
   const imageData = await decodeImageToImageData(file);
   console.log(`[Compression] Decoded: ${imageData.width}x${imageData.height}`);
 
-  let resultData: ArrayBuffer | Uint8Array;
+  let resultData: ArrayBuffer;
   let mimeType: string;
   let engine: CompressionEngine;
 
   switch (outputFormat) {
     case 'mozjpg': {
-      // Encode as MozJPEG with Squoosh defaults
-      resultData = await encodeJpeg(imageData, MOZJPEG_OPTIONS);
+      // Dynamically load and encode as MozJPEG
+      resultData = await encodeToJpeg(imageData);
       mimeType = 'image/jpeg';
       engine = 'mozjpeg';
       break;
     }
 
     case 'webp': {
-      // Encode as WebP
-      resultData = await encodeWebp(imageData, WEBP_OPTIONS);
+      // Dynamically load and encode as WebP
+      resultData = await encodeToWebp(imageData);
       mimeType = 'image/webp';
       engine = 'webp';
       break;
@@ -98,11 +127,9 @@ export async function compressWithSquoosh(
         );
       });
 
-      // Convert to ArrayBuffer and optimize with oxipng
+      // Convert to ArrayBuffer and dynamically load oxipng
       const pngBuffer = await pngBlob.arrayBuffer();
-      const optimizedPng = await optimisePng(new Uint8Array(pngBuffer), OXIPNG_OPTIONS);
-      // oxipng returns Uint8Array, ensure we have proper data
-      resultData = optimizedPng;
+      resultData = await optimizePng(pngBuffer);
       mimeType = 'image/png';
       engine = 'oxipng';
       break;

@@ -93,9 +93,11 @@ export async function injectPngMetadata(
     filteredChunks.splice(newIendIndex, 0, ...textChunks);
   }
 
-  // Re-encode PNG
+  // Re-encode PNG - copy to new ArrayBuffer for Blob constructor (TS 5.9 compatibility)
   const newPngData = encode(filteredChunks);
-  const newBlob = new Blob([newPngData], { type: 'image/png' });
+  const pngArrayBuffer = new ArrayBuffer(newPngData.byteLength);
+  new Uint8Array(pngArrayBuffer).set(newPngData);
+  const newBlob = new Blob([pngArrayBuffer], { type: 'image/png' });
 
   return { blob: newBlob, applied, warnings };
 }

@@ -97,8 +97,8 @@ function App() {
         return;
       }
 
-      // Filter valid files and show errors for invalid ones
-      const { valid, errors } = filterValidFiles(files);
+      // Filter valid files and show errors for invalid ones (includes magic byte check)
+      const { valid, errors } = await filterValidFiles(files);
 
       if (errors.length > 0) {
         errors.forEach((error) => toast.error(error));
@@ -223,26 +223,29 @@ function App() {
       <Header />
 
       <main className="max-w-[720px] mx-auto px-6 py-8 space-y-6 flex-1 w-full">
-        {/* Upload Zone */}
-        <UploadZone
-          onFilesSelected={handleFilesSelected}
-          disabled={isProcessing}
-          maxFiles={MAX_BATCH_SIZE}
-          currentCount={images.length}
-        />
-
-        {/* Format Selector with Boost Only toggle - hidden when images in queue */}
-        {images.length === 0 && (
-          <FormatSelector
-            formatMode={formatMode}
-            onFormatModeChange={setFormatMode}
-            convertFormat={convertFormat}
-            onConvertFormatChange={setConvertFormat}
+        {/* Upload Section Container */}
+        <div className="bg-primary-50 border border-primary-200 rounded-lg p-5 space-y-5">
+          {/* Upload Zone */}
+          <UploadZone
+            onFilesSelected={handleFilesSelected}
             disabled={isProcessing}
-            boostOnly={boostOnly}
-            onBoostOnlyChange={setBoostOnly}
+            maxFiles={MAX_BATCH_SIZE}
+            currentCount={images.length}
           />
-        )}
+
+          {/* Format Selector with Boost Only toggle - hidden when images in queue */}
+          {images.length === 0 && (
+            <FormatSelector
+              formatMode={formatMode}
+              onFormatModeChange={setFormatMode}
+              convertFormat={convertFormat}
+              onConvertFormatChange={setConvertFormat}
+              disabled={isProcessing}
+              boostOnly={boostOnly}
+              onBoostOnlyChange={setBoostOnly}
+            />
+          )}
+        </div>
 
         {/* Image Queue */}
         {images.length > 0 && (

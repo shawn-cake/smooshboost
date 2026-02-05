@@ -21,7 +21,7 @@ A narrative chronicle of the project journey - the decisions, discoveries, and p
 - **Project:** SmooshBoost
 - **Version:** v0.0.1
 - **Active Branch:** `main`
-- **Phase:** v1.0 Feature Complete - Smoosh + Boost workflow ready
+- **Phase:** Production-Ready - Security audit complete, performance optimized
 
 ### Current Objectives
 - [x] Implement TinyPNG API integration
@@ -34,15 +34,43 @@ A narrative chronicle of the project journey - the decisions, discoveries, and p
 - [x] **Read-only mode after Apply Metadata** - With Reset button to re-edit
 - [x] **Format conversion summary** - Shows output format breakdown in SummaryBar
 - [x] **README.md** - GitHub repository documentation
+- [x] **Security Audit** - API key secured, magic byte validation, metadata sanitization
+- [x] **Performance Optimization** - Dynamic WASM imports, React.memo, TypeScript 5.9
 - [ ] Deploy to production
 
 ### Known Risks & Blockers
-- TinyPNG API key currently in vite.config.ts (dev-only); needs serverless function for production
+- TinyPNG API key now in `.env.local` - needs serverless function for production (key not exposed to client)
 - PNG format does not support GPS coordinates - warning shown to users
 
 ---
 
 ## Daily Log - Newest First
+
+### 2026-02-04: Security & Performance Audit - Production Hardening
+
+**The Situation:** With SmooshBoost feature-complete, we needed to audit for security vulnerabilities and performance optimizations before production deployment.
+
+**The Challenge:** The audit revealed a critical security issue - the TinyPNG API key was hardcoded in `vite.config.ts`. Additionally, file validation relied only on MIME types (easily spoofed), and there were opportunities for bundle optimization.
+
+**The Decision:** Implemented five priority improvements:
+1. **CRITICAL: API Key Security** - Rotated the compromised key, moved to `.env.local`, used `loadEnv()` in Vite config, ran `git filter-branch` to remove key from history
+2. **Magic byte validation** - Added actual file content verification (PNG: `89 50 4E 47`, JPEG: `FF D8 FF`) to prevent spoofed uploads
+3. **Metadata sanitization** - Added text sanitization with character limits (title: 100, description: 500, copyright: 200, author: 150) to prevent malformed data
+4. **Dynamic WASM imports** - Changed @jsquash imports from static to dynamic to reduce initial bundle by ~20KB
+5. **React.memo optimization** - Wrapped QueueItem in memo() with useCallback handlers to prevent cascading re-renders
+
+**Why This Matters:** Security audit found a production-blocking issue. API keys in source control can lead to unauthorized usage and billing. Magic byte validation prevents malicious file uploads disguised as images.
+
+**Technical Notes:**
+- TypeScript 5.9 introduced stricter `ArrayBuffer`/`Uint8Array` typing requiring explicit buffer copies
+- File validation is now async (Promise-based) for magic byte reading
+- Metadata sanitization strips control characters (0x00-0x1F, 0x7F) while preserving newlines in descriptions
+
+**The Result:** Production-ready security posture with improved performance characteristics. Bundle size reduced, re-render cascades eliminated, and all user inputs sanitized.
+
+**Files Changed:** `vite.config.ts`, `.env.local`, `.env.example`, `README.md`, `package.json`, `src/app/hooks/useFileValidation.ts`, `src/app/services/metadata/metadataInjector.ts`, `src/app/services/compression/squooshService.ts`, `src/app/services/metadata/pngMetadata.ts`, `src/app/components/queue/QueueItem.tsx`, `src/app/components/queue/ImageQueue.tsx`, `src/app/App.tsx`, `guidelines/`
+
+---
 
 ### 2026-02-04: Completing the Boost Phase - v1.0 Feature Complete
 

@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **README.md** for GitHub repository with project overview, features, and usage guide. Files: `README.md`.
+- **Magic byte file validation** - Two-layer security validation (MIME type + magic byte verification) to prevent spoofed file uploads. Files: `src/app/hooks/useFileValidation.ts`.
+- **Metadata text sanitization** - Control character removal and length limits for all metadata fields (title: 100, description: 500, copyright: 200, author: 150). Files: `src/app/services/metadata/metadataInjector.ts`.
 - **Boost Phase** - Complete metadata injection system with geo-tagging, copyright, author, title, and description. Files: `src/app/services/metadata/`, `src/app/hooks/useMetadataInjection.ts`.
 - **Per-image metadata** - Each image has its own 🚀 Boost Options accordion with individual metadata controls. Files: `src/app/components/queue/ImageMetadataAccordion.tsx`, `src/app/components/metadata/`.
 - **Auto-compression** - Images compress automatically on upload (no button click required). Files: `src/app/hooks/useCompression.ts`, `src/app/App.tsx`.
@@ -46,6 +48,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Single image downloads directly instead of as ZIP. Files: `src/app/App.tsx`.
 - Header padding-top increased to `var(--spacing-12)`. Files: `src/app/components/layout/Header.tsx`.
 - Updated guidelines documents to match current workflow. Files: `guidelines/smooshboost-quick-reference.md`, `guidelines/smooshboost-project-knowledge.md`, `guidelines/smooshboost-technical-spec.md`.
+- **Dynamic WASM imports** - Compression codecs (@jsquash/jpeg, @jsquash/webp, @jsquash/oxipng) are now dynamically imported to reduce initial bundle size. Files: `src/app/services/compression/squooshService.ts`.
+- **React.memo optimization** - QueueItem component uses React.memo with useCallback handlers to prevent unnecessary re-renders. Files: `src/app/components/queue/QueueItem.tsx`, `src/app/components/queue/ImageQueue.tsx`.
+- **TypeScript 5.9** - Upgraded from 5.6.2 to 5.9.3 with stricter ArrayBuffer typing. Files: `package.json`, `src/app/services/compression/squooshService.ts`, `src/app/services/metadata/pngMetadata.ts`.
+- **TinyPNG API key security** - Moved API key from hardcoded value to environment variable via .env.local. Files: `vite.config.ts`, `.env.local`, `.env.example`, `README.md`.
+- **UI container styling** - Upload Zone and Format Selector wrapped in light blue container with border. Files: `src/app/App.tsx`.
 
 ### Removed
 - Explicit "Compress Images" button (replaced with auto-compression). Files: `src/app/App.tsx`.

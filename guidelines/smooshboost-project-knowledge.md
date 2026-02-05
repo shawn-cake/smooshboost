@@ -126,6 +126,7 @@ INPUT IMAGE
 - **URL import** - Bulk URLs in a textarea (one URL per line)
 - **Batch limit:** 20 images maximum per session
 - **Supported input formats:** PNG, JPG, JPEG
+- **Security validation:** Two-layer validation (MIME type + magic byte verification)
 
 ### 2. Output Format Selection
 - PNG → PNG (TinyPNG)
@@ -209,11 +210,13 @@ Collapsible panel (collapsed by default) with checkbox-enabled options.
 - Text field for copyright notice
 - Template variables: `{year}`, `{client}`
 - Example: "© {year} {client}. All rights reserved."
-- Character counter: X / 160 characters
+- Character limit: 200 characters (copyright), 150 characters (author)
+- Text is sanitized to remove control characters before injection
 
 #### Title & Description
-- Title field: 60 character soft limit (SEO recommendation)
-- Description textarea: 160 character soft limit
+- Title field: 60 character soft limit (SEO recommendation), 100 character max
+- Description textarea: 160 character soft limit, 500 character max
+- Text is sanitized to remove control characters (newlines/tabs preserved in description)
 - Character counters with color indicators:
   - Normal: Gray
   - Over soft limit: Yellow 700

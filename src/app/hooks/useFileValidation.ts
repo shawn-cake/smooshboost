@@ -4,16 +4,46 @@ import { MAX_FILE_SIZE, MAX_BATCH_SIZE, VALID_MIME_TYPES } from '../types';
 import { formatBytes } from '../utils';
 
 /**
+ * Magic bytes for supported image formats
+ * PNG: 89 50 4E 47 0D 0A 1A 0A (8 bytes)
+ * JPEG: FF D8 FF (3 bytes)
+ */
+const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+const JPEG_MAGIC = [0xff, 0xd8, 0xff];
+
+/**
+ * Validates file magic bytes to ensure it's a real image
+ */
+async function validateMagicBytes(file: File): Promise<boolean> {
+  try {
+    const buffer = await file.slice(0, 8).arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+
+    // Check for PNG magic bytes
+    const isPNG = PNG_MAGIC.every((byte, i) => bytes[i] === byte);
+    if (isPNG) return true;
+
+    // Check for JPEG magic bytes
+    const isJPEG = JPEG_MAGIC.every((byte, i) => bytes[i] === byte);
+    if (isJPEG) return true;
+
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Hook for validating files before upload
  */
 export function useFileValidation() {
   /**
-   * Validates a single file
+   * Validates a single file (synchronous checks only)
    */
-  const validateFile = useCallback((file: File): ValidationResult => {
+  const validateFileSync = useCallback((file: File): ValidationResult => {
     const errors: string[] = [];
 
-    // Check file type
+    // Check file type (MIME type - fast but can be spoofed)
     if (!VALID_MIME_TYPES.includes(file.type)) {
       errors.push(`"${file.name}" is not a valid image format (PNG or JPG only)`);
     }
@@ -32,7 +62,36 @@ export function useFileValidation() {
   }, []);
 
   /**
-   * Validates a batch of files
+   * Validates a single file with magic byte verification (async)
+   */
+  const validateFile = useCallback(
+    async (file: File): Promise<ValidationResult> => {
+      const errors: string[] = [];
+
+      // Run synchronous checks first
+      const syncResult = validateFileSync(file);
+      errors.push(...syncResult.errors);
+
+      // If sync checks passed, verify magic bytes
+      if (syncResult.valid) {
+        const validMagicBytes = await validateMagicBytes(file);
+        if (!validMagicBytes) {
+          errors.push(
+            `"${file.name}" appears to be corrupted or is not a valid image file`
+          );
+        }
+      }
+
+      return {
+        valid: errors.length === 0,
+        errors,
+      };
+    },
+    [validateFileSync]
+  );
+
+  /**
+   * Validates a batch of files (checks batch limit only, sync)
    */
   const validateBatch = useCallback(
     (files: File[], existingCount: number): ValidationResult => {
@@ -47,30 +106,31 @@ export function useFileValidation() {
         );
       }
 
-      // Validate each file
-      for (const file of files) {
-        const fileResult = validateFile(file);
-        errors.push(...fileResult.errors);
-      }
-
       return {
         valid: errors.length === 0,
         errors,
       };
     },
-    [validateFile]
+    []
   );
 
   /**
-   * Filters valid files from a list
+   * Filters valid files from a list with magic byte verification (async)
    */
   const filterValidFiles = useCallback(
-    (files: File[]): { valid: File[]; errors: string[] } => {
+    async (files: File[]): Promise<{ valid: File[]; errors: string[] }> => {
       const valid: File[] = [];
       const errors: string[] = [];
 
-      for (const file of files) {
-        const result = validateFile(file);
+      // Validate all files in parallel for better performance
+      const validationResults = await Promise.all(
+        files.map(async (file) => ({
+          file,
+          result: await validateFile(file),
+        }))
+      );
+
+      for (const { file, result } of validationResults) {
         if (result.valid) {
           valid.push(file);
         } else {
@@ -85,6 +145,7 @@ export function useFileValidation() {
 
   return {
     validateFile,
+    validateFileSync,
     validateBatch,
     filterValidFiles,
     MAX_FILE_SIZE,

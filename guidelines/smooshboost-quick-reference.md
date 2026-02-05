@@ -174,10 +174,10 @@ Upload → [Auto-Compress] → [🚀 Boost Options per image] → [Apply Metadat
 
 | Layer | Tech |
 |-------|------|
-| Frontend | React 18 + TypeScript |
+| Frontend | React 18 + TypeScript 5.9 |
 | Styling | Tailwind CSS |
 | Build | Vite |
-| Compression | TinyPNG + @aspect-image/squoosh |
+| Compression | TinyPNG + @jsquash libraries (MozJPEG, OxiPNG, WebP via WASM) |
 | Metadata (JPG) | piexifjs (EXIF writing) |
 | Metadata (PNG) | png-chunk-text (tEXt chunks) |
 | Metadata (WebP) | node-webpmux (EXIF chunks) |

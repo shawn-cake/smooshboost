@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { faDownload, faTrash, faRotateRight } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '../ui';
 import { StatusIndicator } from './StatusIndicator';
@@ -21,7 +22,11 @@ interface QueueItemProps {
   boostOnly?: boolean;
 }
 
-export function QueueItem({
+/**
+ * QueueItem component wrapped in React.memo for performance optimization.
+ * Prevents unnecessary re-renders when other items in the queue update.
+ */
+export const QueueItem = memo(function QueueItem({
   image,
   onDownload,
   onRemove,
@@ -146,4 +151,4 @@ export function QueueItem({
       )}
     </div>
   );
-}
+});

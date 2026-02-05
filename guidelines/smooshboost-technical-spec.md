@@ -37,10 +37,10 @@ SmooshBoost follows a streamlined processing pipeline with auto-compression and 
 
 | Layer | Technology |
 |-------|------------|
-| Frontend Framework | React 18 with TypeScript |
+| Frontend Framework | React 18 with TypeScript 5.9 |
 | Build Tool | Vite |
 | Styling | Tailwind CSS |
-| Compression | @jsquash libraries (MozJPEG, OxiPNG, WebP via WASM) |
+| Compression | @jsquash libraries (MozJPEG, OxiPNG, WebP via WASM) - dynamically imported |
 | Metadata (JPG/WebP) | piexifjs (EXIF writing) |
 | Metadata (PNG) | png-chunk-text, png-chunks-encode, png-chunks-extract (tEXt chunks) |
 | Geo Parsing | Google Maps link regex (no API required) |
@@ -794,6 +794,49 @@ function buildExifData(metadata: {
 
 ---
 
+### Metadata Text Sanitization
+
+All text metadata is sanitized before injection to prevent malformed data and ensure compatibility:
+
+```typescript
+/**
+ * Maximum character limits for metadata fields
+ * Based on IPTC/XMP standards and SEO best practices
+ */
+const METADATA_LIMITS = {
+  title: 100,       // IPTC recommends 64, Google indexes ~70
+  description: 500, // IPTC allows 2000, SEO recommends 150-160
+  copyright: 200,   // No standard, 200 is sufficient
+  author: 150,      // Handles long business/photographer names
+};
+
+/**
+ * Sanitizes text for safe metadata injection:
+ * - Removes control characters (0x00-0x1F, 0x7F)
+ * - Optionally preserves newlines/tabs for descriptions
+ * - Normalizes multiple spaces to single space
+ * - Trims whitespace and enforces max length
+ */
+function sanitizeText(
+  text: string,
+  maxLength: number,
+  allowNewlines = false
+): string {
+  let sanitized = text;
+
+  if (allowNewlines) {
+    sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  } else {
+    sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, ' ');
+  }
+
+  sanitized = sanitized.replace(/  +/g, ' ');
+  return sanitized.trim().slice(0, maxLength);
+}
+```
+
+---
+
 ### Combined Metadata Injection (All Formats)
 
 ```javascript
@@ -1101,27 +1144,55 @@ function skipBoostPhase(images: ImageItem[]): ImageItem[] {
 
 ## File Validation
 
+File validation uses a two-layer approach for security:
+1. **MIME type validation** - Quick check of file.type
+2. **Magic byte validation** - Verifies actual file content matches expected format
+
 ```typescript
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_BATCH_SIZE = 20;
 const VALID_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
+
+// Magic bytes for format verification
+const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]; // PNG header
+const JPEG_MAGIC = [0xff, 0xd8, 0xff]; // JPEG header
 
 interface ValidationResult {
   valid: boolean;
   errors: string[];
 }
 
-function validateFile(file: File): ValidationResult {
+/**
+ * Validates file magic bytes to prevent spoofed file extensions
+ */
+async function validateMagicBytes(file: File): Promise<boolean> {
+  const buffer = await file.slice(0, 8).arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+
+  const isPNG = PNG_MAGIC.every((byte, i) => bytes[i] === byte);
+  if (isPNG) return true;
+
+  const isJPEG = JPEG_MAGIC.every((byte, i) => bytes[i] === byte);
+  return isJPEG;
+}
+
+async function validateFile(file: File): Promise<ValidationResult> {
   const errors: string[] = [];
-  
+
   if (file.size > MAX_FILE_SIZE) {
     errors.push(`"${file.name}" exceeds 5MB limit (${formatBytes(file.size)})`);
   }
-  
+
   if (!VALID_TYPES.includes(file.type)) {
     errors.push(`"${file.name}" is not a supported format (PNG or JPG only)`);
   }
-  
+
+  // Verify magic bytes match claimed type
+  const validMagicBytes = await validateMagicBytes(file);
+  if (!validMagicBytes) {
+    errors.push(`"${file.name}" file content does not match its extension`);
+  }
+
   return {
     valid: errors.length === 0,
     errors
@@ -1374,3 +1445,5 @@ interface AppNotification {
 4. **Memory management:** Revoke object URLs when no longer needed
 5. **Lazy metadata:** Only inject if options are enabled
 6. **Progress indication:** Update UI during long operations
+7. **Dynamic WASM imports:** Compression codecs (@jsquash/jpeg, @jsquash/webp, @jsquash/oxipng) are dynamically imported at runtime to reduce initial bundle size
+8. **React.memo optimization:** QueueItem component uses React.memo with useCallback handlers to prevent unnecessary re-renders when other queue items update
