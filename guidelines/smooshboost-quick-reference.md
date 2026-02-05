@@ -7,12 +7,7 @@ An image optimization suite for digital marketing agencies. Compress images for 
 
 ---
 
-## Workflow Modes
-
-| Mode | Flow | Use Case |
-|------|------|----------|
-| **Smoosh + Boost** (default) | Upload → Auto-Compress → Per-Image Metadata → Download | Full optimization |
-| **Boost Only** | Upload → Per-Image Metadata → Download | Metadata only (no compression) |
+## Workflow
 
 ## Streamlined Workflow
 
@@ -70,7 +65,6 @@ Upload → [Auto-Compress] → [🚀 Boost Options per image] → [Apply Metadat
 **Upload**
 - [x] Drag and drop
 - [x] File picker
-- [x] Boost Only toggle (skip compression)
 
 **Smoosh (Compression)**
 - [x] Auto-compression on upload
@@ -102,7 +96,7 @@ Upload → [Auto-Compress] → [🚀 Boost Options per image] → [Apply Metadat
 
 1. **Header** — Logo + info tooltip (top right)
 2. **Upload Zone** — Drag/drop + file picker
-3. **Format Selector** — Format mode + Boost Only toggle (hidden when images in queue)
+3. **Format Selector** — Format mode (hidden when images in queue)
 4. **Queue** — Images with status, savings, 🚀 Boost accordion per image
 5. **Processing Status** — Compression progress bar
 6. **Summary Bar** — Total savings + format conversion info

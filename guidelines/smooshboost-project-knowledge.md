@@ -16,20 +16,11 @@ Provide an efficient, agency-focused interface for batch image optimization that
 
 ---
 
-## Workflow Modes
+## Workflow
 
-SmooshBoost supports two workflow modes:
-
-### Mode 1: Smoosh + Boost (Default)
 Complete optimization: auto-compress images, then optionally add metadata per image.
 ```
 Upload → [Auto-Compress] → [🚀 Boost per image] → Download
-```
-
-### Mode 2: Boost Only
-Metadata only, skip compression (keeps original format/quality).
-```
-Upload → [🚀 Boost per image] → Download
 ```
 
 ---
@@ -62,11 +53,11 @@ WORKFLOW DIAGRAM
 
 Upload Images
     ↓
-[FORMAT SELECTOR + BOOST ONLY TOGGLE]
+[FORMAT SELECTOR]
 (hidden once images are in queue)
     ↓
 ┌─────────────────────────────────────────────┐
-│ [AUTO-COMPRESS] (if not Boost Only)         │
+│ [AUTO-COMPRESS]                             │
 │ Compression starts automatically            │
 │ Progress shown in status bar                │
 │ Metadata stripped (clean slate)             │
@@ -175,7 +166,7 @@ Below compression details, show metadata status:
 - Chevron indicator for expand/collapse state
 
 ### 4. Metadata Options Panel (Boost Phase)
-Collapsible panel (collapsed by default) with toggle-enabled options.
+Collapsible panel (collapsed by default) with checkbox-enabled options.
 
 #### Metadata Application Modes
 
@@ -363,9 +354,6 @@ Error Light:     #FEE2E2  (error backgrounds)
 │ SmooshBoost              [minimal branding]                     │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│ WORKFLOW MODE TOGGLE                                            │
-│ Mode: ● Smoosh + Boost   ○ Smoosh Only   ○ Boost Only          │
-│                                                                 │
 │ UPLOAD ZONE                                                     │
 │ ┌─────────────────────────────────────────────────────────────┐ │
 │ │                                                             │ │
@@ -376,13 +364,8 @@ Error Light:     #FEE2E2  (error backgrounds)
 │ │  ▸ Import from URLs                                         │ │
 │ └─────────────────────────────────────────────────────────────┘ │
 │                                                                 │
-│ BOOST-ONLY MODE INDICATOR (when active)                         │
-│ ┌─────────────────────────────────────────────────────────────┐ │
-│ │ ℹ️ Compression skipped - Images will keep original format   │ │
-│ └─────────────────────────────────────────────────────────────┘ │
-│                                                                 │
 │ PROCESSING BUTTONS                                              │
-│ [Compress Images] → [Add Metadata (Boost)] [Skip & Download]   │
+│ [Add Metadata (Boost)] [Skip & Download]                       │
 │                                                                 │
 │ METADATA OPTIONS (collapsible, collapsed by default)            │
 │ ┌─────────────────────────────────────────────────────────────┐ │

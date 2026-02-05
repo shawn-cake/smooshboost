@@ -16,17 +16,17 @@ SmooshBoost follows a streamlined processing pipeline with auto-compression and 
                     Size reduction     GPS, Copyright
 ```
 
-### Workflow Modes
+### Workflow
 
-| Mode | Smoosh Phase | Boost Phase | Use Case |
-|------|-------------|-------------|----------|
-| **Smoosh + Boost** (Default) | ✅ Auto | ✅ Per-image | Full optimization |
-| **Boost Only** | ❌ | ✅ Per-image | Metadata only (keeps original format) |
+| Phase | Description |
+|-------|-------------|
+| **Smoosh** | ✅ Auto-compress on upload |
+| **Boost** | ✅ Per-image metadata injection |
 
 ### Streamlined Processing
 
 1. **Upload** — Files added to queue
-2. **Auto-Compress** — Compression starts automatically (unless Boost Only mode)
+2. **Auto-Compress** — Compression starts automatically
 3. **Per-Image Boost** — Each image has a 🚀 accordion with metadata options
 4. **Apply Metadata** — Click per image, fields become read-only
 5. **Download** — Individual or ZIP download
@@ -945,7 +945,7 @@ function getCompressionEngine(
 The processing pipeline is now split into two explicit steps that require user action:
 
 ```typescript
-// Step 1: Compression (Smoosh Phase) - triggered by "Compress Images" button
+// Step 1: Compression (Smoosh Phase) - automatic on upload
 async function compressImages(
   images: ImageItem[],
   state: AppState,
@@ -1244,11 +1244,8 @@ src/
 │   ├── App.tsx
 │   ├── components/
 │   │   ├── Header.tsx
-│   │   ├── WorkflowModeToggle.tsx          # NEW: Smoosh+Boost / Smoosh Only / Boost Only
-│   │   ├── BoostOnlyIndicator.tsx          # NEW: Info banner for Boost Only mode
-│   │   ├── ProcessingButtons/              # NEW: Two-step button controls
+│   │   ├── ProcessingButtons/              # Button controls
 │   │   │   ├── ProcessingButtons.tsx
-│   │   │   ├── CompressButton.tsx
 │   │   │   ├── BoostButton.tsx
 │   │   │   └── SkipDownloadButton.tsx
 │   │   ├── UploadZone/
@@ -1258,7 +1255,7 @@ src/
 │   │   │   └── UrlImportPanel.tsx
 │   │   ├── MetadataPanel/
 │   │   │   ├── MetadataPanel.tsx
-│   │   │   ├── MetadataApplicationToggle.tsx # NEW: Apply to All / Per Image toggle
+│   │   │   ├── MetadataApplicationSelector.tsx # Apply to All / Per Image selector
 │   │   │   ├── GeoTagSection.tsx
 │   │   │   ├── GoogleMapsLinkParser.tsx    # NEW: Parse coords from Maps URLs
 │   │   │   ├── CopyrightSection.tsx

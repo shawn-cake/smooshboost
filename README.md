@@ -1,6 +1,6 @@
 # SmooshBoost
 
-**Smoosh & Boost Images** — A browser-based image optimization suite for digital marketing agencies.
+**Smoosh & Boost Images** — A browser-based image optimization suite for Cake Website, a digital marketing agency.
 
 ## Overview
 
@@ -11,7 +11,7 @@ SmooshBoost combines best-in-class lossless compression techniques with SEO meta
 
 ## Features
 
-### 🗜️ Compression (Smoosh Phase)
+### Compression (Smoosh Phase)
 - **MozJPEG** — Superior JPEG compression with quality preservation
 - **OxiPNG** — Lossless PNG optimization
 - **WebP** — Modern format with excellent compression ratios
@@ -19,14 +19,14 @@ SmooshBoost combines best-in-class lossless compression techniques with SEO meta
 - **Batch processing** up to 20 images at once
 - **Client-side processing** — Your images never leave your browser
 
-### 🚀 Metadata Injection (Boost Phase)
+### Metadata Injection (Boost Phase)
 - **Geo-tagging** — Add GPS coordinates for local SEO (JPG/WebP only)
 - **Copyright & Author** — Proper attribution embedded in image files
 - **Title & Description** — SEO-optimized metadata for image search
 - **Per-image configuration** — Customize metadata for each image individually
 - **Apply to All** — Copy settings across your entire batch
 
-### 📦 Output Options
+### Output Options
 - **Format conversion** — Convert between JPG, PNG, and WebP
 - **Individual downloads** — Download images one at a time
 - **ZIP export** — Download all images in a single archive
@@ -51,7 +51,7 @@ SmooshBoost combines best-in-class lossless compression techniques with SEO meta
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/smooshboost.git
+git clone https://github.com/shawn-cake/smooshboost.git
 cd smooshboost
 
 # Install dependencies
@@ -70,29 +70,22 @@ npm run preview
 
 ## Usage
 
-1. **Upload images** — Drag & drop or click to select (supports JPG, PNG, WebP)
+1. **Upload images** — Drag & drop or click to select (supports JPG, PNG)
 2. **Compression starts automatically** — Watch progress in the queue
-3. **Configure Boost options** — Click the 🚀 accordion on each image
+3. **Configure Boost options** — Click the accordion on each image
 4. **Apply metadata** — Click "Apply Metadata" for each image
 5. **Download** — Get individual files or download all as ZIP
-
-### Workflow Modes
-
-| Mode | Description |
-|------|-------------|
-| **Smoosh + Boost** (default) | Compress images, then add metadata |
-| **Boost Only** | Add metadata without compression |
 
 ## Format Support
 
 | Feature | JPG/MozJPG | PNG | WebP |
 |---------|------------|-----|------|
-| Compression | ✅ | ✅ | ✅ |
-| Geo-tagging | ✅ | ❌ | ✅ |
-| Copyright | ✅ | ✅ | ✅ |
-| Author | ✅ | ✅ | ✅ |
-| Title | ✅ | ✅ | ✅ |
-| Description | ✅ | ✅ | ✅ |
+| Compression | Yes | Yes | Yes |
+| Geo-tagging | Yes | No | Yes |
+| Copyright | Yes | Yes | Yes |
+| Author | Yes | Yes | Yes |
+| Title | Yes | Yes | Yes |
+| Description | Yes | Yes | Yes |
 
 ## Project Structure
 
@@ -122,12 +115,3 @@ smooshboost/
 ## License
 
 MIT License — See [LICENSE](LICENSE) for details.
-
-## Contributing
-
-Contributions are welcome! Please read the guidelines in the `guidelines/` directory before submitting PRs.
-
----
-
-Built with ❤️ for digital marketing agencies
-
