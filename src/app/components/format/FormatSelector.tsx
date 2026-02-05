@@ -99,7 +99,7 @@ export function FormatSelector({
       {/* Boost Only explanation */}
       {boostOnly && (
         <p className="text-center text-sm text-gray-500">
-          <span className="font-medium text-primary-500">No Compression</span> — Images will only receive metadata (Boost)
+          <span className="font-medium text-primary-500">No Compression</span> — Images will only receive metadata
         </p>
       )}
     </div>
