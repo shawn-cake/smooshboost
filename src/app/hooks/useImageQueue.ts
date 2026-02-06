@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import type { ImageItem, OutputFormat, Savings, FormatMode } from '../types';
 import { getMatchingOutputFormat, DEFAULT_METADATA_OPTIONS } from '../types';
 import { generateId, generateThumbnail, detectInputFormat } from '../utils';
+import { resetTinypngQuota } from '../services/compression/compressionRouter';
 
 /**
  * Hook for managing the image queue state
@@ -54,7 +55,7 @@ export function useImageQueue() {
           metadata: null,
           metadataWarnings: [],
           // Per-image metadata options (deep copy to avoid shared references)
-          metadataOptions: JSON.parse(JSON.stringify(DEFAULT_METADATA_OPTIONS)),
+          metadataOptions: structuredClone(DEFAULT_METADATA_OPTIONS),
         });
       }
 
@@ -110,9 +111,7 @@ export function useImageQueue() {
             ? img
             : {
                 ...img,
-                metadataOptions: JSON.parse(
-                  JSON.stringify(sourceImage.metadataOptions)
-                ),
+                metadataOptions: structuredClone(sourceImage.metadataOptions),
               }
         );
       });
@@ -125,6 +124,7 @@ export function useImageQueue() {
    */
   const clearQueue = useCallback(() => {
     setImages([]);
+    resetTinypngQuota();
   }, []);
 
   /**

@@ -51,104 +51,67 @@ SmooshBoost follows a streamlined processing pipeline with auto-compression and 
 
 ---
 
-## Design Tokens (Tailwind Config)
+## Design Tokens (Tailwind CSS v4)
 
-```javascript
-// tailwind.config.js
-module.exports = {
-  theme: {
-    extend: {
-      colors: {
-        // Primary Colors
-        primary: {
-          DEFAULT: '#4074A8',
-          50: '#EBF1F7',
-          100: '#D1E0EE',
-          200: '#A3C1DD',
-          700: '#2D5276',
-          900: '#1A3044',
-        },
-        accent: {
-          DEFAULT: '#F2A918',
-          50: '#FEF7E6',
-          100: '#FDE9B8',
-          700: '#B87D0E',
-        },
-        // Semantic Colors
-        success: {
-          DEFAULT: '#059669',
-          light: '#D1FAE5',
-        },
-        error: {
-          DEFAULT: '#DC2626',
-          light: '#FEE2E2',
-        },
-        // Grays
-        gray: {
-          50: '#F9FAFB',
-          100: '#F3F4F6',
-          200: '#E5E7EB',
-          300: '#D1D5DB',
-          400: '#9CA3AF',
-          500: '#6B7280',
-          600: '#4B5563',
-          700: '#374151',
-          800: '#1F2937',
-          900: '#111827',
-        }
-      },
-      fontFamily: {
-        sans: ['Roboto', '-apple-system', 'BlinkMacSystemFont', 'Inter', 'Segoe UI', 'sans-serif'],
-        mono: ['Roboto Mono', 'SF Mono', 'Fira Code', 'Consolas', 'monospace'],
-      },
-      fontSize: {
-        'xs': ['12px', { lineHeight: '16px', letterSpacing: '0.01em' }],
-        'sm': ['13px', { lineHeight: '20px' }],
-        'base': ['14px', { lineHeight: '22px' }],
-        'lg': ['16px', { lineHeight: '24px' }],
-        'xl': ['20px', { lineHeight: '28px', letterSpacing: '-0.01em' }],
-        '2xl': ['24px', { lineHeight: '32px', letterSpacing: '-0.02em' }],
-      },
-      fontWeight: {
-        normal: '400',
-        medium: '500',
-        semibold: '600',
-      },
-      borderRadius: {
-        'sm': '4px',
-        'DEFAULT': '6px',
-        'md': '8px',
-        'lg': '12px',
-      },
-      boxShadow: {
-        'sm': '0 1px 2px rgba(0, 0, 0, 0.05)',
-        'DEFAULT': '0 1px 3px rgba(0, 0, 0, 0.1)',
-        'md': '0 4px 6px rgba(0, 0, 0, 0.1)',
-        'lg': '0 10px 15px rgba(0, 0, 0, 0.1)',
-        'xl': '0 25px 50px rgba(0, 0, 0, 0.25)',
-      },
-      spacing: {
-        '1': '4px',
-        '2': '8px',
-        '3': '12px',
-        '4': '16px',
-        '5': '20px',
-        '6': '24px',
-        '8': '32px',
-        '10': '40px',
-        '12': '48px',
-      },
-      transitionDuration: {
-        'DEFAULT': '150ms',
-        '200': '200ms',
-      },
-      transitionTimingFunction: {
-        'DEFAULT': 'ease-in-out',
-      },
-    }
-  }
-}
-```
+> **Note:** This project uses **Tailwind CSS v4** with CSS-based theme configuration in `src/styles/index.css` (using `@theme` blocks), not a JavaScript `tailwind.config.js` file. The token values below are provided as reference.
+
+### Color Tokens
+
+| Token | Value |
+|-------|-------|
+| `--color-primary` | `#4074A8` |
+| `--color-primary-50` | `#EBF1F7` |
+| `--color-primary-100` | `#D1E0EE` |
+| `--color-primary-200` | `#A3C1DD` |
+| `--color-primary-700` | `#2D5276` |
+| `--color-primary-900` | `#1A3044` |
+| `--color-accent` | `#F2A918` |
+| `--color-accent-50` | `#FEF7E6` |
+| `--color-accent-100` | `#FDE9B8` |
+| `--color-accent-700` | `#B87D0E` |
+| `--color-success` | `#059669` |
+| `--color-success-light` | `#D1FAE5` |
+| `--color-error` | `#DC2626` |
+| `--color-error-light` | `#FEE2E2` |
+| `--color-gray-50` | `#F9FAFB` |
+| `--color-gray-100` | `#F3F4F6` |
+| `--color-gray-200` | `#E5E7EB` |
+| `--color-gray-300` | `#D1D5DB` |
+| `--color-gray-400` | `#9CA3AF` |
+| `--color-gray-500` | `#6B7280` |
+| `--color-gray-600` | `#4B5563` |
+| `--color-gray-700` | `#374151` |
+| `--color-gray-800` | `#1F2937` |
+| `--color-gray-900` | `#111827` |
+
+### Typography Tokens
+
+| Token | Value |
+|-------|-------|
+| `--font-sans` | `Roboto, -apple-system, BlinkMacSystemFont, Inter, Segoe UI, sans-serif` |
+| `--font-mono` | `Roboto Mono, SF Mono, Fira Code, Consolas, monospace` |
+| `--font-size-xs` | `12px` (line-height: 16px, letter-spacing: 0.01em) |
+| `--font-size-sm` | `13px` (line-height: 20px) |
+| `--font-size-base` | `14px` (line-height: 22px) |
+| `--font-size-lg` | `16px` (line-height: 24px) |
+| `--font-size-xl` | `20px` (line-height: 28px, letter-spacing: -0.01em) |
+| `--font-size-2xl` | `24px` (line-height: 32px, letter-spacing: -0.02em) |
+
+### Spacing, Radius, Shadow Tokens
+
+| Token | Value |
+|-------|-------|
+| `--radius-sm` | `4px` |
+| `--radius-DEFAULT` | `6px` |
+| `--radius-md` | `8px` |
+| `--radius-lg` | `12px` |
+| `--shadow-sm` | `0 1px 2px rgba(0, 0, 0, 0.05)` |
+| `--shadow-DEFAULT` | `0 1px 3px rgba(0, 0, 0, 0.1)` |
+| `--shadow-md` | `0 4px 6px rgba(0, 0, 0, 0.1)` |
+| `--shadow-lg` | `0 10px 15px rgba(0, 0, 0, 0.1)` |
+| `--shadow-xl` | `0 25px 50px rgba(0, 0, 0, 0.25)` |
+| `--transition-duration` | `150ms` |
+| `--transition-timing` | `ease-in-out` |
 
 ---
 
@@ -158,17 +121,15 @@ module.exports = {
 ```typescript
 interface ImageItem {
   id: string;                              // Unique identifier (UUID)
-  file: File | null;                       // Original file object (null if from URL)
-  sourceUrl: string | null;                // Source URL (null if uploaded)
-  filename: string;                        // Original filename
+  file: File;                              // Original file object
+  name: string;                            // Original filename
   originalSize: number;                    // Size in bytes
   inputFormat: 'png' | 'jpg' | 'webp';     // Detected input format
   outputFormat: 'png' | 'mozjpg' | 'webp'; // Target output format
 
   // Processing state
   status: ImageStatus;
-  phase: 'upload' | 'smoosh' | 'boost' | 'complete' | 'error';
-  engine: 'tinypng' | 'squoosh' | null;
+  engine: 'tinypng' | 'oxipng' | 'mozjpeg' | 'webp' | null;  // CompressionEngine type
 
   // Smoosh phase results
   compressedSize: number | null;
@@ -235,6 +196,7 @@ interface MetadataOptions {
   copyrightEnabled: boolean;
   copyright: {
     text: string;                // e.g., "© 2026 Client Name"
+    author: string;              // e.g., "Client Name"
   };
 
   titleDescEnabled: boolean;
@@ -246,40 +208,14 @@ interface MetadataOptions {
 ```
 
 ### App State
-```typescript
-interface AppState {
-  // Images
-  images: ImageItem[];
 
-  // Workflow mode
-  workflowMode: 'smoosh-boost' | 'smoosh-only' | 'boost-only';
-
-  // Processing state
-  isProcessing: boolean;
-  currentPhase: 'idle' | 'smoosh' | 'boost';
-  boostPhase: 'idle' | 'boosting' | 'complete' | 'error';
-
-  // API state
-  tinypngApiKey: string;
-  tinypngQuotaExhausted: boolean;
-  tinypngCompressionCount: number;
-
-  // Metadata options (global)
-  metadataOptions: MetadataOptions;
-
-  // Metadata application mode
-  metadataApplicationMode: 'apply-to-all' | 'per-image';
-
-  // Per-image metadata storage (when metadataApplicationMode === 'per-image')
-  perImageMetadata: Map<string, MetadataOptions>;  // Key = image.id
-
-  // UI state
-  metadataPanelExpanded: boolean;
-  urlImportExpanded: boolean;
-  expandedQueueItems: Set<string>;                  // Image IDs with expanded details
-  editingMetadataForImage: string | null;           // Image ID currently being edited
-}
-```
+> **Note:** There is no single `AppState` interface. State is managed via composable React hooks:
+> - `useImageQueue` — image list, add/remove/update operations
+> - `useCompression` — auto-compression on upload, engine routing, progress
+> - `useMetadataInjection` — per-image metadata injection via accordion UI
+> - `useDownload` — individual file download and ZIP archive generation
+>
+> Each hook encapsulates its own state and exposes actions/selectors to the `App.tsx` component.
 
 ### Client Preset (Future)
 ```typescript
@@ -459,33 +395,26 @@ async function geocodeAddress(address: string): Promise<GeoTag> {
 }
 ```
 
-### Squoosh Client-Side
+### @jsquash Client-Side Compression
 
-#### MozJPG Encoding
-```javascript
-const result = await encode(imageData, {
-  mozjpeg: {
-    quality: 75,
-  }
-});
+Compression codecs are dynamically imported from `@jsquash` packages (WASM-based, runs in browser):
+
+#### MozJPEG Encoding
+```typescript
+const { encode } = await import('@jsquash/jpeg');
+const result = await encode(imageData, { quality: 75, progressive: true, ... });
 ```
 
 #### WebP Encoding
-```javascript
-const result = await encode(imageData, {
-  webp: {
-    quality: 80,
-  }
-});
+```typescript
+const { encode } = await import('@jsquash/webp');
+const result = await encode(imageData, { quality: 75 });
 ```
 
-#### PNG Optimization (Fallback)
-```javascript
-const result = await encode(imageData, {
-  oxipng: {
-    level: 2,
-  }
-});
+#### OxiPNG Optimization (Fallback for PNG)
+```typescript
+const { optimise } = await import('@jsquash/oxipng');
+const result = await optimise(pngBuffer, { level: 2 });
 ```
 
 ---
@@ -717,80 +646,18 @@ async function injectPngTextMetadata(
 
 ---
 
-### WebP EXIF Chunk Injection (via node-webpmux)
+### WebP EXIF Chunk Injection (via RIFF chunk manipulation)
 
-WebP supports full EXIF metadata including GPS coordinates via EXIF chunk injection.
+WebP supports full EXIF metadata including GPS coordinates via EXIF chunk injection. The actual implementation performs manual binary RIFF chunk manipulation rather than using a library like `node-webpmux`:
 
-```javascript
-import WebP from 'node-webpmux';
+1. **Parse WebP RIFF container** to find or create the VP8X chunk
+2. **Build EXIF data** using piexifjs (via `buildExifBytes` from `jpgMetadata.ts`)
+3. **Remove existing EXIF chunks** to avoid duplicates
+4. **Set VP8X EXIF flag** to indicate EXIF data is present
+5. **Create VP8X chunk if missing** (required for simple lossy/lossless WebP files that lack extended features)
+6. **Inject new EXIF chunk** after the VP8X chunk in the RIFF container
 
-async function injectWebpExifMetadata(
-  webpBlob: Blob,
-  metadata: {
-    geoTag?: GeoTag;
-    copyright?: string;
-    title?: string;
-    description?: string;
-  }
-): Promise<Blob> {
-  const buffer = await webpBlob.arrayBuffer();
-  const image = new WebP.Image();
-  await image.load(Buffer.from(buffer));
-
-  // Build EXIF data structure
-  const exifData = buildExifData(metadata);
-
-  // Set EXIF chunk
-  await image.setExif(exifData);
-
-  // Save and return as blob
-  const outputBuffer = await image.save(null);
-  return new Blob([outputBuffer], { type: 'image/webp' });
-}
-
-function buildExifData(metadata: {
-  geoTag?: GeoTag;
-  copyright?: string;
-  title?: string;
-  description?: string;
-}): Buffer {
-  // Use piexifjs to build EXIF structure, then extract raw bytes
-  const exifObj = {
-    '0th': {},
-    'Exif': {},
-    'GPS': {},
-    '1st': {},
-    'thumbnail': null
-  };
-
-  if (metadata.copyright) {
-    exifObj['0th'][piexif.ImageIFD.Copyright] = metadata.copyright;
-  }
-
-  if (metadata.description) {
-    exifObj['0th'][piexif.ImageIFD.ImageDescription] = metadata.description;
-  }
-
-  if (metadata.title) {
-    exifObj['0th'][piexif.ImageIFD.XPTitle] = metadata.title;
-  }
-
-  if (metadata.geoTag) {
-    const latDMS = decimalToDMS(Math.abs(metadata.geoTag.latitude));
-    const lngDMS = decimalToDMS(Math.abs(metadata.geoTag.longitude));
-
-    exifObj.GPS = {
-      [piexif.GPSIFD.GPSLatitudeRef]: metadata.geoTag.latitude >= 0 ? 'N' : 'S',
-      [piexif.GPSIFD.GPSLatitude]: latDMS,
-      [piexif.GPSIFD.GPSLongitudeRef]: metadata.geoTag.longitude >= 0 ? 'E' : 'W',
-      [piexif.GPSIFD.GPSLongitude]: lngDMS,
-    };
-  }
-
-  const exifBytes = piexif.dump(exifObj);
-  return Buffer.from(exifBytes, 'binary');
-}
-```
+The EXIF payload itself is constructed using piexifjs (the same library used for JPG metadata), which builds a standard EXIF byte sequence containing GPS coordinates, copyright, title, and description fields. This EXIF byte sequence is then wrapped in a RIFF "EXIF" chunk and inserted into the WebP binary structure.
 
 ---
 
@@ -961,21 +828,25 @@ async function injectAllMetadata(
 
 ## Compression Routing
 
+Routing is based solely on the output format (not the input format):
+
 ```typescript
+type CompressionEngine = 'tinypng' | 'oxipng' | 'mozjpeg' | 'webp';
+
 function getCompressionEngine(
-  image: ImageItem, 
-  state: AppState
-): 'tinypng' | 'squoosh' {
-  const { inputFormat, outputFormat } = image;
-  const { tinypngQuotaExhausted } = state;
-  
-  // PNG to PNG: prefer TinyPNG unless quota exhausted
-  if (inputFormat === 'png' && outputFormat === 'png') {
-    return tinypngQuotaExhausted ? 'squoosh' : 'tinypng';
+  _inputFormat: InputFormat,
+  outputFormat: OutputFormat
+): CompressionEngine {
+  switch (outputFormat) {
+    case 'png':
+      return tinypngQuotaExhausted ? 'oxipng' : 'tinypng';
+    case 'mozjpg':
+      return 'mozjpeg';
+    case 'webp':
+      return 'webp';
+    default:
+      return 'webp';
   }
-  
-  // All other conversions: Squoosh
-  return 'squoosh';
 }
 ```
 
@@ -983,162 +854,32 @@ function getCompressionEngine(
 
 ## Processing Pipeline
 
-### Two-Step Workflow
+### Hook-Based Architecture
 
-The processing pipeline is now split into two explicit steps that require user action:
+The processing pipeline uses composable React hooks rather than batch processing functions:
 
-```typescript
-// Step 1: Compression (Smoosh Phase) - automatic on upload
-async function compressImages(
-  images: ImageItem[],
-  state: AppState,
-  callbacks: {
-    onImageStatusChange: (imageId: string, status: ImageStatus) => void;
-    onImageError: (imageId: string, error: string) => void;
-    onProgress: (completed: number, total: number) => void;
-  }
-): Promise<ImageItem[]> {
-  const { onImageStatusChange, onImageError, onProgress } = callbacks;
-  const results: ImageItem[] = [];
+#### `useCompression` Hook
+- **Auto-starts compression** when new images are added to the queue
+- Processes images **sequentially** (one at a time)
+- Uses `getCompressionEngine()` to select the appropriate engine based on output format
+- Updates each image's status (`compressing` -> `compressed` or `error`) as processing completes
+- Tracks TinyPNG quota exhaustion and falls back to OxiPNG for PNG output
 
-  for (let i = 0; i < images.length; i++) {
-    const image = images[i];
+#### `useMetadataInjection` Hook
+- Handles **per-image metadata injection** via the accordion UI in each queue item
+- Each image has its own "Boost" accordion (`ImageMetadataAccordion.tsx`) with metadata fields
+- User fills in metadata fields (geo-tag, copyright, title/description) per image
+- Clicking "Apply" on an individual image injects metadata and locks fields to read-only
+- There is **no batch boost button** -- each image is boosted independently
+- Boost errors are non-fatal: the compressed image remains downloadable without metadata
 
-    try {
-      onImageStatusChange(image.id, 'compressing');
+#### `useDownload` Hook
+- Provides individual file download per image
+- Provides ZIP archive download for all completed images via JSZip
 
-      const engine = getCompressionEngine(image, state);
-      let compressedBlob: Blob;
-
-      if (engine === 'tinypng') {
-        compressedBlob = await compressWithTinyPNG(image.file!, state.tinypngApiKey);
-      } else {
-        compressedBlob = await compressWithSquoosh(image.file!, image.outputFormat);
-      }
-
-      const compressedSize = compressedBlob.size;
-      onImageStatusChange(image.id, 'compressed');
-
-      results.push({
-        ...image,
-        status: 'compressed',
-        phase: 'smoosh',
-        engine,
-        compressedSize,
-        compressedBlob,
-        boostStatus: 'pending',
-      });
-    } catch (error) {
-      onImageError(image.id, error.message);
-      results.push({
-        ...image,
-        status: 'error',
-        phase: 'error',
-        error: error.message,
-      });
-    }
-
-    onProgress(i + 1, images.length);
-  }
-
-  return results;
-}
-
-// Step 2: Metadata Injection (Boost Phase) - triggered by "Add Metadata (Boost)" button
-async function boostImages(
-  images: ImageItem[],
-  state: AppState,
-  callbacks: {
-    onImageStatusChange: (imageId: string, status: ImageStatus, boostStatus: BoostStatus) => void;
-    onImageError: (imageId: string, error: string) => void;
-    onProgress: (completed: number, total: number) => void;
-  }
-): Promise<ImageItem[]> {
-  const { onImageStatusChange, onImageError, onProgress } = callbacks;
-  const results: ImageItem[] = [];
-
-  for (let i = 0; i < images.length; i++) {
-    const image = images[i];
-
-    // Skip images that weren't successfully compressed
-    if (image.status === 'error' || !image.compressedBlob) {
-      results.push(image);
-      onProgress(i + 1, images.length);
-      continue;
-    }
-
-    try {
-      onImageStatusChange(image.id, 'boosting', 'boosting');
-
-      // Get metadata for this image (global or per-image based on mode)
-      const metadata = getMetadataForImage(image.id, state);
-
-      // Validate format capabilities
-      const { warnings } = validateMetadataForFormat(metadata, image.outputFormat);
-
-      // Inject metadata (skip unsupported types)
-      const { blob: finalBlob, applied } = await injectAllMetadata(
-        image.compressedBlob,
-        image.outputFormat === 'mozjpg' ? 'jpg' : image.outputFormat,
-        metadata
-      );
-
-      onImageStatusChange(image.id, 'complete', 'boosted');
-
-      results.push({
-        ...image,
-        status: 'complete',
-        phase: 'complete',
-        boostStatus: 'boosted',
-        finalBlob,
-        metadata: applied,
-        metadataWarnings: warnings,
-      });
-    } catch (error) {
-      onImageError(image.id, error.message);
-      results.push({
-        ...image,
-        boostStatus: 'boost-failed',
-        boostError: error.message,
-        // Image still downloadable with compressed blob
-        finalBlob: image.compressedBlob,
-      });
-    }
-
-    onProgress(i + 1, images.length);
-  }
-
-  return results;
-}
-
-// Helper: Get metadata for specific image based on application mode
-function getMetadataForImage(imageId: string, state: AppState): MetadataOptions {
-  if (state.metadataApplicationMode === 'per-image') {
-    return state.perImageMetadata.get(imageId) || state.metadataOptions;
-  }
-  return state.metadataOptions;
-}
-
-// Helper: Save per-image metadata
-function savePerImageMetadata(
-  imageId: string,
-  metadata: MetadataOptions,
-  state: AppState
-): void {
-  state.perImageMetadata.set(imageId, metadata);
-}
-
-// Skip Boost - mark images as complete without metadata
-function skipBoostPhase(images: ImageItem[]): ImageItem[] {
-  return images.map(image => ({
-    ...image,
-    status: image.status === 'compressed' ? 'complete' : image.status,
-    phase: image.phase === 'smoosh' ? 'complete' : image.phase,
-    boostStatus: 'boost-skipped',
-    finalBlob: image.compressedBlob || image.finalBlob,
-  }));
-}
-```
+#### `useImageQueue` Hook
+- Manages the image list state (add, remove, update)
+- Tracks per-image status, metadata, and processing results
 
 ---
 
@@ -1320,61 +1061,67 @@ src/
 ├── main.tsx
 ├── app/
 │   ├── App.tsx
+│   ├── types.ts                           # All TypeScript types & constants
 │   ├── components/
-│   │   ├── Header.tsx
-│   │   ├── ProcessingButtons/              # Button controls
-│   │   │   ├── ProcessingButtons.tsx
-│   │   │   ├── BoostButton.tsx
-│   │   │   └── SkipDownloadButton.tsx
-│   │   ├── UploadZone/
-│   │   │   ├── UploadZone.tsx
-│   │   │   ├── DragDropArea.tsx
-│   │   │   ├── FilePickerButton.tsx
-│   │   │   └── UrlImportPanel.tsx
-│   │   ├── MetadataPanel/
-│   │   │   ├── MetadataPanel.tsx
-│   │   │   ├── MetadataApplicationSelector.tsx # Apply to All / Per Image selector
+│   │   ├── download/
+│   │   │   └── DownloadSection.tsx
+│   │   ├── format/
+│   │   │   └── FormatSelector.tsx         # Format mode + Boost Only toggle
+│   │   ├── layout/
+│   │   │   ├── Header.tsx
+│   │   │   └── Footer.tsx
+│   │   ├── metadata/
+│   │   │   ├── MetadataPanel.tsx           # Wrapper for metadata sections
 │   │   │   ├── GeoTagSection.tsx
-│   │   │   ├── GoogleMapsLinkParser.tsx    # NEW: Parse coords from Maps URLs
 │   │   │   ├── CopyrightSection.tsx
-│   │   │   ├── TitleDescSection.tsx
-│   │   │   ├── AddressAutocomplete.tsx     # Optional: Google Places API
-│   │   │   └── FormatWarningBanner.tsx     # NEW: Format compatibility warnings
-│   │   ├── ImageQueue/
+│   │   │   └── TitleDescSection.tsx
+│   │   ├── processing/
+│   │   │   └── ProcessingButtons.tsx       # Compression progress display
+│   │   ├── queue/
 │   │   │   ├── ImageQueue.tsx
-│   │   │   ├── ImageQueueItem.tsx
-│   │   │   ├── StatusBadge.tsx
-│   │   │   ├── MetadataStatusBadges.tsx    # NEW: Geo/Copyright/Title status badges
-│   │   │   ├── PerImageMetadataForm.tsx    # NEW: Inline per-image metadata form
-│   │   │   └── ExpandableMetadataDetails.tsx # NEW: Expandable full metadata view
-│   │   ├── SummaryBar.tsx                  # Updated: includes metadata summary
-│   │   ├── DownloadSection.tsx             # Updated: metadata indicators
-│   │   └── Notifications/
-│   │       ├── NotificationContainer.tsx
-│   │       └── NotificationToast.tsx
+│   │   │   ├── QueueItem.tsx              # Individual image in queue
+│   │   │   ├── StatusIndicator.tsx        # Status icon/spinner
+│   │   │   ├── MetadataStatusBadges.tsx   # Geo/Copyright/Title badges
+│   │   │   └── ImageMetadataAccordion.tsx # Per-image Boost accordion
+│   │   ├── summary/
+│   │   │   └── SummaryBar.tsx
+│   │   ├── ui/
+│   │   │   ├── Button.tsx
+│   │   │   ├── Select.tsx
+│   │   │   └── Spinner.tsx
+│   │   └── upload/
+│   │       └── UploadZone.tsx             # Drag/drop + file picker
 │   ├── hooks/
-│   │   ├── useImageQueue.ts
-│   │   ├── useWorkflowMode.ts              # NEW: Workflow mode state
-│   │   ├── useCompression.ts
-│   │   ├── useTinyPng.ts
-│   │   ├── useSquoosh.ts
-│   │   ├── useMetadataInjection.ts
-│   │   ├── usePerImageMetadata.ts          # NEW: Per-image metadata management
-│   │   ├── useGoogleMapsParser.ts          # NEW: Parse Maps links
-│   │   ├── useGeocode.ts                   # Optional: Google Places API
-│   │   └── useNotifications.ts
-│   ├── utils/
-│   │   ├── fileHelpers.ts
-│   │   ├── compressionRouter.ts
-│   │   ├── metadataInjector.ts
-│   │   ├── googleMapsParser.ts             # NEW: URL parsing utilities
-│   │   ├── geoHelpers.ts
-│   │   └── zipGenerator.ts
-│   └── types/
-│       └── index.ts
-├── workers/
-│   └── compression.worker.ts
-└── index.css
+│   │   ├── index.ts                       # Re-exports all hooks
+│   │   ├── useCompression.ts              # Auto-compression on upload
+│   │   ├── useDownload.ts                 # Individual & ZIP download
+│   │   ├── useFileValidation.ts           # MIME + magic byte validation
+│   │   ├── useImageQueue.ts               # Image state management
+│   │   └── useMetadataInjection.ts        # Per-image metadata injection
+│   ├── services/
+│   │   ├── compression/
+│   │   │   ├── compressionRouter.ts       # Engine selection & routing
+│   │   │   ├── squooshService.ts          # @jsquash WASM encoders
+│   │   │   └── tinypngService.ts          # TinyPNG API client
+│   │   ├── metadata/
+│   │   │   ├── metadataInjector.ts        # Format router & sanitization
+│   │   │   ├── jpgMetadata.ts             # EXIF injection via piexifjs
+│   │   │   ├── pngMetadata.ts             # tEXt chunk injection
+│   │   │   └── webpMetadata.ts            # RIFF/EXIF chunk injection
+│   │   └── download/
+│   │       └── zipService.ts              # ZIP archive generation
+│   └── utils/
+│       ├── detectFormat.ts                # MIME type detection
+│       ├── fileHelpers.ts                 # Thumbnails, downloads, decode
+│       ├── formatBytes.ts                 # Byte formatting
+│       ├── generateId.ts                  # UUID generation
+│       └── googleMapsParser.ts            # Google Maps URL parsing
+├── styles/
+│   └── index.css                          # Tailwind CSS v4 theme config
+├── types/
+│   └── metadata-libs.d.ts                 # Type defs for external libs
+└── test/
+    └── setup.ts                           # Test setup with mocks
 ```
 
 ---
@@ -1383,9 +1130,10 @@ src/
 
 ```env
 # .env
-VITE_TINYPNG_API_KEY=your_tinypng_key
-VITE_GOOGLE_PLACES_API_KEY=your_google_key  # Optional
+TINYPNG_API_KEY=your_tinypng_key
 ```
+
+> **Note:** The `TINYPNG_API_KEY` is loaded via `loadEnv` in `vite.config.ts` (not a `VITE_`-prefixed variable exposed to the client). In production, a Vercel serverless function at `api/tinypng/[...path].ts` proxies requests to the TinyPNG API, keeping the API key server-side.
 
 ---
 

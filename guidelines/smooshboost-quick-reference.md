@@ -12,13 +12,15 @@ An image optimization suite for digital marketing agencies. Compress images for 
 ## Streamlined Workflow
 
 ```
-Upload → [Auto-Compress] → [🚀 Boost Options per image] → [Apply Metadata] → Download
+Upload → [Auto-Compress] → [🚀 Boost per image] → Download
 ```
 
 | Phase | What Happens | Trigger |
 |-------|--------------|---------|
-| Smoosh | Auto-compress via Squoosh, strips existing metadata | Automatic on upload |
+| Smoosh | Auto-compress, strips existing metadata | Automatic on upload |
 | Boost | Configure geo-tags, copyright, title/description per image | Click 🚀 accordion |
+
+**Boost Only toggle:** A checkbox that skips compression entirely. When enabled, images go straight to the Boost phase without being compressed.
 
 ---
 
@@ -26,10 +28,15 @@ Upload → [Auto-Compress] → [🚀 Boost Options per image] → [Apply Metadat
 
 | Input | Output | Engine |
 |-------|--------|--------|
-| PNG | PNG | TinyPNG API (Squoosh fallback) |
-| PNG | WebP | Squoosh |
-| JPG | MozJPG | Squoosh |
-| JPG | WebP | Squoosh |
+| PNG | PNG | TinyPNG API (OxiPNG fallback) |
+| PNG | WebP | @jsquash/webp |
+| PNG | MozJPG | @jsquash/jpeg |
+| JPG | MozJPG | @jsquash/jpeg |
+| JPG | WebP | @jsquash/webp |
+| JPG | PNG | TinyPNG API (OxiPNG fallback) |
+| WebP | WebP | @jsquash/webp |
+| WebP | MozJPG | @jsquash/jpeg |
+| WebP | PNG | TinyPNG API (OxiPNG fallback) |
 
 ---
 
@@ -180,7 +187,7 @@ Upload → [Auto-Compress] → [🚀 Boost Options per image] → [Apply Metadat
 | Compression | TinyPNG + @jsquash libraries (MozJPEG, OxiPNG, WebP via WASM) |
 | Metadata (JPG) | piexifjs (EXIF writing) |
 | Metadata (PNG) | png-chunk-text (tEXt chunks) |
-| Metadata (WebP) | node-webpmux (EXIF chunks) |
+| Metadata (WebP) | Custom RIFF chunk manipulation (browser-native) |
 | Geo Parsing | Google Maps link regex (primary, no API) |
 | Geocoding | Google Places API (optional enhancement) |
 | ZIP | JSZip |
@@ -204,7 +211,7 @@ Original filename preserved. Extension changes if format changes:
 | Error | Cause | Type |
 |-------|-------|------|
 | `file_too_large` | Exceeds 5MB | Error |
-| `invalid_format` | Not PNG/JPG | Error |
+| `invalid_format` | Not PNG/JPG/WebP | Error |
 | `batch_limit_exceeded` | More than 20 images | Error |
 | `quota_exceeded` | TinyPNG limit reached | Error |
 | `compression_failed` | Engine error | Error |

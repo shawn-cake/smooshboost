@@ -80,18 +80,4 @@ export async function compressWithTinyPNG(file: File): Promise<TinyPNGResult> {
   };
 }
 
-/**
- * Checks if TinyPNG API is available (for quota checking, etc.)
- * Returns the compression count from the response header
- */
-export async function getTinyPNGCompressionCount(): Promise<number | null> {
-  try {
-    // Make a minimal request to check the API
-    // Note: This will use one compression credit
-    // In a real app, you might want to cache this or use a different approach
-    return null; // For now, we don't check quota proactively
-  } catch {
-    return null;
-  }
-}
 

@@ -46,7 +46,6 @@ Selectively inject metadata per image via the 🚀 accordion.
 - **Apply Metadata** button per image
 - **Apply to All Images** to copy settings across batch
 - **Read-only after apply** with Reset option
-- Client presets for repeated workflows (future)
 
 ```
 WORKFLOW DIAGRAM
@@ -123,7 +122,6 @@ INPUT IMAGE
 ### 1. Image Upload
 - **Drag and drop zone** - Primary upload method
 - **File picker button** - Secondary method ("Select Files")
-- **URL import** - Bulk URLs in a textarea (one URL per line)
 - **Batch limit:** 20 images maximum per session
 - **Supported input formats:** PNG, JPG, JPEG, WebP
 - **Security validation:** Two-layer validation (MIME type + magic byte verification)
@@ -271,10 +269,9 @@ After batch completion, display:
 
 **Blocking Errors (stop processing):**
 - **File too large:** Display notification if image exceeds 5MB
-- **Invalid format:** Notify if uploaded file is not PNG/JPG
+- **Invalid format:** Notify if uploaded file is not PNG/JPG/WebP
 - **API quota exceeded:** Automatically switch to Squoosh, notify user
 - **Network errors:** Display retry option
-- **URL fetch failures:** Show which URLs failed to import
 - **Metadata injection failed:** Technical error during EXIF/chunk write
 - **Geocoding failed:** Show address lookup errors
 
@@ -363,8 +360,6 @@ Error Light:     #FEE2E2  (error backgrounds)
 │ │              Drop images here                               │ │
 │ │                    or                                       │ │
 │ │              [Select Files]                                 │ │
-│ │                                                             │ │
-│ │  ▸ Import from URLs                                         │ │
 │ └─────────────────────────────────────────────────────────────┘ │
 │                                                                 │
 │ PROCESSING BUTTONS                                              │
@@ -510,18 +505,17 @@ Extract coordinates directly from Google Maps/Place URLs:
 - Fallback: Manual coordinate entry or Maps link parsing
 
 #### Squoosh
-- Use `@aspect-image/squoosh` or official WASM modules
+- Uses `@jsquash/jpeg`, `@jsquash/oxipng`, `@jsquash/webp` (via WASM)
 - MozJPG encoder for JPG output
 - WebP encoder for WebP output
 - OxiPNG encoder for PNG fallback
-- Run in Web Worker to prevent UI blocking
 
 ### Metadata Injection
 
 #### Libraries by Format
 - **JPG/JPEG:** piexifjs (full EXIF read/write)
-- **PNG:** png-chunk-text / png-chunks-encode (tEXt chunks)
-- **WebP:** node-webpmux (EXIF chunk injection)
+- **PNG:** png-chunk-text / png-chunks-encode / png-chunks-extract (tEXt chunks)
+- **WebP:** Custom RIFF/VP8X/EXIF chunk manipulation (browser-native, no external library)
 
 #### Supported Metadata by Format
 
@@ -561,7 +555,6 @@ PNG does not support GPS coordinates. Switch to JPG or WebP for geo-tagged image
 
 ### File Handling
 - FileReader API for local files
-- Fetch API for URL imports
 - Blob URLs for previews and downloads
 - JSZip for batch ZIP generation
 
@@ -571,6 +564,8 @@ PNG does not support GPS coordinates. Switch to JPG or WebP for geo-tagged image
 
 ### Future Features (v2+)
 - **Client presets:** Save and recall metadata configurations
+- **URL import:** Bulk image URLs in a textarea (one URL per line)
+- **Web Worker compression:** Run compression in a Web Worker to prevent UI blocking
 - **Batch metadata templates:** Apply different metadata to image groups
 - **Export report:** CSV/PDF summary for client deliverables
 - **IPTC keywords:** Additional metadata for stock photo workflows
@@ -599,7 +594,6 @@ PNG does not support GPS coordinates. Switch to JPG or WebP for geo-tagged image
 - Static hosting (Vercel, Netlify, or custom server)
 - Environment variables for API keys
 - Optional backend proxy for API key security
-- CORS considerations for URL imports
 
 ---
 

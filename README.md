@@ -92,9 +92,13 @@ npm run build
 npm run preview
 ```
 
+### Deployment (Vercel)
+
+SmooshBoost is deployed on Vercel. The TinyPNG API proxy runs as a Vercel serverless function (`api/tinypng/`). Set `TINYPNG_API_KEY` in the Vercel dashboard environment variables.
+
 ## Usage
 
-1. **Upload images** — Drag & drop or click to select (supports JPG, PNG)
+1. **Upload images** — Drag & drop or click to select (supports JPG, PNG, WebP)
 2. **Compression starts automatically** — Watch progress in the queue
 3. **Configure Boost options** — Click the accordion on each image
 4. **Apply metadata** — Click "Apply Metadata" for each image
@@ -115,6 +119,8 @@ npm run preview
 
 ```
 smooshboost/
+├── api/                   # Vercel serverless functions
+│   └── tinypng/           # TinyPNG API proxy
 ├── src/
 │   ├── app/
 │   │   ├── components/    # React components
@@ -122,7 +128,7 @@ smooshboost/
 │   │   ├── services/      # Compression & metadata services
 │   │   ├── utils/         # Utility functions
 │   │   └── types.ts       # TypeScript types
-│   ├── styles/            # Tailwind CSS configuration
+│   ├── styles/            # Tailwind CSS v4 theme
 │   └── main.tsx           # Application entry point
 ├── public/                # Static assets
 ├── guidelines/            # Project documentation

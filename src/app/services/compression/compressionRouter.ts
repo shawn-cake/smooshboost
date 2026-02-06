@@ -11,15 +11,20 @@ import { compressWithTinyPNG } from './tinypngService';
 let tinypngQuotaExhausted = false;
 
 /**
- * Determines which compression engine to use based on input/output formats
+ * Resets the TinyPNG quota exhaustion flag.
+ * Call this when clearing the queue so TinyPNG can be retried.
+ */
+export function resetTinypngQuota(): void {
+  tinypngQuotaExhausted = false;
+}
+
+/**
+ * Determines which compression engine to use based on output format.
  *
- * Routing logic:
- * - PNG → PNG: TinyPNG API (falls back to oxipng if quota exhausted)
- * - JPG → PNG: TinyPNG API (falls back to oxipng if quota exhausted)
- * - JPG → MozJPG: mozjpeg (Squoosh)
- * - JPG → WebP: webp (Squoosh)
- * - PNG → WebP: webp (Squoosh)
- * - PNG → MozJPG: mozjpeg (Squoosh) - converts to JPEG
+ * Routing logic (based on output format only):
+ * - Output PNG: TinyPNG API (falls back to OxiPNG if quota exhausted)
+ * - Output MozJPG: MozJPEG via @jsquash
+ * - Output WebP: WebP via @jsquash
  */
 export function getCompressionEngine(
   _inputFormat: InputFormat,
@@ -93,7 +98,7 @@ export function isValidFormatCombination(
 ): boolean {
   // All combinations are valid with Squoosh
   // PNG/JPG input can be converted to any output format
-  const validInputs: InputFormat[] = ['png', 'jpg'];
+  const validInputs: InputFormat[] = ['png', 'jpg', 'webp'];
   const validOutputs: OutputFormat[] = ['png', 'mozjpg', 'webp'];
 
   return validInputs.includes(inputFormat) && validOutputs.includes(outputFormat);

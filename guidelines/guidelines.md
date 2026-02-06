@@ -68,6 +68,7 @@ This document defines the visual design system for SmooshBoost, an image optimiz
 - **Primary Font:** Roboto (Google Fonts)
 - **Fallback:** -apple-system, BlinkMacSystemFont, Inter, "Segoe UI", sans-serif
 - **Monospace:** "Roboto Mono", "SF Mono", "Fira Code", Consolas, monospace (for file sizes, coordinates, technical data)
+- **Logo Font:** Syne Extra Bold (Google Fonts) — used as the design source for the SVG logo; not loaded as a web font at runtime. "smoosh" is stylized in lowercase, "BOOST" in uppercase
 
 ### Type Scale
 
@@ -123,17 +124,12 @@ Use an 8px base grid with the following scale:
 │ SmooshBoost              [minimal branding]                     │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│ WORKFLOW MODE TOGGLE                                            │
-│ Mode: ● Smoosh + Boost   ○ Smoosh Only   ○ Boost Only          │
-│                                                                 │
 │ UPLOAD ZONE                                                     │
 │ ┌─────────────────────────────────────────────────────────────┐ │
 │ │                                                             │ │
 │ │              Drop images here                               │ │
 │ │                    or                                       │ │
 │ │              [Select Files]                                 │ │
-│ │                                                             │ │
-│ │  ▸ Import from URLs                                         │ │
 │ └─────────────────────────────────────────────────────────────┘ │
 │                                                                 │
 │ BOOST-ONLY MODE INDICATOR (when active)                         │
@@ -286,29 +282,26 @@ Use an 8px base grid with the following scale:
 
 ## Boost Workflow Components
 
-### Workflow Mode Toggle
+### Boost Only Toggle
 
-**Position:** Top of main content area, above Upload Zone
+**Position:** Within the Format Selector area, shown only when no images are in the queue
 
 **Layout:**
 ```
-Mode: ● Smoosh + Boost   ○ Smoosh Only   ○ Boost Only
+☐ Boost Only (skip compression)
 ```
 
 **Styling:**
-- Component: Radio button group
+- Component: Checkbox toggle
 - Font: 14px medium
-- Color (inactive): Gray 600 (`#4B5563`)
-- Color (active): Primary Blue (`#4074A8`)
-- Spacing: 24px between options
-- Background (active): Blue 50 (`#EBF1F7`)
-- Border radius: 6px
-- Padding: 8px 16px
+- Color: Gray 600 (`#4B5563`)
+- When checked: Primary Blue (`#4074A8`)
 
 **Behavior:**
-- Default selection: "Smoosh + Boost"
-- Switching modes clears queue and resets metadata options
-- "Boost Only" mode hides output format selector (keeps original format)
+- Default: unchecked (compression + boost workflow)
+- When checked, compression is skipped — images keep their original format
+- Format selector is hidden when Boost Only is active
+- Toggle is hidden once images are added to the queue
 
 ---
 
@@ -1038,22 +1031,6 @@ While designed for desktop/tablet (768px minimum), ensure:
 - Error messages linked to fields via aria-describedby
 - Keyboard navigation support for all interactions
 - Tooltips on icon-only buttons
-
----
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Shift + M` | Toggle Metadata Options panel |
-| `Shift + B` | Click "Add Metadata (Boost)" button |
-| `Shift + D` | Download all as ZIP |
-| `Shift + C` | Clear queue |
-| `Arrow Down` | Navigate to next queue item |
-| `Arrow Up` | Navigate to previous queue item |
-| `Enter` | Expand/collapse selected item |
-| `E` | Edit metadata (per-image mode) |
-| `?` | Show keyboard shortcuts modal |
 
 ---
 
