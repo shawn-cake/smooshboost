@@ -161,7 +161,7 @@ Upload → [Auto-Compress] → [🚀 Boost per image] → Download
 
 | Token | Value |
 |-------|-------|
-| Body Font | Roboto Mono (`--font-sans`, `--font-mono`) |
+| Body Font | Spline Sans Mono (`--font-sans`, `--font-mono`) |
 | Heading Font | Syne (`--font-heading`) — headings only |
 | Scaling | Fluid: 100% at ≤1024px → 120% at ≥1200px via `clamp()` |
 | Body text class | `text-xs` (downshifted from text-sm for mono visual sizing) |

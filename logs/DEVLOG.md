@@ -36,7 +36,7 @@ A narrative chronicle of the project journey - the decisions, discoveries, and p
 - [x] **README.md** - GitHub repository documentation
 - [x] **Security Audit** - API key secured, magic byte validation, metadata sanitization
 - [x] **Performance Optimization** - Dynamic WASM imports, React.memo, TypeScript 5.9
-- [x] **Typography polish** - Roboto Mono for data elements, format labels on download buttons
+- [x] **Typography polish** - Spline Sans Mono for data elements, format labels on download buttons
 - [ ] Deploy to production
 
 ### Known Risks & Blockers
@@ -52,7 +52,7 @@ A narrative chronicle of the project journey - the decisions, discoveries, and p
 **The Situation:** SmooshBoost needed visual refinement — the font hierarchy was unclear, the UI didn't scale well across viewports, and the Boost Options section order needed adjustment.
 
 **Changes Made:**
-1. **Font hierarchy** — Roboto Mono as body font (`--font-sans`), Syne reserved for headings only (`--font-heading`). All body text downshifted one Tailwind size class for visual balance.
+1. **Font hierarchy** — Spline Sans Mono as body font (`--font-sans`), Syne reserved for headings only (`--font-heading`). All body text downshifted one Tailwind size class for visual balance.
 2. **Fluid scaling** — Root font-size scales from 16px (≤1024px) to 19.2px (≥1200px) via `clamp()`. Spacing tokens converted from px to rem.
 3. **Radial gradient background** — Applied to body element.
 4. **Boost Options reorder** — Copyright & Author moved after Title & Description (was second, now third).
@@ -95,7 +95,7 @@ A narrative chronicle of the project journey - the decisions, discoveries, and p
 **The Challenge:** Technical data like file sizes, percentages, and coordinates were displayed in the same font as body text, making them harder to scan. Additionally, the download button didn't indicate what format the file would be downloaded as.
 
 **The Decision:** Implemented three improvements:
-1. **Roboto Mono font** - Added to Google Fonts import and CSS theme for monospace elements
+1. **Spline Sans Mono font** - Added to Google Fonts import and CSS theme for monospace elements (initially Roboto Mono, later swapped to Spline Sans Mono)
 2. **Monospace data elements** - Applied `font-mono` to file names, sizes, savings percentages, coordinates, progress counters, and metadata counts
 3. **Format-aware download button** - Per-image download now shows format label (PNG, JPG, WebP) next to the download icon
 

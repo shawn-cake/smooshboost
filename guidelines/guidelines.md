@@ -65,11 +65,11 @@ This document defines the visual design system for SmooshBoost, an image optimiz
 
 ### Font Stack
 
-- **Body Font:** Roboto Mono (Google Fonts) — used for all body text, labels, inputs, captions, and UI elements
+- **Body Font:** Spline Sans Mono (Google Fonts) — used for all body text, labels, inputs, captions, and UI elements
 - **Heading Font:** Syne (Google Fonts) — used exclusively for headings ("Upload Images", "Boost Options") via `font-heading` utility class
-- **Monospace:** Roboto Mono, "SF Mono", "Fira Code", Consolas, monospace (same as body font; used for file sizes, coordinates, technical data)
+- **Monospace:** Spline Sans Mono, "SF Mono", "Fira Code", Consolas, monospace (same as body font; used for file sizes, coordinates, technical data)
 - **Logo Font:** Syne Extra Bold (Google Fonts) — used as the design source for the SVG logo. "smoosh" is stylized in lowercase, "BOOST" in uppercase
-- **CSS Variables:** `--font-sans` and `--font-mono` both map to Roboto Mono; `--font-heading` maps to Syne
+- **CSS Variables:** `--font-sans` and `--font-mono` both map to Spline Sans Mono; `--font-heading` maps to Syne
 
 ### Fluid Scaling
 
@@ -82,7 +82,7 @@ The UI uses fluid scaling via `clamp()` on the root `font-size`:
 
 ### Font Size Downshift Convention
 
-Because Roboto Mono's monospaced glyphs read visually larger than proportional fonts, all body/UI text sizes are downshifted one level from their semantic Tailwind class:
+Because Spline Sans Mono's monospaced glyphs read visually larger than proportional fonts, all body/UI text sizes are downshifted one level from their semantic Tailwind class:
 - `text-lg` elements → use `text-base`
 - `text-base` elements → use `text-sm`
 - `text-sm` elements → use `text-xs`
@@ -95,11 +95,11 @@ Because Roboto Mono's monospaced glyphs read visually larger than proportional f
 |---------|---------------|------|--------|
 | H1 (Page Title, e.g. "Upload Images") | `text-2xl font-heading` | Syne | 600 (Semibold) |
 | H2 (Section Title, e.g. "Boost Options") | `text-base font-heading` | Syne | 600 (Semibold) |
-| Body / Labels | `text-xs` | Roboto Mono | 400–500 |
-| Caption / Small Text | `text-xs` | Roboto Mono | 400 |
-| Button (sm/md) | `text-xs` | Roboto Mono | 500 (Medium) |
-| Button (lg) | `text-sm` | Roboto Mono | 500 (Medium) |
-| Stats / Savings Display | `text-base font-mono` | Roboto Mono | 600 (Semibold) |
+| Body / Labels | `text-xs` | Spline Sans Mono | 400–500 |
+| Caption / Small Text | `text-xs` | Spline Sans Mono | 400 |
+| Button (sm/md) | `text-xs` | Spline Sans Mono | 500 (Medium) |
+| Button (lg) | `text-sm` | Spline Sans Mono | 500 (Medium) |
+| Stats / Savings Display | `text-base font-mono` | Spline Sans Mono | 600 (Semibold) |
 
 ### Text Colors
 
@@ -480,7 +480,7 @@ Apply settings:  ● To all images    ○ Per image
 
 **Current Coordinates Display:**
 - Format: `35.5951° N, 82.5515° W`
-- Font: Roboto Mono, `text-xs`
+- Font: Spline Sans Mono, `text-xs`
 - Color: Primary Blue
 - Hidden until valid coordinates entered
 

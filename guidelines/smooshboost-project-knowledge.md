@@ -326,10 +326,10 @@ Error Light:     #FEE2E2  (error backgrounds)
 
 ### Typography
 
-- **Body Font:** Roboto Mono (Google Fonts) — all body text, labels, inputs, captions, UI elements
+- **Body Font:** Spline Sans Mono (Google Fonts) — all body text, labels, inputs, captions, UI elements
 - **Heading Font:** Syne (Google Fonts) — headings only ("Upload Images", "Boost Options") via `font-heading` class
-- **CSS Variables:** `--font-sans` and `--font-mono` → Roboto Mono; `--font-heading` → Syne
-- Body/label text: `text-xs` (downshifted from text-sm for Roboto Mono visual sizing)
+- **CSS Variables:** `--font-sans` and `--font-mono` → Spline Sans Mono; `--font-heading` → Syne
+- Body/label text: `text-xs` (downshifted from text-sm for Spline Sans Mono visual sizing)
 - Headings: `text-2xl` / `text-base` with `font-heading` (Syne, semibold)
 - Stats/savings: `text-base font-mono` semibold, Success Green
 - **Fluid scaling:** Root font-size scales from 16px (≤1024px) to 19.2px (≥1200px) via `clamp()`

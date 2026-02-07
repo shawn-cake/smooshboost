@@ -88,13 +88,13 @@ SmooshBoost follows a streamlined processing pipeline with auto-compression and 
 
 | Token | Value |
 |-------|-------|
-| `--font-sans` | `Roboto Mono, SF Mono, Fira Code, Consolas, monospace` (body font) |
-| `--font-mono` | `Roboto Mono, SF Mono, Fira Code, Consolas, monospace` (same as sans) |
+| `--font-sans` | `Spline Sans Mono, SF Mono, Fira Code, Consolas, monospace` (body font) |
+| `--font-mono` | `Spline Sans Mono, SF Mono, Fira Code, Consolas, monospace` (same as sans) |
 | `--font-heading` | `Syne, sans-serif` (headings only, via `font-heading` utility) |
 
 **Fluid root font-size:** `clamp(16px, calc(16px + (100vw - 1024px) * 3.2 / 176), 19.2px)` — scales from 100% at ≤1024px to 120% at ≥1200px.
 
-**Font size downshift convention:** Roboto Mono body text is downshifted one Tailwind class (text-sm → text-xs, text-base → text-sm, text-lg → text-base). Syne headings are NOT downshifted.
+**Font size downshift convention:** Spline Sans Mono body text is downshifted one Tailwind class (text-sm → text-xs, text-base → text-sm, text-lg → text-base). Syne headings are NOT downshifted.
 
 ### Spacing, Radius, Shadow Tokens
 

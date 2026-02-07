@@ -302,7 +302,7 @@ function App() {
         position="bottom-right"
         toastOptions={{
           style: {
-            fontFamily: "'Roboto Mono', monospace",
+            fontFamily: "'Spline Sans Mono', monospace",
           },
         }}
       />

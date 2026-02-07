@@ -22,14 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Boost Options section order** - Copyright & Author moved to last position (after Title & Description) in both MetadataPanel and ImageMetadataAccordion. Files: `src/app/components/metadata/MetadataPanel.tsx`, `src/app/components/queue/ImageMetadataAccordion.tsx`.
 - **Version bump to 0.1.0** - Updated version in package.json and Footer component. Files: `package.json`, `src/app/components/layout/Footer.tsx`.
-- **Guidelines docs updated** - Typography, spacing, and layout sections updated to reflect current UI state (Roboto Mono body font, Syne headings, fluid scaling, rem-based spacing, radial gradient background). Files: `guidelines/guidelines.md`, `guidelines/smooshboost-project-knowledge.md`, `guidelines/smooshboost-quick-reference.md`, `guidelines/smooshboost-technical-spec.md`.
+- **Body font changed to Spline Sans Mono** - Replaced Roboto Mono with Spline Sans Mono (Google Fonts) across Google Fonts import, CSS variables, and Toaster inline style. Files: `index.html`, `src/styles/index.css`, `src/app/App.tsx`.
+- **Guidelines docs updated** - Typography, spacing, and layout sections updated to reflect current UI state (Spline Sans Mono body font, Syne headings, fluid scaling, rem-based spacing, radial gradient background). Files: `guidelines/guidelines.md`, `guidelines/smooshboost-project-knowledge.md`, `guidelines/smooshboost-quick-reference.md`, `guidelines/smooshboost-technical-spec.md`.
 
 ### Removed
 - **SEO Guideline Tooltip** - Removed info-circle icon and hover tooltip from Title & Description checkbox label. Files: `src/app/components/metadata/TitleDescSection.tsx`, `guidelines/guidelines.md`.
 
 ### Added
 - **WebP import/upload support** - WebP files can now be imported for both compression and metadata injection workflows. Includes magic byte validation (RIFF/WEBP headers), MIME type detection, and format routing. WebP inputs are compressed to optimized WebP output when "Keep Original" format mode is selected. Files: `src/app/types.ts`, `src/app/hooks/useFileValidation.ts`, `src/app/utils/detectFormat.ts`, `src/app/components/upload/UploadZone.tsx`.
-- **Roboto Mono font** - Loaded from Google Fonts for monospace UI elements. Files: `index.html`, `src/styles/index.css`.
+- **Spline Sans Mono font** - Loaded from Google Fonts for monospace UI elements (replaced Roboto Mono). Files: `index.html`, `src/styles/index.css`.
 - **Download button format label** - Per-image download button now shows output format (PNG, JPG, WebP) next to icon. Files: `src/app/components/queue/QueueItem.tsx`.
 
 ### Changed
