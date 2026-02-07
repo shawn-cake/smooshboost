@@ -81,7 +81,7 @@ export const QueueItem = memo(function QueueItem({
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate font-mono">{image.name}</p>
+          <p className="text-xs font-medium text-gray-900 truncate font-mono">{image.name}</p>
           <p className="text-xs text-gray-500 font-mono">
             {formatBytes(image.originalSize)}
             {isComplete && image.compressedSize && (
@@ -111,7 +111,7 @@ export const QueueItem = memo(function QueueItem({
               type="button"
               onClick={onDownload}
               title={`Download as ${FORMAT_LABELS[image.outputFormat]}`}
-              className="inline-flex items-center gap-1.5 px-2 py-1.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-md transition-colors"
+              className="inline-flex items-center gap-1.5 px-2 py-1.5 text-xs text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-md transition-colors"
             >
               <FontAwesomeIcon icon={faDownload} className="text-xs" />
               <span className="font-mono text-xs font-medium">{FORMAT_LABELS[image.outputFormat]}</span>

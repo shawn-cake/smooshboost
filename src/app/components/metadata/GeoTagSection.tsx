@@ -71,7 +71,7 @@ export function GeoTagSection({
     return (
       <div className="space-y-3">
         <div className="flex items-start gap-2 px-3 py-2 bg-accent-50 border border-accent-100 rounded-md">
-          <span className="text-accent-700 text-sm">
+          <span className="text-accent-700 text-xs">
             ⚠ PNG does not support GPS coordinates. Switch to JPG or WebP
             for geo-tagged images.
           </span>
@@ -91,7 +91,7 @@ export function GeoTagSection({
           disabled={disabled}
           className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary-100 disabled:opacity-50"
         />
-        <span className="text-sm font-medium text-gray-700">
+        <span className="text-xs font-medium text-gray-700">
           Add geo-location (Local SEO)
         </span>
       </label>
@@ -111,7 +111,7 @@ export function GeoTagSection({
               placeholder="Paste link or coordinates (e.g., 35.5951, -82.5515)"
               disabled={disabled}
               readOnly={disabled}
-              className={`w-full px-3 py-2 text-sm border rounded-md
+              className={`w-full px-3 py-2 text-xs border rounded-md
                        placeholder:text-gray-400 focus:border-primary focus:outline-none
                        focus:ring-2 focus:ring-primary-100
                        ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
@@ -128,7 +128,7 @@ export function GeoTagSection({
 
           {/* Current coordinates display with labels */}
           {hasValidCoords && (
-            <div className="flex gap-6 text-sm font-mono text-primary bg-primary-50 px-3 py-2 rounded-md">
+            <div className="flex gap-6 text-xs font-mono text-primary bg-primary-50 px-3 py-2 rounded-md">
               <div>
                 <span className="text-xs text-gray-500 font-sans">Latitude:</span>{' '}
                 <span>{formatCoordinate(geoTag.latitude, true)}</span>

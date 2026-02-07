@@ -13,7 +13,7 @@ interface StatusIndicatorProps {
 }
 
 export function StatusIndicator({ status, size = 'md' }: StatusIndicatorProps) {
-  const iconSize = size === 'sm' ? 'text-xs' : 'text-sm';
+  const iconSize = size === 'sm' ? 'text-xs' : 'text-xs';
   const containerSize = size === 'sm' ? 'w-5 h-5' : 'w-6 h-6';
 
   switch (status) {

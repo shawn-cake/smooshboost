@@ -128,7 +128,7 @@ export function ImageQueue({
 
   return (
     <div className="space-y-2">
-      <h2 className="text-sm font-medium text-gray-700">
+      <h2 className="text-xs font-medium text-gray-700">
         Images ({images.length})
       </h2>
       <div className="space-y-2">

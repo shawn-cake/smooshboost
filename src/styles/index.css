@@ -26,28 +26,33 @@
   --color-accent-900: #302205;
 
   /* Font family */
-  --font-sans: 'Roboto', sans-serif;
+  --font-sans: 'Roboto Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
   --font-mono: 'Roboto Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+  --font-heading: 'Syne', sans-serif;
 
-  /* Spacing (8px base) */
-  --spacing-1: 4px;
-  --spacing-2: 8px;
-  --spacing-3: 12px;
-  --spacing-4: 16px;
-  --spacing-5: 20px;
-  --spacing-6: 24px;
-  --spacing-8: 32px;
-  --spacing-10: 40px;
-  --spacing-12: 48px;
+  /* Spacing (8px base, rem-based so it scales with root font-size) */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
 }
 
 html {
+  /* Fluid scale: 100% at ≤1024px, 120% at ≥1200px, smooth between */
+  font-size: clamp(16px, calc(16px + (100vw - 1024px) * 3.2 / 176), 19.2px);
   /* Prevent layout shift when scrollbar appears/disappears */
   overflow-y: scroll;
 }
 
 body {
   font-family: var(--font-sans);
+  background: radial-gradient(circle at 50% 30%, #ffffff, #fefeff, #f6f9fc, #e2ecf4, #d5e2ef, #d1e0ee, #d1e0ee, #cddded, #c0d4e8, #acc7e0, #a4c2dd, #a3c1dd);
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

@@ -34,7 +34,7 @@ export function CopyrightSection({
           disabled={disabled}
           className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary-100 disabled:opacity-50"
         />
-        <span className="text-sm font-medium text-gray-700">
+        <span className="text-xs font-medium text-gray-700">
           Add copyright & author
         </span>
       </label>
@@ -55,7 +55,7 @@ export function CopyrightSection({
               maxLength={MAX_COPYRIGHT_LENGTH + 50}
               disabled={disabled}
               readOnly={disabled}
-              className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-md
+              className={`w-full px-3 py-2 text-xs border border-gray-300 rounded-md
                        placeholder:text-gray-400 focus:border-primary focus:outline-none
                        focus:ring-2 focus:ring-primary-100
                        ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
@@ -86,7 +86,7 @@ export function CopyrightSection({
               maxLength={MAX_AUTHOR_LENGTH + 20}
               disabled={disabled}
               readOnly={disabled}
-              className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-md
+              className={`w-full px-3 py-2 text-xs border border-gray-300 rounded-md
                        placeholder:text-gray-400 focus:border-primary focus:outline-none
                        focus:ring-2 focus:ring-primary-100
                        ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}

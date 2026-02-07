@@ -53,10 +53,10 @@ export function MetadataPanel({
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 bg-gray-50">
-        <span className="text-base font-semibold text-gray-800">
+        <span className="text-base font-semibold text-gray-800 font-heading">
           Boost Options
         </span>
-        <span className="text-sm text-gray-500 font-mono">({enabledCount}/3)</span>
+        <span className="text-xs text-gray-500 font-mono">({enabledCount}/3)</span>
       </div>
 
       {/* Body - always visible */}

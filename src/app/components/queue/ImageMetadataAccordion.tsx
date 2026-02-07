@@ -97,9 +97,9 @@ export function ImageMetadataAccordion({
         <div className="flex items-center gap-2">
           <FontAwesomeIcon
             icon={faRocket}
-            className={`text-sm ${isExpanded ? 'text-primary-600' : 'text-gray-400'}`}
+            className={`text-xs ${isExpanded ? 'text-primary-600' : 'text-gray-400'}`}
           />
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-xs font-medium text-gray-700">
             Boost Options
           </span>
           <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full font-mono">

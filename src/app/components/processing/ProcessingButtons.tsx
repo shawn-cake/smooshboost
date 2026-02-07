@@ -30,14 +30,14 @@ export function ProcessingButtons({
       {/* Compression Progress Status Bar */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-xs text-gray-600">
             <FontAwesomeIcon
               icon={faSpinner}
               className="animate-spin text-primary-500"
             />
             <span>Compressing images...</span>
           </div>
-          <span className="text-sm font-medium text-gray-700 font-mono">
+          <span className="text-xs font-medium text-gray-700 font-mono">
             {compressProgress.current} of {compressProgress.total}
           </span>
         </div>

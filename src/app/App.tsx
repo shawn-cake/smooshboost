@@ -219,12 +219,12 @@ function App() {
     metadataSummary.titleCount > 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="max-w-[720px] mx-auto px-6 py-8 space-y-6 flex-1 w-full">
+      <main className="max-w-[45rem] mx-auto px-6 py-8 space-y-6 flex-1 w-full">
         {/* Upload Section Container */}
-        <div className="bg-primary-50 border border-primary-200 rounded-lg p-5 space-y-5">
+        <div className="bg-gray-100 border border-primary-200 rounded-lg p-5 space-y-5">
           {/* Upload Zone */}
           <UploadZone
             onFilesSelected={handleFilesSelected}
@@ -302,7 +302,7 @@ function App() {
         position="bottom-right"
         toastOptions={{
           style: {
-            fontFamily: "'Roboto', sans-serif",
+            fontFamily: "'Roboto Mono', monospace",
           },
         }}
       />

@@ -126,18 +126,18 @@ export function UploadZone({
         </div>
 
         <div>
-          <p className="text-gray-700 font-medium text-2xl">
+          <p className="text-gray-700 font-semibold text-2xl font-heading">
             Upload Images
           </p>
-          <p className="text-gray-500 text-sm mt-2">
-            Drag and drop or click to browse (PNG, JPG, WebP)
+          <p className="text-gray-500 text-xs mt-2">
+            Drag and drop or click to browse
           </p>
         </div>
 
         <p className="text-gray-400 text-xs mt-1">
           {isAtLimit
             ? `Maximum ${maxFiles} images reached`
-            : `Up to ${remaining} more image${remaining !== 1 ? 's' : ''} (max 5MB each)`}
+            : `Up to ${remaining} more image${remaining !== 1 ? 's' : ''} (max 5MB each · PNG, JPG, or WebP)`}
         </p>
       </div>
     </div>
