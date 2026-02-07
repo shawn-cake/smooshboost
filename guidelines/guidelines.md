@@ -65,25 +65,41 @@ This document defines the visual design system for SmooshBoost, an image optimiz
 
 ### Font Stack
 
-- **Primary Font:** Roboto (Google Fonts)
-- **Fallback:** -apple-system, BlinkMacSystemFont, Inter, "Segoe UI", sans-serif
-- **Monospace:** "Roboto Mono", "SF Mono", "Fira Code", Consolas, monospace (for file sizes, coordinates, technical data)
-- **Logo Font:** Syne Extra Bold (Google Fonts) — used as the design source for the SVG logo; not loaded as a web font at runtime. "smoosh" is stylized in lowercase, "BOOST" in uppercase
+- **Body Font:** Roboto Mono (Google Fonts) — used for all body text, labels, inputs, captions, and UI elements
+- **Heading Font:** Syne (Google Fonts) — used exclusively for headings ("Upload Images", "Boost Options") via `font-heading` utility class
+- **Monospace:** Roboto Mono, "SF Mono", "Fira Code", Consolas, monospace (same as body font; used for file sizes, coordinates, technical data)
+- **Logo Font:** Syne Extra Bold (Google Fonts) — used as the design source for the SVG logo. "smoosh" is stylized in lowercase, "BOOST" in uppercase
+- **CSS Variables:** `--font-sans` and `--font-mono` both map to Roboto Mono; `--font-heading` maps to Syne
+
+### Fluid Scaling
+
+The UI uses fluid scaling via `clamp()` on the root `font-size`:
+- **≤ 1024px viewport:** 16px (100%)
+- **≥ 1200px viewport:** 19.2px (120%)
+- **Between:** Smooth linear interpolation
+- All spacing tokens use `rem` units, so the entire UI scales proportionally with the root font-size
+- The header logo uses a fixed `width` attribute and is unaffected by scaling
+
+### Font Size Downshift Convention
+
+Because Roboto Mono's monospaced glyphs read visually larger than proportional fonts, all body/UI text sizes are downshifted one level from their semantic Tailwind class:
+- `text-lg` elements → use `text-base`
+- `text-base` elements → use `text-sm`
+- `text-sm` elements → use `text-xs`
+- `text-xs` stays `text-xs`
+- Syne heading text (`font-heading`) is NOT downshifted
 
 ### Type Scale
 
-| Element | Size | Weight | Line Height | Letter Spacing |
-|---------|------|--------|-------------|----------------|
-| H1 (Page Title) | 24px | 600 (Semibold) | 32px | -0.02em |
-| H2 (Section Title) | 20px | 600 (Semibold) | 28px | -0.01em |
-| H3 (Subsection Title) | 16px | 600 (Semibold) | 24px | 0 |
-| H4 (Field Group Label) | 14px | 500 (Medium) | 20px | 0 |
-| Body | 14px | 400 (Regular) | 22px | 0 |
-| Body Small | 13px | 400 (Regular) | 20px | 0 |
-| Caption | 12px | 400 (Regular) | 16px | 0.01em |
-| Label | 13px | 500 (Medium) | 16px | 0 |
-| Button | 14px | 500 (Medium) | 20px | 0 |
-| Savings Display | 16px | 600 (Semibold) | 24px | 0 |
+| Element | Tailwind Class | Font | Weight |
+|---------|---------------|------|--------|
+| H1 (Page Title, e.g. "Upload Images") | `text-2xl font-heading` | Syne | 600 (Semibold) |
+| H2 (Section Title, e.g. "Boost Options") | `text-base font-heading` | Syne | 600 (Semibold) |
+| Body / Labels | `text-xs` | Roboto Mono | 400–500 |
+| Caption / Small Text | `text-xs` | Roboto Mono | 400 |
+| Button (sm/md) | `text-xs` | Roboto Mono | 500 (Medium) |
+| Button (lg) | `text-sm` | Roboto Mono | 500 (Medium) |
+| Stats / Savings Display | `text-base font-mono` | Roboto Mono | 600 (Semibold) |
 
 ### Text Colors
 
@@ -98,19 +114,19 @@ This document defines the visual design system for SmooshBoost, an image optimiz
 
 ## Spacing System
 
-Use an 8px base grid with the following scale:
+Use an 8px base grid. All spacing tokens are `rem`-based so they scale with the fluid root font-size:
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| space-1 | 4px | Tight spacing, inline elements |
-| space-2 | 8px | Small gaps, icon padding |
-| space-3 | 12px | Input padding, small margins |
-| space-4 | 16px | Standard gaps between elements |
-| space-5 | 20px | Section padding |
-| space-6 | 24px | Card padding, larger gaps |
-| space-8 | 32px | Section margins |
-| space-10 | 40px | Major section breaks |
-| space-12 | 48px | Page margins |
+| Token | Value | Base px (at 16px root) | Usage |
+|-------|-------|------------------------|-------|
+| space-1 | 0.25rem | 4px | Tight spacing, inline elements |
+| space-2 | 0.5rem | 8px | Small gaps, icon padding |
+| space-3 | 0.75rem | 12px | Input padding, small margins |
+| space-4 | 1rem | 16px | Standard gaps between elements |
+| space-5 | 1.25rem | 20px | Section padding |
+| space-6 | 1.5rem | 24px | Card padding, larger gaps |
+| space-8 | 2rem | 32px | Section margins |
+| space-10 | 2.5rem | 40px | Major section breaks |
+| space-12 | 3rem | 48px | Page margins |
 
 ---
 
@@ -168,9 +184,16 @@ Use an 8px base grid with the following scale:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+### Background
+
+The page uses a radial gradient background on `body` with `min-height: 100vh`:
+```css
+background: radial-gradient(circle at 50% 30%, #ffffff, #fefeff, #f6f9fc, #e2ecf4, #d5e2ef, #d1e0ee, #d1e0ee, #cddded, #c0d4e8, #acc7e0, #a4c2dd, #a3c1dd);
+```
+
 ### Dimensions
 
-- **Content area max-width:** 720px (centered)
+- **Content area max-width:** 45rem (~720px at base, ~864px at 120% scale, centered)
 - **Minimum viewport:** 768px (tablet and up)
 - **Header height:** 64px
 - **Content scroll:** Independent scrolling with `overflow-y-auto`
@@ -457,7 +480,7 @@ Apply settings:  ● To all images    ○ Per image
 
 **Current Coordinates Display:**
 - Format: `35.5951° N, 82.5515° W`
-- Font: Roboto Mono, 14px
+- Font: Roboto Mono, `text-xs`
 - Color: Primary Blue
 - Hidden until valid coordinates entered
 
@@ -542,15 +565,6 @@ Extract from URL patterns:
 - Character counter: `X / 160 characters (recommended max)` (Gray 500, 12px)
 - Counter turns Yellow 700 if >160, Error Red if >300
 - Resize: Vertical only
-
-**SEO Guideline Tooltip:**
-- Icon: `fa-info-circle` next to section label
-- Tooltip content:
-  ```
-  Title: 50-60 characters ideal for image search
-  Description: 150-160 characters for rich snippets
-  Include relevant keywords naturally
-  ```
 
 ---
 

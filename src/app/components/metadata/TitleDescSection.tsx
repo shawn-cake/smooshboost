@@ -1,5 +1,3 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import type { MetadataOptions } from '../../types';
 
 interface TitleDescSectionProps {
@@ -48,20 +46,6 @@ export function TitleDescSection({
         />
         <span className="text-xs font-medium text-gray-700">
           Add title & description (Image SEO)
-        </span>
-        <span className="group relative">
-          <FontAwesomeIcon
-            icon={faInfoCircle}
-            className="text-gray-400 cursor-help"
-            size="sm"
-          />
-          <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10">
-            Title: 50-60 characters ideal for image search
-            <br />
-            Description: 150-160 characters for rich snippets
-            <br />
-            Include relevant keywords naturally
-          </span>
         </span>
       </label>
 

@@ -72,18 +72,6 @@ export function MetadataPanel({
           outputFormat={outputFormat}
         />
 
-        {/* Copyright section */}
-        <CopyrightSection
-          enabled={options.copyrightEnabled}
-          onEnabledChange={(enabled) =>
-            onOptionsChange({ ...options, copyrightEnabled: enabled })
-          }
-          copyright={options.copyright}
-          onCopyrightChange={(copyright) =>
-            onOptionsChange({ ...options, copyright })
-          }
-        />
-
         {/* Title & Description section */}
         <TitleDescSection
           enabled={options.titleDescEnabled}
@@ -93,6 +81,18 @@ export function MetadataPanel({
           titleDesc={options.titleDesc}
           onTitleDescChange={(titleDesc) =>
             onOptionsChange({ ...options, titleDesc })
+          }
+        />
+
+        {/* Copyright section */}
+        <CopyrightSection
+          enabled={options.copyrightEnabled}
+          onEnabledChange={(enabled) =>
+            onOptionsChange({ ...options, copyrightEnabled: enabled })
+          }
+          copyright={options.copyright}
+          onCopyrightChange={(copyright) =>
+            onOptionsChange({ ...options, copyright })
           }
         />
 

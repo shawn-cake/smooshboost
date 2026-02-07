@@ -326,17 +326,18 @@ Error Light:     #FEE2E2  (error backgrounds)
 
 ### Typography
 
-- **Primary Font:** Roboto (Google Fonts)
-- **Fallback:** -apple-system, BlinkMacSystemFont, Inter, "Segoe UI", sans-serif
-- **Monospace:** Roboto Mono (file sizes, coordinates)
-- Body text: 14px regular
-- Headings: 16-24px semibold
-- Savings percentage: 16px semibold, Success Green
+- **Body Font:** Roboto Mono (Google Fonts) — all body text, labels, inputs, captions, UI elements
+- **Heading Font:** Syne (Google Fonts) — headings only ("Upload Images", "Boost Options") via `font-heading` class
+- **CSS Variables:** `--font-sans` and `--font-mono` → Roboto Mono; `--font-heading` → Syne
+- Body/label text: `text-xs` (downshifted from text-sm for Roboto Mono visual sizing)
+- Headings: `text-2xl` / `text-base` with `font-heading` (Syne, semibold)
+- Stats/savings: `text-base font-mono` semibold, Success Green
+- **Fluid scaling:** Root font-size scales from 16px (≤1024px) to 19.2px (≥1200px) via `clamp()`
 
 ### Spacing
 
-- Base unit: 8px grid
-- Common spacing: 4px, 8px, 12px, 16px, 20px, 24px, 32px, 40px, 48px
+- Base unit: 8px grid (rem-based tokens for fluid scaling)
+- Tokens: 0.25rem, 0.5rem, 0.75rem, 1rem, 1.25rem, 1.5rem, 2rem, 2.5rem, 3rem
 - Generous whitespace throughout
 
 ### Component Patterns

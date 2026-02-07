@@ -161,15 +161,17 @@ Upload → [Auto-Compress] → [🚀 Boost per image] → Download
 
 | Token | Value |
 |-------|-------|
-| Font | Roboto |
-| Fallback | -apple-system, BlinkMacSystemFont, Inter, "Segoe UI", sans-serif |
-| Mono | Roboto Mono |
+| Body Font | Roboto Mono (`--font-sans`, `--font-mono`) |
+| Heading Font | Syne (`--font-heading`) — headings only |
+| Scaling | Fluid: 100% at ≤1024px → 120% at ≥1200px via `clamp()` |
+| Body text class | `text-xs` (downshifted from text-sm for mono visual sizing) |
+| Heading classes | `text-2xl font-heading` (H1), `text-base font-heading` (H2) |
 
 ### Spacing & Radii
 
 | Token | Value |
 |-------|-------|
-| Base unit | 8px grid |
+| Base unit | 8px grid (rem-based: 0.25rem–3rem) |
 | radius-sm | 4px (badges) |
 | radius | 6px (buttons, inputs) |
 | radius-md | 8px (cards, panels) |

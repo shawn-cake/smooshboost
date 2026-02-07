@@ -15,11 +15,11 @@ A narrative chronicle of the project journey - the decisions, discoveries, and p
 
 ## Current Context
 
-**Last Updated:** 2026-02-05
+**Last Updated:** 2026-02-07
 
 ### Project State
 - **Project:** SmooshBoost
-- **Version:** v0.0.1
+- **Version:** v0.1.0
 - **Active Branch:** `main`
 - **Phase:** Production-Ready - UI polish complete, ready for deployment
 
@@ -46,6 +46,23 @@ A narrative chronicle of the project journey - the decisions, discoveries, and p
 ---
 
 ## Daily Log - Newest First
+
+### 2026-02-07: UI Polish — Font Hierarchy, Fluid Scaling, Section Reorder
+
+**The Situation:** SmooshBoost needed visual refinement — the font hierarchy was unclear, the UI didn't scale well across viewports, and the Boost Options section order needed adjustment.
+
+**Changes Made:**
+1. **Font hierarchy** — Roboto Mono as body font (`--font-sans`), Syne reserved for headings only (`--font-heading`). All body text downshifted one Tailwind size class for visual balance.
+2. **Fluid scaling** — Root font-size scales from 16px (≤1024px) to 19.2px (≥1200px) via `clamp()`. Spacing tokens converted from px to rem.
+3. **Radial gradient background** — Applied to body element.
+4. **Boost Options reorder** — Copyright & Author moved after Title & Description (was second, now third).
+5. **Removed SEO tooltip** — Info-circle icon and hover tooltip removed from Title & Description label.
+6. **Version bump** — 0.0.1 → 0.1.0.
+7. **Guidelines updated** — All four docs updated to reflect current typography, spacing, and layout.
+
+**Files Changed:** `src/styles/index.css`, `src/app/components/metadata/TitleDescSection.tsx`, `src/app/components/metadata/MetadataPanel.tsx`, `src/app/components/queue/ImageMetadataAccordion.tsx`, `package.json`, `src/app/components/layout/Footer.tsx`, `guidelines/`
+
+---
 
 ### 2026-02-05: WebP Import Support Added
 

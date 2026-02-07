@@ -88,19 +88,27 @@ SmooshBoost follows a streamlined processing pipeline with auto-compression and 
 
 | Token | Value |
 |-------|-------|
-| `--font-sans` | `Roboto, -apple-system, BlinkMacSystemFont, Inter, Segoe UI, sans-serif` |
-| `--font-mono` | `Roboto Mono, SF Mono, Fira Code, Consolas, monospace` |
-| `--font-size-xs` | `12px` (line-height: 16px, letter-spacing: 0.01em) |
-| `--font-size-sm` | `13px` (line-height: 20px) |
-| `--font-size-base` | `14px` (line-height: 22px) |
-| `--font-size-lg` | `16px` (line-height: 24px) |
-| `--font-size-xl` | `20px` (line-height: 28px, letter-spacing: -0.01em) |
-| `--font-size-2xl` | `24px` (line-height: 32px, letter-spacing: -0.02em) |
+| `--font-sans` | `Roboto Mono, SF Mono, Fira Code, Consolas, monospace` (body font) |
+| `--font-mono` | `Roboto Mono, SF Mono, Fira Code, Consolas, monospace` (same as sans) |
+| `--font-heading` | `Syne, sans-serif` (headings only, via `font-heading` utility) |
+
+**Fluid root font-size:** `clamp(16px, calc(16px + (100vw - 1024px) * 3.2 / 176), 19.2px)` — scales from 100% at ≤1024px to 120% at ≥1200px.
+
+**Font size downshift convention:** Roboto Mono body text is downshifted one Tailwind class (text-sm → text-xs, text-base → text-sm, text-lg → text-base). Syne headings are NOT downshifted.
 
 ### Spacing, Radius, Shadow Tokens
 
 | Token | Value |
 |-------|-------|
+| `--spacing-1` | `0.25rem` (4px at base) |
+| `--spacing-2` | `0.5rem` (8px at base) |
+| `--spacing-3` | `0.75rem` (12px at base) |
+| `--spacing-4` | `1rem` (16px at base) |
+| `--spacing-5` | `1.25rem` (20px at base) |
+| `--spacing-6` | `1.5rem` (24px at base) |
+| `--spacing-8` | `2rem` (32px at base) |
+| `--spacing-10` | `2.5rem` (40px at base) |
+| `--spacing-12` | `3rem` (48px at base) |
 | `--radius-sm` | `4px` |
 | `--radius-DEFAULT` | `6px` |
 | `--radius-md` | `8px` |

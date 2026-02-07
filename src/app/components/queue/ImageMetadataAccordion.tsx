@@ -137,21 +137,6 @@ export function ImageMetadataAccordion({
 
           <hr className="border-gray-200" />
 
-          {/* Copyright Section */}
-          <CopyrightSection
-            enabled={metadataOptions.copyrightEnabled}
-            onEnabledChange={(enabled) =>
-              onMetadataChange({ ...metadataOptions, copyrightEnabled: enabled })
-            }
-            copyright={metadataOptions.copyright}
-            onCopyrightChange={(copyright) =>
-              onMetadataChange({ ...metadataOptions, copyright })
-            }
-            disabled={isBoostComplete}
-          />
-
-          <hr className="border-gray-200" />
-
           {/* Title/Description Section */}
           <TitleDescSection
             enabled={metadataOptions.titleDescEnabled}
@@ -161,6 +146,21 @@ export function ImageMetadataAccordion({
             titleDesc={metadataOptions.titleDesc}
             onTitleDescChange={(titleDesc) =>
               onMetadataChange({ ...metadataOptions, titleDesc })
+            }
+            disabled={isBoostComplete}
+          />
+
+          <hr className="border-gray-200" />
+
+          {/* Copyright Section */}
+          <CopyrightSection
+            enabled={metadataOptions.copyrightEnabled}
+            onEnabledChange={(enabled) =>
+              onMetadataChange({ ...metadataOptions, copyrightEnabled: enabled })
+            }
+            copyright={metadataOptions.copyright}
+            onCopyrightChange={(copyright) =>
+              onMetadataChange({ ...metadataOptions, copyright })
             }
             disabled={isBoostComplete}
           />
