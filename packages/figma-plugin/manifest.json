@@ -5,5 +5,8 @@
   "editorType": ["figma"],
   "main": "code.js",
   "ui": "ui.html",
-  "permissions": []
+  "permissions": [],
+  "networkAccess": {
+    "allowedDomains": ["https://smshbst.vercel.app"]
+  }
 }

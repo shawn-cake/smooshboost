@@ -3,11 +3,18 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build:wasm": "node scripts/encode-wasm.mjs",
+    "build:code": "tsc -p tsconfig.json",
+    "build:ui": "node scripts/build-ui.mjs",
+    "build": "npm run build:wasm && npm run build:code && npm run build:ui",
     "watch": "tsc -p tsconfig.json --watch"
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.100.0",
+    "@jsquash/jpeg": "^1.6.0",
+    "@jsquash/oxipng": "^2.3.0",
+    "esbuild": "^0.24.0",
+    "jszip": "^3.10.1",
     "typescript": "^5.4.0"
   }
 }
