@@ -1,17 +1,27 @@
 /**
  * Core compression module for the Figma plugin.
  *
- * JPG path:  @jsquash/jpeg decode (WASM) → encode (WASM, MozJPEG quality 75)
+ * JPG path:  MozJPEG WASM decode → encode (quality 75, progressive)
  * PNG path:  TinyPNG via Vercel proxy → fallback to OxiPNG WASM (level 2)
  *
- * WASM binaries are inlined as base64 in wasm-data.ts and compiled once on
- * first use, avoiding any network fetch for WASM.
+ * CRITICAL DESIGN DECISION:
+ * We do NOT import from @jsquash/* at build time. The emscripten factory
+ * code in those packages runs self-invoking IIFEs at module evaluation time
+ * that crash in Figma's restricted plugin sandbox (XMLHttpRequest setup,
+ * URL resolution via import.meta.url, etc.).
+ *
+ * Instead, the JS codec sources are embedded as strings in wasm-data.ts
+ * (generated at build time by encode-wasm.mjs) and evaluated lazily via
+ * new Function() only when compression is first requested.
  */
 
 import {
   MOZJPEG_ENC_WASM_BASE64,
   MOZJPEG_DEC_WASM_BASE64,
   OXIPNG_WASM_BASE64,
+  MOZJPEG_DEC_JS_SOURCE,
+  MOZJPEG_ENC_JS_SOURCE,
+  OXIPNG_JS_SOURCE,
   base64ToArrayBuffer,
 } from './wasm-data';
 
@@ -36,15 +46,14 @@ const MOZJPEG_OPTIONS = {
   chroma_quality: 75,
 };
 
-// ── Lazy WASM module cache ───────────────────────────────────────────
+// ── Lazy codec cache ────────────────────────────────────────────────
 
-let mozjpegEncModule: WebAssembly.Module | null = null;
-let mozjpegDecModule: WebAssembly.Module | null = null;
-let oxipngModule: WebAssembly.Module | null = null;
+// Emscripten module instances (resolved promises from the factory)
+let jpegDecModule: any = null;
+let jpegEncModule: any = null;
 
-let jpegEncInitialised = false;
-let jpegDecInitialised = false;
-let oxipngInitialised = false;
+// OxiPNG wasm-bindgen module namespace
+let oxipngNs: any = null;
 
 // ── TinyPNG quota tracking (mirrors compressionRouter.ts) ────────────
 
@@ -58,26 +67,78 @@ function compileWasm(base64: string): WebAssembly.Module {
   return new WebAssembly.Module(buffer);
 }
 
+/**
+ * Evaluate an emscripten factory JS source string.
+ *
+ * The source files use `export default Module;` and
+ * `var Module = (() => { var _scriptDir = import.meta.url; ... })();`
+ *
+ * We strip the ES module wrapper and provide a safe `import.meta.url`
+ * substitute, then evaluate with new Function() so the code runs in a
+ * fresh scope without polluting the global namespace.
+ */
+function loadEmscriptenFactory(source: string): (opts: any) => Promise<any> {
+  // The emscripten factories look like:
+  //   var Module = (() => {
+  //     var _scriptDir = import.meta.url;
+  //     return (function(moduleArg = {}) { ... });
+  //   })();
+  //   export default Module;
+  //
+  // We need to:
+  // 1. Replace `import.meta.url` with a safe string
+  // 2. Remove the `export default Module;` line
+  // 3. Return the Module factory function
+
+  let code = source;
+
+  // Replace import.meta.url with a harmless data: URI
+  code = code.replace(/import\.meta\.url/g, '"data:text/javascript,"');
+
+  // Remove the ES module export
+  code = code.replace(/export\s+default\s+Module\s*;?\s*$/, '');
+
+  // Wrap in a function that returns the Module factory
+  const fn = new Function(`${code}\nreturn Module;`);
+  return fn();
+}
+
+/**
+ * Mirrors @jsquash/jpeg/utils.js `initEmscriptenModule`.
+ * Calls the emscripten factory with our pre-compiled WebAssembly.Module
+ * passed through the `instantiateWasm` callback.
+ */
+function initEmscriptenModule(
+  factory: (opts: any) => Promise<any>,
+  wasmModule: WebAssembly.Module,
+): Promise<any> {
+  return factory({
+    noInitialRun: true,
+    instantiateWasm: (
+      imports: WebAssembly.Imports,
+      callback: (instance: WebAssembly.Instance) => void,
+    ) => {
+      const instance = new WebAssembly.Instance(wasmModule, imports);
+      callback(instance);
+      return instance.exports;
+    },
+  });
+}
+
 // ── JPEG (MozJPEG) ──────────────────────────────────────────────────
 
 async function ensureJpegDec(): Promise<void> {
-  if (jpegDecInitialised) return;
-  if (!mozjpegDecModule) {
-    mozjpegDecModule = compileWasm(MOZJPEG_DEC_WASM_BASE64);
-  }
-  const jpegDec = await import('@jsquash/jpeg/decode');
-  await jpegDec.init(mozjpegDecModule);
-  jpegDecInitialised = true;
+  if (jpegDecModule) return;
+  const factory = loadEmscriptenFactory(MOZJPEG_DEC_JS_SOURCE);
+  const wasmModule = compileWasm(MOZJPEG_DEC_WASM_BASE64);
+  jpegDecModule = await initEmscriptenModule(factory, wasmModule);
 }
 
 async function ensureJpegEnc(): Promise<void> {
-  if (jpegEncInitialised) return;
-  if (!mozjpegEncModule) {
-    mozjpegEncModule = compileWasm(MOZJPEG_ENC_WASM_BASE64);
-  }
-  const jpegEnc = await import('@jsquash/jpeg/encode');
-  await jpegEnc.init(mozjpegEncModule);
-  jpegEncInitialised = true;
+  if (jpegEncModule) return;
+  const factory = loadEmscriptenFactory(MOZJPEG_ENC_JS_SOURCE);
+  const wasmModule = compileWasm(MOZJPEG_ENC_WASM_BASE64);
+  jpegEncModule = await initEmscriptenModule(factory, wasmModule);
 }
 
 /**
@@ -88,12 +149,79 @@ export async function compressJpeg(jpegBytes: ArrayBuffer): Promise<ArrayBuffer>
   await ensureJpegDec();
   await ensureJpegEnc();
 
-  const { decode } = await import('@jsquash/jpeg/decode');
-  const { encode } = await import('@jsquash/jpeg/encode');
+  // decode() and encode() mirror @jsquash/jpeg/decode.js and encode.js
+  const imageData = jpegDecModule.decode(new Uint8Array(jpegBytes), false);
+  if (!imageData) throw new Error('MozJPEG decode failed');
 
-  const imageData = await decode(jpegBytes);
-  const compressed = await encode(imageData, MOZJPEG_OPTIONS);
-  return compressed;
+  const resultView = jpegEncModule.encode(
+    imageData.data,
+    imageData.width,
+    imageData.height,
+    MOZJPEG_OPTIONS,
+  );
+  // Return a copy (avoids wasm memory issues)
+  return resultView.buffer.slice(
+    resultView.byteOffset,
+    resultView.byteOffset + resultView.byteLength,
+  );
+}
+
+// ── PNG — OxiPNG WASM ───────────────────────────────────────────────
+
+/**
+ * Load the OxiPNG wasm-bindgen module from its embedded source string.
+ *
+ * The source uses ES module exports (export function optimise, export { initSync },
+ * export default ...). We convert it to a script that assigns to a namespace object.
+ */
+function loadOxipngModule(): any {
+  let code = OXIPNG_JS_SOURCE;
+
+  // Replace import.meta.url
+  code = code.replace(/import\.meta\.url/g, '"data:text/javascript,"');
+
+  // The oxipng source has module-level side effects we need to handle:
+  // - Lines at the end do environment detection and polyfill ImageData
+  // We'll let those run — they're relatively safe in Figma's UI iframe.
+
+  // Convert ES module exports to assignments on a namespace object.
+  // The module has: export function optimise(...), export { initSync },
+  // export default __wbg_init;
+
+  // Remove export statements but keep the function declarations
+  code = code.replace(/^export\s+default\s+__wbg_init\s*;?\s*$/m, '');
+  code = code.replace(/^export\s*\{\s*initSync\s*\}\s*;?\s*$/m, '');
+  code = code.replace(/^export\s+function\s+/gm, 'function ');
+  code = code.replace(/^export\s+function\s*\*/gm, 'function* ');
+
+  // Return the namespace with the functions we need
+  const fn = new Function(`
+    ${code}
+    return { optimise, optimise_raw, initSync };
+  `);
+  return fn();
+}
+
+function ensureOxipng(): void {
+  if (oxipngNs) return;
+  oxipngNs = loadOxipngModule();
+  const wasmModule = compileWasm(OXIPNG_WASM_BASE64);
+  oxipngNs.initSync(wasmModule);
+}
+
+/**
+ * Compress a PNG image using OxiPNG WASM (level 2).
+ * Used as fallback when TinyPNG is unavailable or quota-exhausted.
+ */
+export async function compressPngWithOxipng(pngBytes: ArrayBuffer): Promise<ArrayBuffer> {
+  ensureOxipng();
+
+  const result = oxipngNs.optimise(new Uint8Array(pngBytes), 2, false, false);
+
+  // Copy to a new ArrayBuffer (avoids SharedArrayBuffer issues)
+  const output = new ArrayBuffer(result.byteLength);
+  new Uint8Array(output).set(new Uint8Array(result.buffer, result.byteOffset, result.byteLength));
+  return output;
 }
 
 // ── PNG — TinyPNG via Vercel proxy ──────────────────────────────────
@@ -131,31 +259,7 @@ async function compressPngWithTinyPNG(pngBytes: ArrayBuffer): Promise<ArrayBuffe
   return downloadResponse.arrayBuffer();
 }
 
-// ── PNG — OxiPNG WASM fallback ──────────────────────────────────────
-
-/**
- * Compress a PNG image using OxiPNG WASM (level 2).
- * Used as fallback when TinyPNG is unavailable or quota-exhausted.
- */
-export async function compressPngWithOxipng(pngBytes: ArrayBuffer): Promise<ArrayBuffer> {
-  if (!oxipngInitialised) {
-    if (!oxipngModule) {
-      oxipngModule = compileWasm(OXIPNG_WASM_BASE64);
-    }
-    // Import the single-threaded codec directly to avoid wasm-feature-detect
-    const oxipng = await import('@jsquash/oxipng/codec/pkg/squoosh_oxipng.js');
-    oxipng.initSync(oxipngModule);
-    oxipngInitialised = true;
-  }
-
-  const oxipng = await import('@jsquash/oxipng/codec/pkg/squoosh_oxipng.js');
-  const result = oxipng.optimise(new Uint8Array(pngBytes), 2, false, false);
-
-  // Copy to a new ArrayBuffer (avoids SharedArrayBuffer issues)
-  const output = new ArrayBuffer(result.byteLength);
-  new Uint8Array(output).set(new Uint8Array(result.buffer));
-  return output;
-}
+// ── PNG — combined (TinyPNG → OxiPNG fallback) ─────────────────────
 
 /**
  * Compress a PNG image. Tries TinyPNG first; falls back to OxiPNG on

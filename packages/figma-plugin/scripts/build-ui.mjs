@@ -20,13 +20,9 @@ const result = buildSync({
   target: 'es2020',
   minify: true,
   write: false,
-  // Prevent emscripten's import.meta.url resolution from erroring
-  define: {
-    'import.meta.url': '"data:text/javascript,"',
-  },
-  // wasm-feature-detect is never used (we import the ST codec directly)
-  // but mark it external just in case any transitive import references it
-  external: ['wasm-feature-detect'],
+  // No @jsquash imports — compression.ts uses embedded JS source strings
+  // evaluated at runtime via new Function(), so esbuild never sees the
+  // emscripten factories. No define/external overrides needed.
 });
 
 const jsBundle = result.outputFiles[0].text;
