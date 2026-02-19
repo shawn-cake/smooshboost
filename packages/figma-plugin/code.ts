@@ -15,7 +15,7 @@ function sendSelectionUpdate(): void {
 }
 
 // Show the plugin UI
-figma.showUI(__html__, { width: 780, height: 680 });
+figma.showUI(__html__, { width: 580, height: 180 });
 
 // Send initial selection count
 sendSelectionUpdate();

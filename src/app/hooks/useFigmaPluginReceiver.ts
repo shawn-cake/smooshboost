@@ -66,6 +66,14 @@ export function useFigmaPluginReceiver(
       });
 
       onFilesReceived(files);
+
+      // Acknowledge receipt so the Figma plugin can stop retrying
+      if (event.source && typeof (event.source as Window).postMessage === 'function') {
+        (event.source as Window).postMessage(
+          { type: 'FIGMA_PLUGIN_FILES_ACK' },
+          event.origin || '*'
+        );
+      }
     }
 
     window.addEventListener('message', handleMessage);

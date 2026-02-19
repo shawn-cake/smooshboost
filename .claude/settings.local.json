@@ -17,7 +17,9 @@
       "Bash(git stash:*)",
       "Bash(git stash pop:*)",
       "Bash(npx vitest:*)",
-      "Bash(npx vite build:*)"
+      "Bash(npx vite build:*)",
+      "WebFetch(domain:smshbst.vercel.app)",
+      "Bash(curl:*)"
     ]
   }
 }
