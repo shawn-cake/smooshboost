@@ -268,7 +268,10 @@ downloadAllBtn.addEventListener('click', () => {
 // ── Init ─────────────────────────────────────────────────────────────
 
 updateSelectionUI();
-setStatus('Select frames and click Export & Smoosh');
+setStatus('Ready — waiting for selection data…');
 
 // Tell the sandbox we're ready so it can send the current selection count
 parent.postMessage({ pluginMessage: { type: 'UI_READY' } }, '*');
+
+// Debug: confirm the script actually ran to completion
+console.log('[SmooshBoost UI] Initialised, UI_READY sent');

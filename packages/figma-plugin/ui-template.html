@@ -384,6 +384,19 @@
     <button class="btn-primary" id="download-all-btn">Download All</button>
   </div>
 
+  <!-- Debug: lightweight pre-bundle message listener -->
+  <script>
+    window.addEventListener('message', function(e) {
+      var msg = e.data && e.data.pluginMessage;
+      if (!msg) return;
+      var sl = document.getElementById('status-line');
+      if (sl && msg.type === 'SELECTION_UPDATE') {
+        sl.textContent = '[debug] Got SELECTION_UPDATE: count=' + msg.count;
+      }
+    });
+    document.getElementById('status-line').textContent = '[debug] Pre-bundle script ran OK';
+  </script>
+
   <!-- INJECT_JS -->
 
 </body>
