@@ -7,6 +7,10 @@
   "ui": "ui.html",
   "permissions": [],
   "networkAccess": {
-    "allowedDomains": ["https://smshbst.vercel.app"]
+    "allowedDomains": [
+      "https://smshbst.vercel.app",
+      "https://fonts.googleapis.com",
+      "https://fonts.gstatic.com"
+    ]
   }
 }

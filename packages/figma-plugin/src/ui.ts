@@ -205,8 +205,10 @@ async function handleExportReady(files: ExportedFile[]): Promise<void> {
 
 // ── Message handler ──────────────────────────────────────────────────
 
-window.onmessage = (event: MessageEvent) => {
-  const msg = event.data.pluginMessage;
+// Use addEventListener (not window.onmessage assignment) to avoid
+// overwriting any handler Figma's UI shell may have set.
+window.addEventListener('message', (event: MessageEvent) => {
+  const msg = event.data?.pluginMessage;
   if (!msg) return;
 
   switch (msg.type) {
@@ -223,7 +225,7 @@ window.onmessage = (event: MessageEvent) => {
       break;
     }
   }
-};
+});
 
 // ── Export button ────────────────────────────────────────────────────
 
