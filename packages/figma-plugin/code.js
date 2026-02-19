@@ -10,7 +10,7 @@ function sendSelectionUpdate() {
     figma.ui.postMessage({ type: 'SELECTION_UPDATE', count });
 }
 // Show the plugin UI
-figma.showUI(__html__, { width: 580, height: 180 });
+figma.showUI(__html__, { width: 780, height: 680 });
 // Send initial selection count
 sendSelectionUpdate();
 // Track selection changes

@@ -9,21 +9,11 @@
       font-family: 'Roboto', system-ui, -apple-system, sans-serif;
       font-size: 13px;
       color: #e5e7eb;
-      background: #1f2937;
+      background: #111827;
       overflow: hidden;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      gap: 16px;
-    }
-
-    /* ── Logo ── */
-    .logo {
-      width: 48px;
-      height: 48px;
-      opacity: 0.7;
     }
 
     /* ── Controls bar ── */
@@ -31,8 +21,11 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      width: 100%;
-      padding: 0 16px;
+      height: 45px;
+      min-height: 45px;
+      padding: 0 12px;
+      background: #1f2937;
+      border-bottom: 1px solid #374151;
     }
 
     .selection-label {
@@ -89,25 +82,26 @@
      *   <div class="boost-dropdown"> ... </div>
      */
 
-    /* ── Status area ── */
+    /* ── Status line ── */
     .status {
-      padding: 0 16px;
-      font-size: 12px;
-      color: #9ca3af;
-      min-height: 18px;
-      text-align: center;
+      padding: 4px 12px;
+      font-size: 11px;
+      color: #6b7280;
+      background: #1f2937;
+      min-height: 22px;
     }
     .status.success { color: #34d399; }
     .status.error   { color: #f87171; }
+
+    /* ── SmooshBoost iframe ── */
+    .app-frame {
+      flex: 1;
+      width: 100%;
+      border: none;
+    }
   </style>
 </head>
 <body>
-
-  <!-- SmooshBoost logo (inline SVG so it works without network) -->
-  <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="100" height="100" rx="20" fill="#4074A8"/>
-    <text x="50" y="62" text-anchor="middle" font-family="system-ui, sans-serif" font-size="40" font-weight="700" fill="white">SB</text>
-  </svg>
 
   <div class="controls">
     <span class="selection-label" id="selectionLabel">0 frames selected</span>
@@ -135,80 +129,65 @@
 
   <div class="status" id="status"></div>
 
+  <iframe
+    id="appFrame"
+    class="app-frame"
+    src="https://smshbst.vercel.app"
+    allow="downloads"
+  ></iframe>
+
   <script>
-    var SMOOSHBOOST_URL = 'https://smshbst.vercel.app';
+    var SMOOSHBOOST_ORIGIN = 'https://smshbst.vercel.app';
 
     var selectionLabel = document.getElementById('selectionLabel');
     var formatSelect   = document.getElementById('formatSelect');
     var scaleSelect    = document.getElementById('scaleSelect');
     var exportBtn      = document.getElementById('exportBtn');
+    var appFrame       = document.getElementById('appFrame');
     var statusEl       = document.getElementById('status');
 
     var selectedCount = 0;
-    var appWindow = null;
+    var iframeLoaded = false;
+    var pendingFiles = null;
 
     function setStatus(msg, type) {
       statusEl.textContent = msg;
       statusEl.className = 'status' + (type ? ' ' + type : '');
     }
 
-    function openOrFocusApp() {
-      // Reuse the window if it's still open
-      if (appWindow && !appWindow.closed) {
-        appWindow.focus();
-        return;
+    function sendFilesToIframe(files) {
+      try {
+        // Use '*' as target origin — the plugin UI runs in a null-origin
+        // sandbox so a specific origin may be rejected by the browser.
+        appFrame.contentWindow.postMessage(
+          { type: 'FIGMA_PLUGIN_FILES', files: files },
+          '*'
+        );
+        var count = files.length;
+        setStatus('Sent ' + count + ' file' + (count !== 1 ? 's' : '') + ' to queue', 'success');
+      } catch (e) {
+        setStatus('Error: ' + e.message, 'error');
       }
-      appWindow = window.open(SMOOSHBOOST_URL, 'smooshboost');
     }
 
-    function sendFilesToApp(files) {
-      openOrFocusApp();
-
-      if (!appWindow) {
-        setStatus('Could not open SmooshBoost — allow popups for Figma', 'error');
-        return;
+    appFrame.addEventListener('load', function () {
+      iframeLoaded = true;
+      setStatus('');
+      if (pendingFiles) {
+        sendFilesToIframe(pendingFiles);
+        pendingFiles = null;
       }
-
-      // Give the window time to load if it was just opened, then send.
-      // Retry a few times in case the app hasn't mounted yet.
-      var attempts = 0;
-      var maxAttempts = 20;
-      var interval = setInterval(function () {
-        attempts++;
-        try {
-          appWindow.postMessage(
-            { type: 'FIGMA_PLUGIN_FILES', files: files },
-            SMOOSHBOOST_URL
-          );
-          // Future Boost-phase: per-file metadata would be included
-          // in the message alongside the files array here.
-        } catch (e) {
-          // Cross-origin — window not ready yet
-        }
-
-        if (attempts >= maxAttempts) {
-          clearInterval(interval);
-        }
-      }, 500);
-
-      // Also listen for a ready ack from the app to stop retrying early
-      var ackHandler = function (event) {
-        if (event.data && event.data.type === 'FIGMA_PLUGIN_FILES_ACK') {
-          clearInterval(interval);
-          window.removeEventListener('message', ackHandler);
-          var count = files.length;
-          setStatus('Sent ' + count + ' file' + (count !== 1 ? 's' : '') + ' to SmooshBoost \u2714', 'success');
-        }
-      };
-      window.addEventListener('message', ackHandler);
-    }
+    });
 
     // ── Incoming messages ──
-    window.onmessage = function (event) {
+    // Two sources:
+    //   1. Figma sandbox  → event.data.pluginMessage
+    //   2. SmooshBoost iframe → event.data (direct)
+    window.addEventListener('message', function (event) {
       var pluginMsg = event.data && event.data.pluginMessage;
 
       if (pluginMsg) {
-        // From Figma sandbox
+        // ── From Figma sandbox ──
         if (pluginMsg.type === 'SELECTION_UPDATE') {
           selectedCount = pluginMsg.count;
           selectionLabel.textContent =
@@ -218,15 +197,26 @@
 
         if (pluginMsg.type === 'EXPORT_READY') {
           var files = pluginMsg.files;
-          setStatus('Exported ' + files.length + ' file' + (files.length !== 1 ? 's' : '') + ', opening SmooshBoost\u2026');
 
-          sendFilesToApp(files);
+          // Future Boost-phase: per-file metadata from pluginMsg.files
+          // entries would be forwarded here alongside file data.
+          if (iframeLoaded) {
+            sendFilesToIframe(files);
+          } else {
+            pendingFiles = files;
+            setStatus('Waiting for SmooshBoost to load\u2026');
+          }
 
           exportBtn.disabled = false;
           exportBtn.textContent = 'Export & Smoosh';
         }
       }
-    };
+
+      // ── From SmooshBoost iframe ──
+      if (event.data && event.data.type === 'FIGMA_PLUGIN_FILES_ACK') {
+        setStatus('Files received \u2714', 'success');
+      }
+    });
 
     // ── Export button ──
     exportBtn.addEventListener('click', function () {
