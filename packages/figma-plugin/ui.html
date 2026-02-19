@@ -137,8 +137,6 @@
   ></iframe>
 
   <script>
-    var SMOOSHBOOST_ORIGIN = 'https://smshbst.vercel.app';
-
     var selectionLabel = document.getElementById('selectionLabel');
     var formatSelect   = document.getElementById('formatSelect');
     var scaleSelect    = document.getElementById('scaleSelect');
@@ -150,6 +148,19 @@
     var iframeLoaded = false;
     var pendingFiles = null;
 
+    // MessageChannel for reliable cross-origin communication.
+    // We send port2 to the iframe; it listens on that port.
+    // This bypasses origin restrictions that block normal postMessage
+    // delivery from Figma's null-origin plugin sandbox.
+    var channel = new MessageChannel();
+    var port = channel.port1;
+
+    port.onmessage = function (event) {
+      if (event.data && event.data.type === 'FIGMA_PLUGIN_FILES_ACK') {
+        setStatus('Files received \u2714', 'success');
+      }
+    };
+
     function setStatus(msg, type) {
       statusEl.textContent = msg;
       statusEl.className = 'status' + (type ? ' ' + type : '');
@@ -157,12 +168,8 @@
 
     function sendFilesToIframe(files) {
       try {
-        // Use '*' as target origin — the plugin UI runs in a null-origin
-        // sandbox so a specific origin may be rejected by the browser.
-        appFrame.contentWindow.postMessage(
-          { type: 'FIGMA_PLUGIN_FILES', files: files },
-          '*'
-        );
+        // Send files through the MessageChannel port
+        port.postMessage({ type: 'FIGMA_PLUGIN_FILES', files: files });
         var count = files.length;
         setStatus('Sent ' + count + ' file' + (count !== 1 ? 's' : '') + ' to queue', 'success');
       } catch (e) {
@@ -173,48 +180,53 @@
     appFrame.addEventListener('load', function () {
       iframeLoaded = true;
       setStatus('');
+
+      // Transfer port2 to the iframe so it can receive messages
+      try {
+        appFrame.contentWindow.postMessage(
+          { type: 'FIGMA_PLUGIN_PORT_INIT' },
+          '*',
+          [channel.port2]
+        );
+      } catch (e) {
+        setStatus('Port transfer failed: ' + e.message, 'error');
+      }
+
       if (pendingFiles) {
-        sendFilesToIframe(pendingFiles);
-        pendingFiles = null;
+        // Small delay to let the iframe set up the port listener
+        setTimeout(function () {
+          sendFilesToIframe(pendingFiles);
+          pendingFiles = null;
+        }, 300);
       }
     });
 
-    // ── Incoming messages ──
-    // Two sources:
-    //   1. Figma sandbox  → event.data.pluginMessage
-    //   2. SmooshBoost iframe → event.data (direct)
+    // ── Incoming messages from Figma sandbox ──
     window.addEventListener('message', function (event) {
       var pluginMsg = event.data && event.data.pluginMessage;
+      if (!pluginMsg) return;
 
-      if (pluginMsg) {
-        // ── From Figma sandbox ──
-        if (pluginMsg.type === 'SELECTION_UPDATE') {
-          selectedCount = pluginMsg.count;
-          selectionLabel.textContent =
-            selectedCount + ' frame' + (selectedCount !== 1 ? 's' : '') + ' selected';
-          exportBtn.disabled = selectedCount === 0;
-        }
-
-        if (pluginMsg.type === 'EXPORT_READY') {
-          var files = pluginMsg.files;
-
-          // Future Boost-phase: per-file metadata from pluginMsg.files
-          // entries would be forwarded here alongside file data.
-          if (iframeLoaded) {
-            sendFilesToIframe(files);
-          } else {
-            pendingFiles = files;
-            setStatus('Waiting for SmooshBoost to load\u2026');
-          }
-
-          exportBtn.disabled = false;
-          exportBtn.textContent = 'Export & Smoosh';
-        }
+      if (pluginMsg.type === 'SELECTION_UPDATE') {
+        selectedCount = pluginMsg.count;
+        selectionLabel.textContent =
+          selectedCount + ' frame' + (selectedCount !== 1 ? 's' : '') + ' selected';
+        exportBtn.disabled = selectedCount === 0;
       }
 
-      // ── From SmooshBoost iframe ──
-      if (event.data && event.data.type === 'FIGMA_PLUGIN_FILES_ACK') {
-        setStatus('Files received \u2714', 'success');
+      if (pluginMsg.type === 'EXPORT_READY') {
+        var files = pluginMsg.files;
+
+        // Future Boost-phase: per-file metadata from pluginMsg.files
+        // entries would be forwarded here alongside file data.
+        if (iframeLoaded) {
+          sendFilesToIframe(files);
+        } else {
+          pendingFiles = files;
+          setStatus('Waiting for SmooshBoost to load\u2026');
+        }
+
+        exportBtn.disabled = false;
+        exportBtn.textContent = 'Export & Smoosh';
       }
     });
 
