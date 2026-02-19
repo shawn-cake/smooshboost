@@ -1,0 +1,9 @@
+{
+  "name": "SmooshBoost",
+  "id": "1606418361284936055",
+  "api": "1.0.0",
+  "editorType": ["figma"],
+  "main": "code.js",
+  "ui": "ui.html",
+  "permissions": []
+}

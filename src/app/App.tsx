@@ -17,6 +17,7 @@ import {
   useCompression,
   useDownload,
   useMetadataInjection,
+  useFigmaPluginReceiver,
 } from './hooks';
 
 // Types
@@ -111,6 +112,9 @@ function App() {
     },
     [images.length, validateBatch, filterValidFiles, addImages]
   );
+
+  // Figma plugin bridge — receives exported files via postMessage
+  useFigmaPluginReceiver(handleFilesSelected);
 
   // Handle single image download
   const handleDownloadOne = useCallback(

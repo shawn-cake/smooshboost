@@ -16,7 +16,8 @@
       "Bash(npm run lint:*)",
       "Bash(git stash:*)",
       "Bash(git stash pop:*)",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "Bash(npx vite build:*)"
     ]
   }
 }

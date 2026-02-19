@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+      font-size: 13px;
+      color: #e5e7eb;
+      background: #111827;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Controls bar ── */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 45px;
+      min-height: 45px;
+      padding: 0 12px;
+      background: #1f2937;
+      border-bottom: 1px solid #374151;
+    }
+
+    .selection-label {
+      white-space: nowrap;
+      color: #e5e7eb;
+      min-width: 110px;
+    }
+
+    .controls select {
+      background: #374151;
+      color: #e5e7eb;
+      border: 1px solid #4b5563;
+      border-radius: 4px;
+      padding: 4px 6px;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .controls select:focus {
+      outline: none;
+      border-color: #4074a8;
+    }
+
+    .controls label {
+      color: #d1d5db;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .spacer { flex: 1; }
+
+    .export-btn {
+      background: #4074a8;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+
+    .export-btn:hover:not(:disabled) { background: #345f8a; }
+    .export-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /*
+     * Future Boost-phase controls (metadata options per-batch or per-frame)
+     * would be inserted here, between .spacer and .export-btn, for example:
+     *   <button class="boost-btn">Boost Options</button>
+     *   <div class="boost-dropdown"> ... </div>
+     */
+
+    /* ── SmooshBoost iframe ── */
+    .app-frame {
+      flex: 1;
+      width: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="controls">
+    <span class="selection-label" id="selectionLabel">0 frames selected</span>
+
+    <label for="formatSelect">Format</label>
+    <select id="formatSelect">
+      <option value="JPG" selected>JPG</option>
+      <option value="PNG">PNG</option>
+    </select>
+
+    <label for="scaleSelect">Scale</label>
+    <select id="scaleSelect">
+      <option value="1">1x</option>
+      <option value="2" selected>2x</option>
+      <option value="3">3x</option>
+      <option value="4">4x</option>
+    </select>
+
+    <span class="spacer"></span>
+
+    <!-- Future: Boost-phase controls would be inserted here -->
+
+    <button class="export-btn" id="exportBtn" disabled>Export &amp; Smoosh</button>
+  </div>
+
+  <!--
+    Live SmooshBoost deployment. Update the src URL if the Vercel
+    project domain changes. allow="downloads" enables ZIP downloads
+    inside the iframe (may be stripped by Figma's plugin environment —
+    see known-limitations note in the project README).
+  -->
+  <iframe
+    id="appFrame"
+    class="app-frame"
+    src="https://smshbst.vercel.app"
+    allow="downloads"
+  ></iframe>
+
+  <script>
+    const selectionLabel = document.getElementById('selectionLabel');
+    const formatSelect   = document.getElementById('formatSelect');
+    const scaleSelect    = document.getElementById('scaleSelect');
+    const exportBtn      = document.getElementById('exportBtn');
+    const appFrame       = document.getElementById('appFrame');
+
+    let selectedCount = 0;
+
+    // ── Incoming messages ──
+    // Messages arrive from two sources:
+    //   1. Figma sandbox  → event.data.pluginMessage
+    //   2. SmooshBoost iframe → event.data (direct postMessage)
+    window.onmessage = function (event) {
+      const pluginMsg = event.data && event.data.pluginMessage;
+
+      if (pluginMsg) {
+        // From Figma sandbox
+        if (pluginMsg.type === 'SELECTION_UPDATE') {
+          selectedCount = pluginMsg.count;
+          selectionLabel.textContent =
+            selectedCount + ' frame' + (selectedCount !== 1 ? 's' : '') + ' selected';
+          exportBtn.disabled = selectedCount === 0;
+        }
+
+        if (pluginMsg.type === 'EXPORT_READY') {
+          // Forward files to the SmooshBoost iframe using the
+          // FIGMA_PLUGIN_FILES message shape that useFigmaPluginReceiver expects.
+          //
+          // Future Boost-phase: per-file metadata from pluginMsg.files entries
+          // would be forwarded here alongside the file data.
+          appFrame.contentWindow.postMessage(
+            { type: 'FIGMA_PLUGIN_FILES', files: pluginMsg.files },
+            '*'
+          );
+          exportBtn.disabled = false;
+          exportBtn.textContent = 'Export & Smoosh';
+        }
+      }
+
+      // Messages from the SmooshBoost iframe would be handled here
+      // if two-way communication is needed in the future.
+    };
+
+    // ── Export button ──
+    exportBtn.addEventListener('click', function () {
+      if (selectedCount === 0) return;
+
+      exportBtn.disabled = true;
+      exportBtn.textContent = 'Exporting\u2026';
+
+      parent.postMessage(
+        {
+          pluginMessage: {
+            type: 'EXPORT_REQUEST',
+            format: formatSelect.value,
+            scale: Number(scaleSelect.value),
+          },
+        },
+        '*'
+      );
+    });
+  </script>
+</body>
+</html>
