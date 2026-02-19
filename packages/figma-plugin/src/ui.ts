@@ -28,6 +28,7 @@ const progressText = document.getElementById('progress-text') as HTMLElement;
 
 const resultsList = document.getElementById('results-list') as HTMLElement;
 const downloadBar = document.getElementById('download-bar') as HTMLElement;
+const downloadSummary = document.getElementById('download-summary') as HTMLElement;
 const downloadAllBtn = document.getElementById('download-all-btn') as HTMLButtonElement;
 
 // ── State ────────────────────────────────────────────────────────────
@@ -117,8 +118,18 @@ function renderResults(): void {
     });
   });
 
-  // Show download bar if there are results
-  downloadBar.style.display = compressionResults.length > 0 ? 'flex' : 'none';
+  // Show download bar with summary if there are results
+  if (compressionResults.length > 0) {
+    const totalOriginal = compressionResults.reduce((a, r) => a + r.originalSize, 0);
+    const totalCompressed = compressionResults.reduce((a, r) => a + r.compressedSize, 0);
+    const totalSaved = totalOriginal - totalCompressed;
+    const totalPct = totalOriginal > 0 ? Math.round((totalSaved / totalOriginal) * 100) : 0;
+    downloadSummary.innerHTML =
+      `${compressionResults.length} file${compressionResults.length > 1 ? 's' : ''} · <strong>${formatBytes(totalSaved)} saved (−${totalPct}%)</strong>`;
+    downloadBar.style.display = 'flex';
+  } else {
+    downloadBar.style.display = 'none';
+  }
 }
 
 // ── Compression pipeline ─────────────────────────────────────────────
@@ -256,3 +267,6 @@ downloadAllBtn.addEventListener('click', () => {
 
 updateSelectionUI();
 setStatus('Select frames and click Export & Smoosh');
+
+// Tell the sandbox we're ready so it can send the current selection count
+parent.postMessage({ pluginMessage: { type: 'UI_READY' } }, '*');

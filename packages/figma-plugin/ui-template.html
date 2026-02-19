@@ -2,19 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans+Mono:wght@400;500;600&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* ── Reset & base ───────────────────────────────────────────── */
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    :root {
+      --primary-50:  #E8F0F7;
+      --primary-100: #D1E0EE;
+      --primary-200: #A3C1DD;
+      --primary-300: #75A2CC;
+      --primary-400: #4783BB;
+      --primary-500: #4074A8;
+      --primary-600: #336086;
+      --primary-700: #264864;
+      --primary-800: #1A3042;
+      --primary-900: #0D1821;
+
+      --accent-50:  #FEF9E7;
+      --accent-100: #FDF3CF;
+      --accent-200: #FBE79F;
+      --accent-300: #F9DB6F;
+      --accent-400: #F7CF3F;
+      --accent-500: #F2A918;
+      --accent-600: #C28713;
+      --accent-700: #91650E;
+      --accent-800: #61430A;
+      --accent-900: #302205;
+    }
+
     body {
-      font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 13px;
-      color: #e5e7eb;
-      background: #111827;
+      font-family: 'Spline Sans Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+      font-size: 12px;
+      color: var(--primary-100);
+      background: radial-gradient(ellipse at 50% 0%, var(--primary-700) 0%, var(--primary-800) 40%, var(--primary-900) 100%);
       display: flex;
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     /* ── Header / Controls ──────────────────────────────────────── */
@@ -22,28 +49,45 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 12px 16px;
-      background: #1f2937;
-      border-bottom: 1px solid #374151;
+      padding: 10px 16px;
+      background: rgba(13, 24, 33, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(163, 193, 221, 0.12);
       flex-shrink: 0;
     }
 
-    .header .logo {
+    .logo-mark {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .logo-mark svg {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .logo-mark .wordmark {
+      font-family: 'Syne', sans-serif;
       font-weight: 700;
-      font-size: 15px;
-      color: #f97316;
+      font-size: 14px;
+      color: #ffffff;
+      letter-spacing: -0.02em;
       white-space: nowrap;
     }
 
     .header .divider {
       width: 1px;
       height: 20px;
-      background: #374151;
+      background: rgba(163, 193, 221, 0.15);
     }
 
     .selection-label {
-      color: #e5e7eb;
-      font-size: 12px;
+      color: var(--primary-200);
+      font-size: 11px;
       flex-shrink: 0;
     }
 
@@ -55,65 +99,85 @@
     }
 
     .controls label {
-      color: #d1d5db;
-      font-size: 11px;
+      color: var(--primary-300);
+      font-size: 10px;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.08em;
+      font-weight: 500;
     }
 
     .controls select {
-      background: #374151;
-      color: #e5e7eb;
-      border: 1px solid #4b5563;
+      background: rgba(26, 48, 66, 0.8);
+      color: var(--primary-100);
+      border: 1px solid rgba(163, 193, 221, 0.2);
       border-radius: 4px;
       padding: 4px 6px;
-      font-size: 12px;
+      font-family: inherit;
+      font-size: 11px;
       cursor: pointer;
+      transition: border-color 0.15s;
     }
 
     .controls select:focus {
       outline: none;
-      border-color: #f97316;
+      border-color: var(--accent-400);
     }
 
     /* ── Buttons ─────────────────────────────────────────────────── */
     .btn-primary {
-      background: #f97316;
-      color: #fff;
+      background: var(--accent-500);
+      color: var(--primary-900);
       border: none;
-      border-radius: 6px;
-      padding: 8px 16px;
-      font-size: 13px;
+      border-radius: 5px;
+      padding: 7px 14px;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: background 0.15s, transform 0.1s;
       white-space: nowrap;
     }
 
-    .btn-primary:hover:not(:disabled) { background: #ea580c; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .btn-small {
-      background: #374151;
-      color: #e5e7eb;
-      border: 1px solid #4b5563;
-      border-radius: 4px;
-      padding: 4px 10px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: background 0.15s;
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-400);
+      transform: translateY(-1px);
     }
 
-    .btn-small:hover { background: #4b5563; }
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-small {
+      background: rgba(26, 48, 66, 0.6);
+      color: var(--primary-200);
+      border: 1px solid rgba(163, 193, 221, 0.15);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn-small:hover {
+      background: rgba(64, 116, 168, 0.25);
+      border-color: rgba(163, 193, 221, 0.3);
+    }
 
     /* ── Status line ─────────────────────────────────────────────── */
     .status-line {
-      padding: 8px 16px;
-      font-size: 11px;
-      color: #9ca3af;
-      background: #111827;
-      border-bottom: 1px solid #1f2937;
+      padding: 7px 16px;
+      font-size: 10px;
+      color: var(--primary-300);
+      background: rgba(13, 24, 33, 0.4);
+      border-bottom: 1px solid rgba(163, 193, 221, 0.06);
       flex-shrink: 0;
+      letter-spacing: 0.02em;
     }
 
     /* ── Progress ─────────────────────────────────────────────────── */
@@ -125,8 +189,8 @@
 
     .progress-track {
       width: 100%;
-      height: 6px;
-      background: #374151;
+      height: 5px;
+      background: rgba(26, 48, 66, 0.6);
       border-radius: 3px;
       overflow: hidden;
     }
@@ -134,28 +198,28 @@
     .progress-bar {
       height: 100%;
       width: 0%;
-      background: #f97316;
+      background: linear-gradient(90deg, var(--accent-500), var(--accent-400));
       border-radius: 3px;
       transition: width 0.3s ease;
     }
 
     .progress-text {
       margin-top: 6px;
-      font-size: 11px;
-      color: #9ca3af;
+      font-size: 10px;
+      color: var(--primary-300);
     }
 
     /* ── Results list ─────────────────────────────────────────────── */
     .results-list {
       flex: 1;
       overflow-y: auto;
-      padding: 8px 16px;
+      padding: 6px 16px;
     }
 
-    .results-list::-webkit-scrollbar { width: 6px; }
+    .results-list::-webkit-scrollbar { width: 5px; }
     .results-list::-webkit-scrollbar-track { background: transparent; }
     .results-list::-webkit-scrollbar-thumb {
-      background: #374151;
+      background: rgba(163, 193, 221, 0.15);
       border-radius: 3px;
     }
 
@@ -164,7 +228,12 @@
       align-items: center;
       justify-content: space-between;
       padding: 8px 10px;
-      border-bottom: 1px solid #1f2937;
+      border-bottom: 1px solid rgba(163, 193, 221, 0.06);
+      transition: background 0.1s;
+    }
+
+    .result-row:hover {
+      background: rgba(64, 116, 168, 0.08);
     }
 
     .result-row:last-child { border-bottom: none; }
@@ -177,20 +246,21 @@
     }
 
     .result-name {
-      font-size: 12px;
-      color: #e5e7eb;
+      font-size: 11px;
+      color: var(--primary-100);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      font-weight: 500;
     }
 
     .result-meta {
-      font-size: 11px;
-      color: #9ca3af;
+      font-size: 10px;
+      color: var(--primary-300);
     }
 
     .result-meta strong {
-      color: #34d399;
+      color: var(--accent-400);
       font-weight: 600;
     }
 
@@ -198,12 +268,23 @@
     .download-bar {
       display: none;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: space-between;
       gap: 10px;
       padding: 10px 16px;
-      background: #1f2937;
-      border-top: 1px solid #374151;
+      background: rgba(13, 24, 33, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(163, 193, 221, 0.12);
       flex-shrink: 0;
+    }
+
+    .download-summary {
+      font-size: 10px;
+      color: var(--primary-300);
+    }
+
+    .download-summary strong {
+      color: var(--accent-400);
     }
 
     /* ── Empty state ──────────────────────────────────────────────── */
@@ -213,20 +294,25 @@
       align-items: center;
       justify-content: center;
       height: 100%;
-      color: #6b7280;
       text-align: center;
       padding: 40px 20px;
     }
 
-    .empty-state .icon {
-      font-size: 48px;
-      margin-bottom: 12px;
-      opacity: 0.5;
+    .empty-state .empty-logo {
+      opacity: 0.15;
+      margin-bottom: 16px;
     }
 
     .empty-state p {
-      font-size: 13px;
-      line-height: 1.5;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--primary-300);
+      max-width: 320px;
+    }
+
+    .empty-state p strong {
+      color: var(--accent-400);
+      font-weight: 600;
     }
   </style>
 </head>
@@ -234,7 +320,15 @@
 
   <!-- Header: logo, selection info, controls, export button -->
   <div class="header">
-    <span class="logo">SmooshBoost</span>
+    <div class="logo-mark">
+      <!-- Inline favicon SVG as logo mark -->
+      <svg width="24" height="24" viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="150" height="150" rx="8" fill="#364151"/>
+        <path d="M41 134V77H98.5481C110.362 77 119.071 78.1281 124.673 80.3844C130.276 82.6406 133.077 86.5594 133.077 92.1406C133.077 95.7031 131.859 98.4344 129.423 100.334C127.048 102.234 123.607 103.57 119.101 104.342C114.655 105.055 109.296 105.5 103.024 105.678L103.755 104.966C108.322 104.966 112.554 105.084 116.452 105.322C120.349 105.559 123.76 106.094 126.683 106.925C129.606 107.756 131.889 109.033 133.534 110.755C135.178 112.477 136 114.852 136 117.88C136 121.561 134.66 124.589 131.981 126.964C129.301 129.339 125.495 131.12 120.563 132.308C115.63 133.436 109.814 134 103.115 134H41ZM63.8365 117.256H103.115C106.343 117.256 108.657 116.959 110.058 116.366C111.519 115.772 112.25 114.822 112.25 113.516C112.25 112.625 111.915 111.912 111.245 111.378C110.636 110.844 109.662 110.458 108.322 110.22C106.982 109.923 105.247 109.775 103.115 109.775H63.8365V117.256ZM63.8365 101.225H99.2788C102.506 101.225 104.821 100.928 106.221 100.334C107.683 99.7406 108.413 98.7906 108.413 97.4844C108.413 96.1188 107.683 95.1688 106.221 94.6344C104.821 94.0406 102.506 93.7438 99.2788 93.7438H63.8365V101.225Z" fill="white"/>
+        <path d="M12.0637 49.1154H40.8811C42.1237 51.0897 44.561 52.5 48.193 53.3462C51.9207 54.1923 57.1776 54.6154 63.9638 54.6154C69.0295 54.6154 72.8049 54.4038 75.29 53.9808C77.7751 53.5577 79.4 52.9936 80.1646 52.2885C81.0248 51.5128 81.4549 50.6667 81.4549 49.75C81.4549 48.5513 80.5947 47.7051 78.8743 47.2115C77.2494 46.6474 74.4776 46.2596 70.5588 46.0481C66.7356 45.8365 61.4787 45.6955 54.7881 45.625C48.3842 45.5545 42.6016 45.2724 37.4403 44.7788C32.3745 44.2147 28.0256 43.4391 24.3936 42.4519C20.7615 41.3942 17.9419 39.9487 15.9347 38.1154C14.0231 36.2821 13.0673 33.9904 13.0673 31.2404C13.0673 28.0673 14.4054 25.3526 17.0817 23.0962C19.8535 20.8397 23.5333 19.0769 28.1212 17.8077C32.8046 16.468 38.2049 15.516 44.322 14.9519C50.4392 14.3173 56.8908 14 63.677 14C74.6688 14 83.7011 14.8814 90.774 16.6442C97.847 18.4071 103.056 20.7692 106.401 23.7308C109.842 26.6923 111.515 30.0417 111.419 33.7788H83.4621C82.4107 31.8045 80.4991 30.4295 77.7273 29.6538C74.9555 28.8077 70.2721 28.3846 63.677 28.3846C57.3687 28.3846 52.7809 28.8077 49.9135 29.6538C47.0461 30.4295 45.6124 31.6635 45.6124 33.3558C45.6124 34.484 46.3292 35.3654 47.7629 36C49.2922 36.5641 51.9685 36.9872 55.7917 37.2692C59.7104 37.4808 65.3497 37.6571 72.7094 37.7981C77.8707 37.8686 82.8886 38.1154 87.7632 38.5385C92.7334 38.891 97.1779 39.5609 101.097 40.5481C105.015 41.4647 108.122 42.875 110.416 44.7788C112.805 46.6122 114 49.1506 114 52.3942C114 56.2724 111.945 59.4455 107.835 61.9135C103.725 64.3814 97.9425 66.1795 90.4873 67.3077C83.032 68.4359 74.1908 69 63.9638 69C54.9792 69 47.3806 68.5417 41.1679 67.625C35.0508 66.7083 30.0328 65.5096 26.114 64.0288C22.1952 62.4776 19.1367 60.8205 16.9383 59.0577C14.8355 57.2949 13.4496 55.5321 12.7806 53.7692C12.1115 52.0064 11.8726 50.4551 12.0637 49.1154Z" fill="white"/>
+      </svg>
+      <span class="wordmark">SmooshBoost</span>
+    </div>
     <span class="divider"></span>
     <span class="selection-label" id="selection-label">No exportable frames selected</span>
 
@@ -271,13 +365,19 @@
   <!-- Scrollable results -->
   <div class="results-list" id="results-list">
     <div class="empty-state">
-      <div class="icon">🖼️</div>
+      <!-- Large faded logo for empty state -->
+      <svg class="empty-logo" width="64" height="64" viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="150" height="150" rx="8" fill="#364151"/>
+        <path d="M41 134V77H98.5481C110.362 77 119.071 78.1281 124.673 80.3844C130.276 82.6406 133.077 86.5594 133.077 92.1406C133.077 95.7031 131.859 98.4344 129.423 100.334C127.048 102.234 123.607 103.57 119.101 104.342C114.655 105.055 109.296 105.5 103.024 105.678L103.755 104.966C108.322 104.966 112.554 105.084 116.452 105.322C120.349 105.559 123.76 106.094 126.683 106.925C129.606 107.756 131.889 109.033 133.534 110.755C135.178 112.477 136 114.852 136 117.88C136 121.561 134.66 124.589 131.981 126.964C129.301 129.339 125.495 131.12 120.563 132.308C115.63 133.436 109.814 134 103.115 134H41ZM63.8365 117.256H103.115C106.343 117.256 108.657 116.959 110.058 116.366C111.519 115.772 112.25 114.822 112.25 113.516C112.25 112.625 111.915 111.912 111.245 111.378C110.636 110.844 109.662 110.458 108.322 110.22C106.982 109.923 105.247 109.775 103.115 109.775H63.8365V117.256ZM63.8365 101.225H99.2788C102.506 101.225 104.821 100.928 106.221 100.334C107.683 99.7406 108.413 98.7906 108.413 97.4844C108.413 96.1188 107.683 95.1688 106.221 94.6344C104.821 94.0406 102.506 93.7438 99.2788 93.7438H63.8365V101.225Z" fill="white"/>
+        <path d="M12.0637 49.1154H40.8811C42.1237 51.0897 44.561 52.5 48.193 53.3462C51.9207 54.1923 57.1776 54.6154 63.9638 54.6154C69.0295 54.6154 72.8049 54.4038 75.29 53.9808C77.7751 53.5577 79.4 52.9936 80.1646 52.2885C81.0248 51.5128 81.4549 50.6667 81.4549 49.75C81.4549 48.5513 80.5947 47.7051 78.8743 47.2115C77.2494 46.6474 74.4776 46.2596 70.5588 46.0481C66.7356 45.8365 61.4787 45.6955 54.7881 45.625C48.3842 45.5545 42.6016 45.2724 37.4403 44.7788C32.3745 44.2147 28.0256 43.4391 24.3936 42.4519C20.7615 41.3942 17.9419 39.9487 15.9347 38.1154C14.0231 36.2821 13.0673 33.9904 13.0673 31.2404C13.0673 28.0673 14.4054 25.3526 17.0817 23.0962C19.8535 20.8397 23.5333 19.0769 28.1212 17.8077C32.8046 16.468 38.2049 15.516 44.322 14.9519C50.4392 14.3173 56.8908 14 63.677 14C74.6688 14 83.7011 14.8814 90.774 16.6442C97.847 18.4071 103.056 20.7692 106.401 23.7308C109.842 26.6923 111.515 30.0417 111.419 33.7788H83.4621C82.4107 31.8045 80.4991 30.4295 77.7273 29.6538C74.9555 28.8077 70.2721 28.3846 63.677 28.3846C57.3687 28.3846 52.7809 28.8077 49.9135 29.6538C47.0461 30.4295 45.6124 31.6635 45.6124 33.3558C45.6124 34.484 46.3292 35.3654 47.7629 36C49.2922 36.5641 51.9685 36.9872 55.7917 37.2692C59.7104 37.4808 65.3497 37.6571 72.7094 37.7981C77.8707 37.8686 82.8886 38.1154 87.7632 38.5385C92.7334 38.891 97.1779 39.5609 101.097 40.5481C105.015 41.4647 108.122 42.875 110.416 44.7788C112.805 46.6122 114 49.1506 114 52.3942C114 56.2724 111.945 59.4455 107.835 61.9135C103.725 64.3814 97.9425 66.1795 90.4873 67.3077C83.032 68.4359 74.1908 69 63.9638 69C54.9792 69 47.3806 68.5417 41.1679 67.625C35.0508 66.7083 30.0328 65.5096 26.114 64.0288C22.1952 62.4776 19.1367 60.8205 16.9383 59.0577C14.8355 57.2949 13.4496 55.5321 12.7806 53.7692C12.1115 52.0064 11.8726 50.4551 12.0637 49.1154Z" fill="white"/>
+      </svg>
       <p>Select frames in Figma, choose your format &amp; scale,<br/>then click <strong>Export &amp; Smoosh</strong> to compress.</p>
     </div>
   </div>
 
   <!-- Download bar -->
   <div class="download-bar" id="download-bar">
+    <span class="download-summary" id="download-summary"></span>
     <button class="btn-primary" id="download-all-btn">Download All</button>
   </div>
 

@@ -1,7 +1,7 @@
 // SmooshBoost Figma Plugin — Sandbox Script
 // Runs in the Figma sandbox (no DOM access, no browser APIs).
 
-const EXPORTABLE_TYPES: NodeType[] = ['FRAME', 'COMPONENT', 'GROUP'];
+const EXPORTABLE_TYPES: NodeType[] = ['FRAME', 'COMPONENT', 'INSTANCE', 'GROUP'];
 
 function getExportableSelection(): SceneNode[] {
   return figma.currentPage.selection.filter((node) =>
@@ -17,8 +17,9 @@ function sendSelectionUpdate(): void {
 // Show the plugin UI
 figma.showUI(__html__, { width: 780, height: 680 });
 
-// Send initial selection count
-sendSelectionUpdate();
+// Send initial selection after a short delay so the UI JS bundle has time to
+// parse and attach its onmessage listener (~900 KB IIFE).
+setTimeout(() => sendSelectionUpdate(), 200);
 
 // Track selection changes
 figma.on('selectionchange', () => {
@@ -38,6 +39,12 @@ figma.ui.onmessage = async (msg: {
   //     description?: string;
   //   }
 }) => {
+  // UI signals it has finished loading — send current selection immediately
+  if (msg.type === 'UI_READY') {
+    sendSelectionUpdate();
+    return;
+  }
+
   if (msg.type !== 'EXPORT_REQUEST') return;
 
   const format = msg.format || 'JPG';
