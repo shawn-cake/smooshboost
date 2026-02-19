@@ -384,19 +384,12 @@
     <button class="btn-primary" id="download-all-btn">Download All</button>
   </div>
 
-  <!-- Debug: lightweight pre-bundle message listener -->
-  <script>
-    window.addEventListener('message', function(e) {
-      var msg = e.data && e.data.pluginMessage;
-      if (!msg) return;
-      var sl = document.getElementById('status-line');
-      if (sl && msg.type === 'SELECTION_UPDATE') {
-        sl.textContent = '[debug] Got SELECTION_UPDATE: count=' + msg.count;
-      }
-    });
-    document.getElementById('status-line').textContent = '[debug] Pre-bundle script ran OK';
-  </script>
+  <!-- Codec scripts: emscripten factories + oxipng wasm-bindgen.
+       These define window.__smoosh_mozjpeg_dec, __smoosh_mozjpeg_enc, __smoosh_oxipng
+       as inert factory functions. They do NOT instantiate WASM until called. -->
+  <!-- INJECT_CODECS -->
 
+  <!-- Main UI bundle -->
   <!-- INJECT_JS -->
 
 </body>

@@ -178,8 +178,9 @@ async function handleExportReady(files: ExportedFile[]): Promise<void> {
         engine,
       });
     } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
       console.error(`[SmooshBoost] Failed to compress ${file.name}:`, err);
-      setStatus(`Error compressing ${file.name}`);
+      setStatus(`Error compressing ${file.name}: ${errMsg}`);
     }
   }
 

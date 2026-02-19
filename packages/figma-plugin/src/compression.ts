@@ -7,23 +7,40 @@
  * CRITICAL DESIGN DECISION:
  * We do NOT import from @jsquash/* at build time. The emscripten factory
  * code in those packages runs self-invoking IIFEs at module evaluation time
- * that crash in Figma's restricted plugin sandbox (XMLHttpRequest setup,
- * URL resolution via import.meta.url, etc.).
+ * that crash in Figma's restricted plugin sandbox.
  *
- * Instead, the JS codec sources are embedded as strings in wasm-data.ts
- * (generated at build time by encode-wasm.mjs) and evaluated lazily via
- * new Function() only when compression is first requested.
+ * Instead, the codec JS sources are injected into the HTML as separate
+ * <script> tags by build-ui.mjs. They define factory functions on the
+ * window object:
+ *   - window.__smoosh_mozjpeg_dec  (emscripten factory for JPEG decoder)
+ *   - window.__smoosh_mozjpeg_enc  (emscripten factory for JPEG encoder)
+ *   - window.__smoosh_oxipng       ({ initSync, optimise, optimise_raw })
+ *
+ * This avoids:
+ *   - esbuild bundling emscripten code (crashes on module evaluation)
+ *   - new Function() / eval() (blocked by Figma's CSP)
  */
 
 import {
   MOZJPEG_ENC_WASM_BASE64,
   MOZJPEG_DEC_WASM_BASE64,
   OXIPNG_WASM_BASE64,
-  MOZJPEG_DEC_JS_SOURCE,
-  MOZJPEG_ENC_JS_SOURCE,
-  OXIPNG_JS_SOURCE,
   base64ToArrayBuffer,
 } from './wasm-data';
+
+// ── Globals set by codec <script> tags ──────────────────────────────
+
+declare global {
+  interface Window {
+    __smoosh_mozjpeg_dec: (opts: any) => Promise<any>;
+    __smoosh_mozjpeg_enc: (opts: any) => Promise<any>;
+    __smoosh_oxipng: {
+      initSync: (module: WebAssembly.Module) => any;
+      optimise: (data: Uint8Array, level: number, interlace: boolean, optimize_alpha: boolean) => Uint8Array;
+      optimise_raw: (data: Uint8ClampedArray, width: number, height: number, level: number, interlace: boolean, optimize_alpha: boolean) => Uint8Array;
+    };
+  }
+}
 
 // ── MozJPEG options (mirrors squooshService.ts) ──────────────────────
 
@@ -52,8 +69,8 @@ const MOZJPEG_OPTIONS = {
 let jpegDecModule: any = null;
 let jpegEncModule: any = null;
 
-// OxiPNG wasm-bindgen module namespace
-let oxipngNs: any = null;
+// OxiPNG initialised flag
+let oxipngInitialised = false;
 
 // ── TinyPNG quota tracking (mirrors compressionRouter.ts) ────────────
 
@@ -65,42 +82,6 @@ let tinypngQuotaExhausted = false;
 function compileWasm(base64: string): WebAssembly.Module {
   const buffer = base64ToArrayBuffer(base64);
   return new WebAssembly.Module(buffer);
-}
-
-/**
- * Evaluate an emscripten factory JS source string.
- *
- * The source files use `export default Module;` and
- * `var Module = (() => { var _scriptDir = import.meta.url; ... })();`
- *
- * We strip the ES module wrapper and provide a safe `import.meta.url`
- * substitute, then evaluate with new Function() so the code runs in a
- * fresh scope without polluting the global namespace.
- */
-function loadEmscriptenFactory(source: string): (opts: any) => Promise<any> {
-  // The emscripten factories look like:
-  //   var Module = (() => {
-  //     var _scriptDir = import.meta.url;
-  //     return (function(moduleArg = {}) { ... });
-  //   })();
-  //   export default Module;
-  //
-  // We need to:
-  // 1. Replace `import.meta.url` with a safe string
-  // 2. Remove the `export default Module;` line
-  // 3. Return the Module factory function
-
-  let code = source;
-
-  // Replace import.meta.url with a harmless data: URI
-  code = code.replace(/import\.meta\.url/g, '"data:text/javascript,"');
-
-  // Remove the ES module export
-  code = code.replace(/export\s+default\s+Module\s*;?\s*$/, '');
-
-  // Wrap in a function that returns the Module factory
-  const fn = new Function(`${code}\nreturn Module;`);
-  return fn();
 }
 
 /**
@@ -129,14 +110,16 @@ function initEmscriptenModule(
 
 async function ensureJpegDec(): Promise<void> {
   if (jpegDecModule) return;
-  const factory = loadEmscriptenFactory(MOZJPEG_DEC_JS_SOURCE);
+  const factory = window.__smoosh_mozjpeg_dec;
+  if (!factory) throw new Error('MozJPEG decoder codec not loaded');
   const wasmModule = compileWasm(MOZJPEG_DEC_WASM_BASE64);
   jpegDecModule = await initEmscriptenModule(factory, wasmModule);
 }
 
 async function ensureJpegEnc(): Promise<void> {
   if (jpegEncModule) return;
-  const factory = loadEmscriptenFactory(MOZJPEG_ENC_JS_SOURCE);
+  const factory = window.__smoosh_mozjpeg_enc;
+  if (!factory) throw new Error('MozJPEG encoder codec not loaded');
   const wasmModule = compileWasm(MOZJPEG_ENC_WASM_BASE64);
   jpegEncModule = await initEmscriptenModule(factory, wasmModule);
 }
@@ -168,45 +151,13 @@ export async function compressJpeg(jpegBytes: ArrayBuffer): Promise<ArrayBuffer>
 
 // ── PNG — OxiPNG WASM ───────────────────────────────────────────────
 
-/**
- * Load the OxiPNG wasm-bindgen module from its embedded source string.
- *
- * The source uses ES module exports (export function optimise, export { initSync },
- * export default ...). We convert it to a script that assigns to a namespace object.
- */
-function loadOxipngModule(): any {
-  let code = OXIPNG_JS_SOURCE;
-
-  // Replace import.meta.url
-  code = code.replace(/import\.meta\.url/g, '"data:text/javascript,"');
-
-  // The oxipng source has module-level side effects we need to handle:
-  // - Lines at the end do environment detection and polyfill ImageData
-  // We'll let those run — they're relatively safe in Figma's UI iframe.
-
-  // Convert ES module exports to assignments on a namespace object.
-  // The module has: export function optimise(...), export { initSync },
-  // export default __wbg_init;
-
-  // Remove export statements but keep the function declarations
-  code = code.replace(/^export\s+default\s+__wbg_init\s*;?\s*$/m, '');
-  code = code.replace(/^export\s*\{\s*initSync\s*\}\s*;?\s*$/m, '');
-  code = code.replace(/^export\s+function\s+/gm, 'function ');
-  code = code.replace(/^export\s+function\s*\*/gm, 'function* ');
-
-  // Return the namespace with the functions we need
-  const fn = new Function(`
-    ${code}
-    return { optimise, optimise_raw, initSync };
-  `);
-  return fn();
-}
-
 function ensureOxipng(): void {
-  if (oxipngNs) return;
-  oxipngNs = loadOxipngModule();
+  if (oxipngInitialised) return;
+  const ns = window.__smoosh_oxipng;
+  if (!ns) throw new Error('OxiPNG codec not loaded');
   const wasmModule = compileWasm(OXIPNG_WASM_BASE64);
-  oxipngNs.initSync(wasmModule);
+  ns.initSync(wasmModule);
+  oxipngInitialised = true;
 }
 
 /**
@@ -216,7 +167,7 @@ function ensureOxipng(): void {
 export async function compressPngWithOxipng(pngBytes: ArrayBuffer): Promise<ArrayBuffer> {
   ensureOxipng();
 
-  const result = oxipngNs.optimise(new Uint8Array(pngBytes), 2, false, false);
+  const result = window.__smoosh_oxipng.optimise(new Uint8Array(pngBytes), 2, false, false);
 
   // Copy to a new ArrayBuffer (avoids SharedArrayBuffer issues)
   const output = new ArrayBuffer(result.byteLength);
