@@ -95,6 +95,9 @@ function initEmscriptenModule(
 ): Promise<any> {
   return factory({
     noInitialRun: true,
+    // Provide locateFile so the factory never calls `new URL(wasm, import.meta.url)`
+    // which fails with "Invalid URL" in Figma's sandbox.
+    locateFile: (path: string) => path,
     instantiateWasm: (
       imports: WebAssembly.Imports,
       callback: (instance: WebAssembly.Instance) => void,

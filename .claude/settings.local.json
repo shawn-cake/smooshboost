@@ -19,7 +19,10 @@
       "Bash(npx vitest:*)",
       "Bash(npx vite build:*)",
       "WebFetch(domain:smshbst.vercel.app)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "mcp__f236e21f-3eb6-4d59-8827-6712cd1c4a67__list_teams",
+      "mcp__f236e21f-3eb6-4d59-8827-6712cd1c4a67__list_projects",
+      "mcp__f236e21f-3eb6-4d59-8827-6712cd1c4a67__get_project"
     ]
   }
 }

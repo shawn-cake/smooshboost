@@ -1,5 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
+// Disable Vercel's automatic body parsing so we receive raw binary data
+// for image uploads (POST to /shrink).
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 /**
  * Vercel serverless function to proxy TinyPNG API requests.
  *
@@ -18,8 +26,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Extract the path after /api/tinypng/
+  // NOTE: req.query.path can be empty on POST requests in some Vercel runtimes,
+  // so we also parse from req.url as a reliable fallback.
+  let subPath = '';
   const pathSegments = req.query.path;
-  const subPath = Array.isArray(pathSegments) ? pathSegments.join('/') : pathSegments || '';
+  if (pathSegments) {
+    subPath = Array.isArray(pathSegments) ? pathSegments.join('/') : pathSegments;
+  } else if (req.url) {
+    // req.url is like "/api/tinypng/shrink" or "/api/tinypng/output/abc123"
+    const match = req.url.match(/^\/api\/tinypng\/(.+?)(\?.*)?$/);
+    if (match) {
+      subPath = match[1];
+    }
+  }
   const targetUrl = `https://api.tinify.com/${subPath}`;
 
   const auth = Buffer.from(`api:${apiKey}`).toString('base64');
@@ -40,9 +59,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       headers,
     };
 
-    // Forward body for POST requests
+    // Forward body for POST requests (bodyParser is disabled, so we stream raw bytes)
     if (req.method === 'POST') {
-      // Read raw body as buffer
       const chunks: Buffer[] = [];
       for await (const chunk of req) {
         chunks.push(Buffer.from(chunk));
