@@ -28,7 +28,7 @@ export async function compressWithTinyPNG(file: File): Promise<TinyPNGResult> {
   console.log(`[TinyPNG] Starting compression: ${file.name} (${file.size} bytes)`);
 
   // Step 1: Upload the image to TinyPNG for compression
-  const uploadResponse = await fetch('/api/tinypng/shrink', {
+  const uploadResponse = await fetch('/api/tinypng?path=shrink', {
     method: 'POST',
     body: file,
     headers: {
@@ -53,11 +53,11 @@ export async function compressWithTinyPNG(file: File): Promise<TinyPNGResult> {
   console.log('[TinyPNG] Compression complete:', uploadResult);
 
   // Step 2: Download the compressed image
-  // The location URL is absolute, but we need to proxy it through our dev server
-  // Extract the path from the URL (e.g., /output/abc123)
+  // The location URL is absolute — extract the path (e.g., /output/abc123)
+  // and pass it as a query parameter to our proxy.
   const outputPath = new URL(locationUrl).pathname;
 
-  const downloadResponse = await fetch(`/api/tinypng${outputPath}`, {
+  const downloadResponse = await fetch(`/api/tinypng?path=${encodeURIComponent(outputPath.replace(/^\//, ''))}`, {
     method: 'GET',
   });
 

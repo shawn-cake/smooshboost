@@ -181,8 +181,8 @@ export async function compressPngWithOxipng(pngBytes: ArrayBuffer): Promise<Arra
 // ── PNG — TinyPNG via Vercel proxy ──────────────────────────────────
 
 async function compressPngWithTinyPNG(pngBytes: ArrayBuffer): Promise<ArrayBuffer> {
-  // Step 1: POST raw bytes to the Vercel proxy
-  const uploadResponse = await fetch(`${TINYPNG_BASE}/shrink`, {
+  // Step 1: POST raw bytes to the Vercel proxy (query-param based endpoint)
+  const uploadResponse = await fetch(`${TINYPNG_BASE}?path=shrink`, {
     method: 'POST',
     body: pngBytes,
     headers: { 'Content-Type': 'image/png' },
@@ -198,11 +198,11 @@ async function compressPngWithTinyPNG(pngBytes: ArrayBuffer): Promise<ArrayBuffe
     throw new Error('TinyPNG did not return a Location header');
   }
 
-  // Extract the path portion (e.g. /output/abc123)
-  const outputPath = new URL(locationUrl).pathname;
+  // Extract the path portion (e.g. /output/abc123) and pass as query param
+  const outputPath = new URL(locationUrl).pathname.replace(/^\//, '');
 
   // Step 3: Download the compressed image through the proxy
-  const downloadResponse = await fetch(`${TINYPNG_BASE}${outputPath}`, {
+  const downloadResponse = await fetch(`${TINYPNG_BASE}?path=${encodeURIComponent(outputPath)}`, {
     method: 'GET',
   });
 

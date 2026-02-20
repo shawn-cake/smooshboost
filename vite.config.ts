@@ -34,7 +34,13 @@ export default defineConfig(({ mode }) => {
             '/api/tinypng': {
               target: 'https://api.tinify.com',
               changeOrigin: true,
-              rewrite: (path) => path.replace(/^\/api\/tinypng/, ''),
+              // Client sends /api/tinypng?path=shrink or /api/tinypng?path=output/abc123
+              // Rewrite to /<path_value> on api.tinify.com
+              rewrite: (reqPath) => {
+                const url = new URL(reqPath, 'http://localhost')
+                const subPath = url.searchParams.get('path') || ''
+                return `/${subPath}`
+              },
               configure: (proxy) => {
                 proxy.on('proxyReq', (proxyReq) => {
                   // Add Basic Auth header with TinyPNG API key

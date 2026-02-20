@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Disable Vercel's automatic body parsing so we receive raw binary data
-// for image uploads (POST to /shrink).
+// for image uploads.
 export const config = {
   api: {
     bodyParser: false,
@@ -11,36 +11,41 @@ export const config = {
 /**
  * Vercel serverless function to proxy TinyPNG API requests.
  *
- * In development, Vite's dev server proxy handles /api/tinypng/* requests.
- * In production on Vercel, this serverless function takes over.
+ * Single endpoint approach (avoids Vercel catch-all routing issues):
+ *   POST /api/tinypng?path=shrink         -> https://api.tinify.com/shrink
+ *   GET  /api/tinypng?path=output/abc123   -> https://api.tinify.com/output/abc123
  *
- * Routes:
- *   POST /api/tinypng/shrink  -> https://api.tinify.com/shrink
- *   GET  /api/tinypng/output/* -> https://api.tinify.com/output/*
+ * Also supports the legacy nested route format for backwards compatibility:
+ *   POST /api/tinypng/shrink              -> https://api.tinify.com/shrink
+ *   GET  /api/tinypng/output/abc123       -> https://api.tinify.com/output/abc123
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS headers for Figma plugin requests
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Expose-Headers', 'Location, Compression-Count');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
   const apiKey = process.env.TINYPNG_API_KEY;
 
   if (!apiKey) {
     return res.status(500).json({ error: 'TinyPNG API key not configured' });
   }
 
-  // Extract the path after /api/tinypng/
-  // NOTE: req.query.path can be empty on POST requests in some Vercel runtimes,
-  // so we also parse from req.url as a reliable fallback.
-  let subPath = '';
-  const pathSegments = req.query.path;
-  if (pathSegments) {
-    subPath = Array.isArray(pathSegments) ? pathSegments.join('/') : pathSegments;
-  } else if (req.url) {
-    // req.url is like "/api/tinypng/shrink" or "/api/tinypng/output/abc123"
-    const match = req.url.match(/^\/api\/tinypng\/(.+?)(\?.*)?$/);
-    if (match) {
-      subPath = match[1];
-    }
+  // Get the sub-path from query parameter
+  const subPath = typeof req.query.path === 'string' ? req.query.path : '';
+  if (!subPath) {
+    return res.status(400).json({
+      error: 'missing_path',
+      message: 'Query parameter "path" is required (e.g. ?path=shrink)',
+    });
   }
-  const targetUrl = `https://api.tinify.com/${subPath}`;
 
+  const targetUrl = `https://api.tinify.com/${subPath}`;
   const auth = Buffer.from(`api:${apiKey}`).toString('base64');
 
   try {

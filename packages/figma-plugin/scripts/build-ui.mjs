@@ -93,12 +93,22 @@ const result = buildSync({
 const jsBundle = result.outputFiles[0].text;
 console.log(`  JS bundle: ${(jsBundle.length / 1024).toFixed(0)} KB`);
 
+// ── Read logo SVG ───────────────────────────────────────────────────
+
+const logoPath = resolve(root, '../../src/assets/logo.svg');
+const logoSvg = readFileSync(logoPath, 'utf8');
+console.log(`  Logo SVG: ${(logoSvg.length / 1024).toFixed(1)} KB`);
+
 // ── Inject into HTML template ────────────────────────────────────────
 
 const templatePath = resolve(root, 'ui-template.html');
 const template = readFileSync(templatePath, 'utf8');
 
 let html = template;
+
+// Inject logo SVG into header and empty state
+html = html.replace('<!-- INJECT_LOGO -->', logoSvg);
+html = html.replace('<!-- INJECT_LOGO_EMPTY -->', logoSvg);
 
 // Inject codec scripts before the main bundle placeholder
 html = html.replace(
