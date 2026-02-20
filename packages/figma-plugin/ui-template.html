@@ -389,6 +389,17 @@
        as inert factory functions. They do NOT instantiate WASM until called. -->
   <!-- INJECT_CODECS -->
 
+  <!-- Diagnostic: verify codec globals loaded -->
+  <script>
+    (function() {
+      var sl = document.getElementById('status-line');
+      var dec = typeof window.__smoosh_mozjpeg_dec;
+      var enc = typeof window.__smoosh_mozjpeg_enc;
+      var oxi = typeof window.__smoosh_oxipng;
+      sl.textContent = '[diag] dec=' + dec + ' enc=' + enc + ' oxi=' + oxi;
+    })();
+  </script>
+
   <!-- Main UI bundle -->
   <!-- INJECT_JS -->
 
