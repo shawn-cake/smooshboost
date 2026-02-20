@@ -30,26 +30,30 @@ const root = resolve(__dirname, '..');
 
 function buildMozjpegScript(source, globalName) {
   let code = source;
-  // Replace import.meta.url with a safe data: URI
-  code = code.replace(/import\.meta\.url/g, '"data:text/javascript,"');
+  // Replace import.meta.url with a variable reference (NOT a string literal).
+  // The original source has both reads (`var _scriptDir = import.meta.url`)
+  // and writes (`import.meta.url = "https://localhost"` in CloudFlare/Node
+  // polyfill blocks). Using a variable avoids "assignment to string" errors.
+  code = code.replace(/import\.meta\.url/g, '__smoosh_meta_url');
   // Replace `var Module =` with `window.${globalName} =`
   code = code.replace(/^var Module\s*=/m, `window.${globalName} =`);
   // Remove the ES module export line
   code = code.replace(/export\s+default\s+Module\s*;?\s*$/, '');
-  return code;
+  // Prepend the variable declaration
+  return `var __smoosh_meta_url = "data:text/javascript,";\n${code}`;
 }
 
 function buildOxipngScript(source) {
   let code = source;
-  // Replace import.meta.url
-  code = code.replace(/import\.meta\.url/g, '"data:text/javascript,"');
-  // Wrap everything in an IIFE that assigns to window.__smoosh_oxipng
+  // Replace import.meta.url with a variable (same reason as above)
+  code = code.replace(/import\.meta\.url/g, '__smoosh_meta_url');
   // Strip ES module export syntax
   code = code.replace(/^export\s+default\s+__wbg_init\s*;?\s*$/m, '');
   code = code.replace(/^export\s*\{\s*initSync\s*\}\s*;?\s*$/m, '');
   code = code.replace(/^export\s+function\s+/gm, 'function ');
   code = code.replace(/^export\s+function\s*\*/gm, 'function* ');
-  return `(function() {\n${code}\nwindow.__smoosh_oxipng = { optimise, optimise_raw, initSync };\n})();`;
+  // Wrap in IIFE with variable declaration at top
+  return `(function() {\nvar __smoosh_meta_url = "data:text/javascript,";\n${code}\nwindow.__smoosh_oxipng = { optimise, optimise_raw, initSync };\n})();`;
 }
 
 const mozjpegDecSrc = readFileSync(

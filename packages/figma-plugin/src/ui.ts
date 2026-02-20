@@ -179,8 +179,14 @@ async function handleExportReady(files: ExportedFile[]): Promise<void> {
       });
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
+      const errStack = err instanceof Error && err.stack ? err.stack : '';
       console.error(`[SmooshBoost] Failed to compress ${file.name}:`, err);
       setStatus(`Error compressing ${file.name}: ${errMsg}`);
+      // Render error visibly in results area
+      const errEl = document.createElement('div');
+      errEl.style.cssText = 'padding:8px 10px;font-size:10px;color:#F87171;font-family:monospace;white-space:pre-wrap;word-break:break-all;';
+      errEl.textContent = `[compress error] ${file.name}: ${errMsg}\n${errStack}`;
+      resultsList.appendChild(errEl);
     }
   }
 

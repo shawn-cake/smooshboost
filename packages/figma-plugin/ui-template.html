@@ -389,14 +389,34 @@
        as inert factory functions. They do NOT instantiate WASM until called. -->
   <!-- INJECT_CODECS -->
 
-  <!-- Diagnostic: verify codec globals loaded -->
+  <!-- Diagnostic: verify codec globals loaded + capture all errors -->
   <script>
     (function() {
-      var sl = document.getElementById('status-line');
+      // Write codec load status into the results area so it persists
+      var rl = document.getElementById('results-list');
       var dec = typeof window.__smoosh_mozjpeg_dec;
       var enc = typeof window.__smoosh_mozjpeg_enc;
       var oxi = typeof window.__smoosh_oxipng;
-      sl.textContent = '[diag] dec=' + dec + ' enc=' + enc + ' oxi=' + oxi;
+      var info = document.createElement('div');
+      info.style.cssText = 'padding:8px 10px;font-size:10px;color:#A3C1DD;font-family:monospace;white-space:pre-wrap;word-break:break-all;';
+      info.textContent = '[codecs] dec=' + dec + ' enc=' + enc + ' oxi=' + oxi;
+      rl.insertBefore(info, rl.firstChild);
+
+      // Global error handler to catch anything
+      window.onerror = function(msg, src, line, col, err) {
+        var el = document.createElement('div');
+        el.style.cssText = 'padding:8px 10px;font-size:10px;color:#F87171;font-family:monospace;white-space:pre-wrap;word-break:break-all;';
+        el.textContent = '[error] ' + msg + '\n  at ' + (src||'?') + ':' + line + ':' + col;
+        if (err && err.stack) el.textContent += '\n' + err.stack;
+        rl.appendChild(el);
+      };
+      window.onunhandledrejection = function(ev) {
+        var el = document.createElement('div');
+        el.style.cssText = 'padding:8px 10px;font-size:10px;color:#F87171;font-family:monospace;white-space:pre-wrap;word-break:break-all;';
+        var reason = ev.reason;
+        el.textContent = '[unhandled rejection] ' + (reason && reason.stack ? reason.stack : String(reason));
+        rl.appendChild(el);
+      };
     })();
   </script>
 
