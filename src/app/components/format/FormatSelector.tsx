@@ -2,7 +2,6 @@ import type { OutputFormat, FormatMode } from '../../types';
 import { FORMAT_OPTIONS } from '../../types';
 
 interface FormatSelectorProps {
-  formatMode: FormatMode;
   onFormatModeChange: (mode: FormatMode) => void;
   convertFormat: OutputFormat;
   onConvertFormatChange: (format: OutputFormat) => void;
@@ -12,7 +11,6 @@ interface FormatSelectorProps {
 }
 
 export function FormatSelector({
-  formatMode,
   onFormatModeChange,
   convertFormat,
   onConvertFormatChange,

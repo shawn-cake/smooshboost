@@ -242,7 +242,6 @@ function App() {
           /* Empty state — open, full-height layout */
           <div className="flex-1 flex flex-col gap-4 py-8">
             <FormatSelector
-              formatMode={formatMode}
               onFormatModeChange={setFormatMode}
               convertFormat={convertFormat}
               onConvertFormatChange={setConvertFormat}
