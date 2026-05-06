@@ -9,7 +9,7 @@ import { resetTinypngQuota } from '../services/compression/compressionRouter';
  */
 export function useImageQueue() {
   const [images, setImages] = useState<ImageItem[]>([]);
-  const [formatMode, setFormatMode] = useState<FormatMode>('match');
+  const [formatMode, setFormatMode] = useState<FormatMode>('convert');
   const [convertFormat, setConvertFormat] = useState<OutputFormat>('webp');
 
   /**

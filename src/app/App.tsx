@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { Toaster, toast } from 'sonner';
 
 // Components
-import { Header, Footer } from './components/layout';
+import { Footer } from './components/layout';
 import { UploadZone } from './components/upload';
 import { FormatSelector } from './components/format';
 import { ImageQueue } from './components/queue';
@@ -22,7 +22,10 @@ import {
 
 // Types
 import type { ImageItem, WorkflowMode } from './types';
-import { MAX_BATCH_SIZE } from './types';
+import { MAX_BATCH_SIZE, getMatchingOutputFormat } from './types';
+
+// Utils
+import { detectInputFormat } from './utils';
 
 function App() {
   // Boost Only toggle state (replaces workflow mode selector)
@@ -106,11 +109,20 @@ function App() {
       }
 
       if (valid.length > 0) {
+        // Auto-detect format from the first file on the first upload
+        if (images.length === 0) {
+          const inputFormat = detectInputFormat(valid[0]);
+          if (inputFormat) {
+            setConvertFormat(getMatchingOutputFormat(inputFormat));
+            setFormatMode('convert');
+          }
+        }
+
         await addImages(valid);
         toast.success(`Added ${valid.length} image${valid.length !== 1 ? 's' : ''}`);
       }
     },
-    [images.length, validateBatch, filterValidFiles, addImages]
+    [images.length, validateBatch, filterValidFiles, addImages, setConvertFormat, setFormatMode]
   );
 
   // Figma plugin bridge — receives exported files via postMessage
@@ -224,21 +236,11 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <main className="max-w-[45rem] mx-auto px-6 flex-1 w-full flex flex-col">
 
-      <main className="max-w-[45rem] mx-auto px-6 py-8 space-y-6 flex-1 w-full">
-        {/* Upload Section Container */}
-        <div className="bg-gray-100 border border-primary-200 rounded-lg p-5 space-y-5">
-          {/* Upload Zone */}
-          <UploadZone
-            onFilesSelected={handleFilesSelected}
-            disabled={isProcessing}
-            maxFiles={MAX_BATCH_SIZE}
-            currentCount={images.length}
-          />
-
-          {/* Format Selector with Boost Only toggle - hidden when images in queue */}
-          {images.length === 0 && (
+        {images.length === 0 ? (
+          /* Empty state — open, full-height layout */
+          <div className="flex-1 flex flex-col gap-4 py-8">
             <FormatSelector
               formatMode={formatMode}
               onFormatModeChange={setFormatMode}
@@ -248,12 +250,24 @@ function App() {
               boostOnly={boostOnly}
               onBoostOnlyChange={setBoostOnly}
             />
-          )}
-        </div>
+            <UploadZone
+              variant="open"
+              onFilesSelected={handleFilesSelected}
+              disabled={isProcessing}
+              maxFiles={MAX_BATCH_SIZE}
+              currentCount={images.length}
+            />
+          </div>
+        ) : (
+          /* Queue state — compact upload zone + image list */
+          <div className="py-8 space-y-6">
+            <UploadZone
+              onFilesSelected={handleFilesSelected}
+              disabled={isProcessing}
+              maxFiles={MAX_BATCH_SIZE}
+              currentCount={images.length}
+            />
 
-        {/* Image Queue */}
-        {images.length > 0 && (
-          <>
             <ImageQueue
               images={images}
               onDownload={handleDownloadOne}
@@ -297,7 +311,7 @@ function App() {
               completedCount={downloadableImages.length}
               hasMetadata={hasAnyMetadata}
             />
-          </>
+          </div>
         )}
       </main>
 

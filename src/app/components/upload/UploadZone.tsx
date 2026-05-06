@@ -7,6 +7,7 @@ interface UploadZoneProps {
   disabled?: boolean;
   maxFiles?: number;
   currentCount?: number;
+  variant?: 'default' | 'open';
 }
 
 export function UploadZone({
@@ -14,6 +15,7 @@ export function UploadZone({
   disabled = false,
   maxFiles = 10,
   currentCount = 0,
+  variant = 'default',
 }: UploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -85,6 +87,8 @@ export function UploadZone({
     }
   }, [disabled, isAtLimit]);
 
+  const isOpen = variant === 'open';
+
   return (
     <div
       onClick={handleContainerClick}
@@ -93,11 +97,18 @@ export function UploadZone({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
       className={`
-        relative border-2 border-dashed rounded-lg pt-12 pb-16 px-8 text-center transition-colors
-        ${
-          isDragging
-            ? 'border-primary-500 bg-primary-50'
-            : 'border-gray-300 bg-white'
+        relative border-2 border-dashed transition-colors
+        ${isOpen
+          ? `flex-1 min-h-[280px] flex flex-col items-center justify-center rounded-2xl
+             ${isDragging
+               ? 'border-primary-400 bg-primary-50/40'
+               : 'border-transparent hover:border-gray-400'
+             }`
+          : `rounded-lg pt-12 pb-16 px-8 text-center
+             ${isDragging
+               ? 'border-primary-500 bg-primary-50'
+               : 'border-gray-300 bg-white'
+             }`
         }
         ${disabled || isAtLimit ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
       `}
@@ -112,7 +123,7 @@ export function UploadZone({
         className="hidden"
       />
 
-      <div className="flex flex-col items-center gap-5">
+      <div className="flex flex-col items-center gap-5 text-center">
         <div
           className={`
             w-16 h-16 rounded-full flex items-center justify-center

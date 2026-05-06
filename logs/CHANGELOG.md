@@ -19,6 +19,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.2.0] - 2026-05-06
+
+### Changed
+- **Version bump to 0.2.0** - Updated version in `package.json`, `package-lock.json`, `Footer.tsx`, and `logs/DEVLOG.md`. Files: `package.json`, `package-lock.json`, `src/app/components/layout/Footer.tsx`, `logs/DEVLOG.md`.
+- **Layout overhaul — header removed** - Logo and subtitle moved to footer; info icon relocated to footer inline with copyright. Files: `src/app/components/layout/Header.tsx` (deleted), `src/app/components/layout/Footer.tsx`, `src/app/components/layout/index.ts`, `src/app/App.tsx`.
+- **FormatSelector moved above UploadZone** - Controls now appear before the drop zone to match configure-then-upload workflow. Files: `src/app/App.tsx`.
+- **Full-height open upload zone** - Empty state uses a borderless, full-height `variant="open"` UploadZone that fills available viewport. Queue state retains compact bordered variant. Files: `src/app/components/upload/UploadZone.tsx`, `src/app/App.tsx`.
+- **Upload zone text centered** - "Upload Images" and subtext center-aligned in open variant. Files: `src/app/components/upload/UploadZone.tsx`.
+- **Hover border contrast improved** - Open variant hover border changed from `gray-300/70` to `gray-400` for better visibility against gradient background. Files: `src/app/components/upload/UploadZone.tsx`.
+- **Format auto-detection on upload** - On first upload, output format is auto-detected from the first file's MIME type and the format selector updates to match. Files: `src/app/App.tsx`.
+- **Default formatMode changed to `convert`** - Initial queue state no longer defaults to `match` mode. Files: `src/app/hooks/useImageQueue.ts`.
+
+### Removed
+- **"Keep Original" format option** - Removed from FormatSelector UI; format is now always explicitly selected (auto-detected on upload). Files: `src/app/components/format/FormatSelector.tsx`.
+
+---
+
+## [0.1.0] - 2026-02-07
+
 ### Changed
 - **Boost Options section order** - Copyright & Author moved to last position (after Title & Description) in both MetadataPanel and ImageMetadataAccordion. Files: `src/app/components/metadata/MetadataPanel.tsx`, `src/app/components/queue/ImageMetadataAccordion.tsx`.
 - **Version bump to 0.1.0** - Updated version in package.json and Footer component. Files: `package.json`, `src/app/components/layout/Footer.tsx`.

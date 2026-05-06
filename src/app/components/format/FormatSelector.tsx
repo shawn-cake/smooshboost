@@ -22,8 +22,6 @@ export function FormatSelector({
 }: FormatSelectorProps) {
   const formatDisabled = disabled || boostOnly;
 
-  const isKeepOriginalActive = formatMode === 'match';
-
   const handleFormatPillClick = (format: OutputFormat) => {
     onFormatModeChange('convert');
     onConvertFormatChange(format);
@@ -36,20 +34,8 @@ export function FormatSelector({
         {/* Output Format section - left aligned */}
         <div className={`flex items-center gap-3 ${boostOnly ? 'opacity-50' : ''}`}>
           <label className="text-xs font-medium text-gray-700">Output Format</label>
-          {/* Pill buttons for all format options */}
+          {/* Pill buttons for format options */}
           <div className="inline-flex rounded-lg border border-gray-300 p-1 bg-gray-100">
-            <button
-              type="button"
-              onClick={() => onFormatModeChange('match')}
-              disabled={formatDisabled}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                isKeepOriginalActive
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              } ${formatDisabled ? 'cursor-not-allowed' : ''}`}
-            >
-              Keep Original
-            </button>
             {FORMAT_OPTIONS.map((option) => (
               <button
                 key={option.value}
@@ -57,7 +43,7 @@ export function FormatSelector({
                 onClick={() => handleFormatPillClick(option.value)}
                 disabled={formatDisabled}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                  !isKeepOriginalActive && convertFormat === option.value
+                  convertFormat === option.value
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 } ${formatDisabled ? 'cursor-not-allowed' : ''}`}
