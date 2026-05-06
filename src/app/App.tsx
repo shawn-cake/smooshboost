@@ -42,7 +42,6 @@ function App() {
   // Image queue state
   const {
     images,
-    formatMode,
     setFormatMode,
     convertFormat,
     setConvertFormat,
