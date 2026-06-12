@@ -70,6 +70,24 @@ export function useImageQueue() {
   );
 
   /**
+   * Re-tags images that haven't been compressed yet with a new output format.
+   * 'match' resets each image to the format of its original file (boost-only).
+   */
+  const updateQueuedOutputFormat = useCallback((format: OutputFormat | 'match') => {
+    setImages((prev) =>
+      prev.map((img) =>
+        img.status === 'queued'
+          ? {
+              ...img,
+              outputFormat:
+                format === 'match' ? getMatchingOutputFormat(img.inputFormat) : format,
+            }
+          : img
+      )
+    );
+  }, []);
+
+  /**
    * Removes an image from the queue
    */
   const removeImage = useCallback((id: string) => {
@@ -190,6 +208,7 @@ export function useImageQueue() {
     addImages,
     removeImage,
     updateImage,
+    updateQueuedOutputFormat,
     updateImageMetadata,
     applyMetadataToAll,
     clearQueue,

@@ -21,11 +21,10 @@ import {
 } from './hooks';
 
 // Types
-import type { ImageItem, WorkflowMode } from './types';
-import { MAX_BATCH_SIZE, getMatchingOutputFormat } from './types';
+import type { ImageItem, OutputFormat, WorkflowMode } from './types';
+import { MAX_BATCH_SIZE, FORMAT_OPTIONS } from './types';
 
 // Utils
-import { detectInputFormat } from './utils';
 import { isDownloadable } from './services/download';
 
 function App() {
@@ -49,20 +48,23 @@ function App() {
     addImages,
     removeImage,
     updateImage,
+    updateQueuedOutputFormat,
     updateImageMetadata,
     applyMetadataToAll,
     clearQueue,
     getTotalSavings,
   } = useImageQueue();
 
-  // Compression processing - auto-starts when not in boost-only mode
+  // Compression processing — staged flow: images queue up and compression
+  // starts only when the user confirms the output format via the Smoosh button
   const {
     isProcessing: isCompressing,
+    processQueue,
     retryCompression,
   } = useCompression({
     images,
     updateImage,
-    autoStart: !boostOnly, // Auto-compress when not in boost-only mode
+    autoStart: false,
   });
 
   // Metadata injection processing (per-image)
@@ -89,7 +91,8 @@ function App() {
     : undefined;
 
   // Handle file selection
-  // Note: Compression auto-starts via useEffect in useCompression hook when autoStart is true
+  // Note: Images are staged as 'queued' — compression starts when the user
+  // confirms via the Smoosh button (see handleSmoosh)
   const handleFilesSelected = useCallback(
     async (files: File[]) => {
       // Validate batch
@@ -109,20 +112,37 @@ function App() {
       }
 
       if (valid.length > 0) {
-        // Auto-detect format from the first file on the first upload
-        if (images.length === 0) {
-          const inputFormat = detectInputFormat(valid[0]);
-          if (inputFormat) {
-            setConvertFormat(getMatchingOutputFormat(inputFormat));
-            setFormatMode('convert');
-          }
-        }
-
         await addImages(valid, boostOnly);
         toast.success(`Added ${valid.length} image${valid.length !== 1 ? 's' : ''}`);
       }
     },
-    [images.length, boostOnly, validateBatch, filterValidFiles, addImages, setConvertFormat, setFormatMode]
+    [images.length, boostOnly, validateBatch, filterValidFiles, addImages]
+  );
+
+  // Start compression of all staged images
+  const handleSmoosh = useCallback(() => {
+    processQueue();
+  }, [processQueue]);
+
+  // Changing the format re-tags any staged (not yet compressed) images
+  const handleConvertFormatChange = useCallback(
+    (format: OutputFormat) => {
+      setConvertFormat(format);
+      if (!boostOnly) {
+        updateQueuedOutputFormat(format);
+      }
+    },
+    [boostOnly, setConvertFormat, updateQueuedOutputFormat]
+  );
+
+  // Toggling Boost Only re-tags staged images: boost-only output must match
+  // the input format (no conversion happens), normal mode uses the selector
+  const handleBoostOnlyChange = useCallback(
+    (value: boolean) => {
+      setBoostOnly(value);
+      updateQueuedOutputFormat(value ? 'match' : convertFormat);
+    },
+    [convertFormat, updateQueuedOutputFormat]
   );
 
   // Figma plugin bridge — receives exported files via postMessage
@@ -213,6 +233,12 @@ function App() {
   const downloadableImages = getDownloadableImages();
   const hasDownloadableImages = downloadableImages.length > 0;
 
+  // Staged images awaiting the Smoosh confirmation (boost-only skips compression)
+  const stagedCount = boostOnly
+    ? 0
+    : images.filter((img) => img.status === 'queued').length;
+  const formatLabel = FORMAT_OPTIONS.find((opt) => opt.value === convertFormat)?.label;
+
   // Calculate metadata summary
   const metadataSummary = {
     geoTaggedCount: images.filter((img) => img.metadata?.geoTag).length,
@@ -234,10 +260,10 @@ function App() {
             <FormatSelector
               onFormatModeChange={setFormatMode}
               convertFormat={convertFormat}
-              onConvertFormatChange={setConvertFormat}
+              onConvertFormatChange={handleConvertFormatChange}
               disabled={isProcessing}
               boostOnly={boostOnly}
-              onBoostOnlyChange={setBoostOnly}
+              onBoostOnlyChange={handleBoostOnlyChange}
             />
             <UploadZone
               variant="open"
@@ -250,6 +276,15 @@ function App() {
         ) : (
           /* Queue state — compact upload zone + image list */
           <div className="py-8 space-y-6">
+            <FormatSelector
+              onFormatModeChange={setFormatMode}
+              convertFormat={convertFormat}
+              onConvertFormatChange={handleConvertFormatChange}
+              disabled={isProcessing}
+              boostOnly={boostOnly}
+              onBoostOnlyChange={handleBoostOnlyChange}
+            />
+
             <UploadZone
               onFilesSelected={handleFilesSelected}
               disabled={isProcessing}
@@ -272,11 +307,14 @@ function App() {
               boostOnly={boostOnly}
             />
 
-            {/* Processing Buttons - shows compression progress only */}
+            {/* Processing Buttons - Smoosh confirmation + compression progress */}
             <ProcessingButtons
               hasImages={images.length > 0}
               isCompressing={isCompressing}
               compressProgress={compressProgress}
+              stagedCount={stagedCount}
+              formatLabel={formatLabel}
+              onSmoosh={handleSmoosh}
             />
 
             {/* Summary Bar */}

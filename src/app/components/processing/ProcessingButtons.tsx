@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { Button } from '../ui';
 
 interface ProcessingButtonsProps {
   // Queue state
@@ -7,19 +8,41 @@ interface ProcessingButtonsProps {
   // Processing state
   isCompressing: boolean;
   compressProgress?: { current: number; total: number };
+  // Staged state — images waiting for the user to confirm format and start
+  stagedCount?: number;
+  formatLabel?: string;
+  onSmoosh?: () => void;
 }
 
 /**
- * Shows compression progress indicator while auto-compressing.
+ * Shows the Smoosh confirmation button while images are staged, and the
+ * compression progress indicator while compressing.
  * Boost phase buttons are now in DownloadSection.
  */
 export function ProcessingButtons({
   hasImages,
   isCompressing,
   compressProgress,
+  stagedCount = 0,
+  formatLabel,
+  onSmoosh,
 }: ProcessingButtonsProps) {
-  // Only show when compressing
-  if (!hasImages || !isCompressing || !compressProgress) return null;
+  if (!hasImages) return null;
+
+  // Staged images waiting for confirmation
+  if (!isCompressing && stagedCount > 0 && onSmoosh) {
+    return (
+      <div className="w-full">
+        <Button variant="primary" size="lg" className="w-full" onClick={onSmoosh}>
+          Smoosh {stagedCount} image{stagedCount !== 1 ? 's' : ''}
+          {formatLabel ? ` to ${formatLabel}` : ''}
+        </Button>
+      </div>
+    );
+  }
+
+  // Only show progress when compressing
+  if (!isCompressing || !compressProgress) return null;
 
   const progressPercent = Math.round(
     (compressProgress.current / compressProgress.total) * 100
@@ -52,4 +75,3 @@ export function ProcessingButtons({
     </div>
   );
 }
-
