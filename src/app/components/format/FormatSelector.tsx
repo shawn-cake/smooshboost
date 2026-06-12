@@ -74,12 +74,15 @@ export function FormatSelector({
         </label>
       </div>
 
-      {/* Boost Only explanation */}
-      {boostOnly && (
-        <p className="text-center text-xs text-gray-500">
-          <span className="font-medium text-primary-500">No Compression</span> — Images will only receive metadata
-        </p>
-      )}
+      {/* Boost Only explanation — always rendered so toggling doesn't shift the layout */}
+      <p
+        aria-hidden={!boostOnly}
+        className={`text-center text-xs text-gray-500 transition-opacity duration-200 ${
+          boostOnly ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <span className="font-medium text-primary-500">No Compression</span> — Images will only receive metadata
+      </p>
     </div>
   );
 }
