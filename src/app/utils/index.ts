@@ -7,3 +7,4 @@ export {
   downloadBlob,
   decodeImageToImageData,
 } from './fileHelpers';
+export { forEachWithConcurrency } from './concurrency';
