@@ -1,6 +1,14 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ImageItem } from '../types';
 import { compressImage } from '../services/compression';
+import { forEachWithConcurrency } from '../utils';
+
+/**
+ * Maximum number of images compressed at once. Network-bound TinyPNG (PNG)
+ * requests benefit most; CPU-bound WASM encodes still overlap their async
+ * decode/canvas steps. Kept low to avoid overwhelming the browser.
+ */
+const COMPRESSION_CONCURRENCY = 3;
 
 interface UseCompressionProps {
   images: ImageItem[];
@@ -35,36 +43,41 @@ export function useCompression({ images, updateImage, autoStart = false }: UseCo
     isProcessingRef.current = true;
     setIsProcessing(true);
 
-    // Process images sequentially to avoid overwhelming the browser
-    for (const image of queuedImages) {
-      // Mark as compressing
-      updateImage(image.id, { status: 'compressing' });
+    // Process up to COMPRESSION_CONCURRENCY images at a time. Each worker
+    // handles its own errors so one failure never aborts the batch.
+    await forEachWithConcurrency(
+      queuedImages,
+      COMPRESSION_CONCURRENCY,
+      async (image) => {
+        // Mark as compressing
+        updateImage(image.id, { status: 'compressing' });
 
-      try {
-        const result = await compressImage(
-          image.file,
-          image.inputFormat,
-          image.outputFormat
-        );
+        try {
+          const result = await compressImage(
+            image.file,
+            image.inputFormat,
+            image.outputFormat
+          );
 
-        // Mark as complete
-        updateImage(image.id, {
-          status: 'complete',
-          compressedBlob: result.blob,
-          compressedSize: result.size,
-          engine: result.engine,
-        });
-      } catch (error) {
-        // Mark as error
-        const errorMessage =
-          error instanceof Error ? error.message : 'Compression failed';
+          // Mark as complete
+          updateImage(image.id, {
+            status: 'complete',
+            compressedBlob: result.blob,
+            compressedSize: result.size,
+            engine: result.engine,
+          });
+        } catch (error) {
+          // Mark as error
+          const errorMessage =
+            error instanceof Error ? error.message : 'Compression failed';
 
-        updateImage(image.id, {
-          status: 'error',
-          error: errorMessage,
-        });
+          updateImage(image.id, {
+            status: 'error',
+            error: errorMessage,
+          });
+        }
       }
-    }
+    );
 
     isProcessingRef.current = false;
     setIsProcessing(false);

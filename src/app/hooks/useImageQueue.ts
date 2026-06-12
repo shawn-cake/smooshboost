@@ -16,16 +16,21 @@ export function useImageQueue() {
    * Adds files to the queue
    */
   const addImages = useCallback(
-    async (files: File[]) => {
+    async (files: File[], boostOnly = false) => {
       const newImages: ImageItem[] = [];
 
       for (const file of files) {
         const inputFormat = detectInputFormat(file);
         if (!inputFormat) continue;
 
-        // Determine output format based on mode
-        const outputFormat =
-          formatMode === 'match' ? getMatchingOutputFormat(inputFormat) : convertFormat;
+        // Determine output format based on mode. In boost-only mode no
+        // compression/conversion happens, so the output is the original file —
+        // its format (and therefore download extension) must match the input.
+        const outputFormat = boostOnly
+          ? getMatchingOutputFormat(inputFormat)
+          : formatMode === 'match'
+            ? getMatchingOutputFormat(inputFormat)
+            : convertFormat;
 
         // Generate thumbnail
         let thumbnail: string | null = null;

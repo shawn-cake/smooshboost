@@ -13,12 +13,11 @@ export type CompressionEngine = 'tinypng' | 'oxipng' | 'mozjpeg' | 'webp';
 // Workflow mode: determines which phases are active
 export type WorkflowMode = 'smoosh-boost' | 'smoosh-only' | 'boost-only';
 
-// Processing status - updated to include compressed state (awaiting boost)
+// Processing status. Note: per-image Boost progress is tracked separately via
+// BoostStatus, so there is no 'boosting' value here.
 export type ImageStatus =
   | 'queued'
   | 'compressing'
-  | 'compressed' // Awaiting Boost phase
-  | 'boosting'
   | 'complete'
   | 'error';
 

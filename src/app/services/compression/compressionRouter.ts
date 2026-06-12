@@ -7,8 +7,11 @@ import type {
 import { compressWithSquoosh } from './squooshService';
 import { compressWithTinyPNG } from './tinypngService';
 
-// Track if TinyPNG quota is exhausted (429 error)
+// Track if TinyPNG quota is exhausted (429 error, or Compression-Count >= limit)
 let tinypngQuotaExhausted = false;
+
+// TinyPNG free-tier monthly compression limit. At/above this, route to OxiPNG.
+const TINYPNG_MONTHLY_LIMIT = 500;
 
 /**
  * Resets the TinyPNG quota exhaustion flag.
@@ -57,6 +60,17 @@ export async function compressImage(
   if (engine === 'tinypng') {
     try {
       const result = await compressWithTinyPNG(file);
+      // Pre-emptively exhaust the quota when we've hit the monthly limit, so
+      // the next PNG goes straight to OxiPNG instead of eating a 429.
+      if (
+        result.compressionCount !== null &&
+        result.compressionCount >= TINYPNG_MONTHLY_LIMIT
+      ) {
+        console.warn(
+          `[Compression] TinyPNG monthly limit reached (${result.compressionCount}), switching to OxiPNG for subsequent PNGs`
+        );
+        tinypngQuotaExhausted = true;
+      }
       return {
         blob: result.blob,
         size: result.blob.size,

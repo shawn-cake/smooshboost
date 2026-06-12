@@ -199,7 +199,12 @@ async function compressPngWithTinyPNG(pngBytes: ArrayBuffer): Promise<ArrayBuffe
   }
 
   // Extract the path portion (e.g. /output/abc123) and pass as query param
-  const outputPath = new URL(locationUrl).pathname.replace(/^\//, '');
+  let outputPath: string;
+  try {
+    outputPath = new URL(locationUrl).pathname.replace(/^\//, '');
+  } catch {
+    throw new Error(`TinyPNG returned an invalid Location URL: ${locationUrl}`);
+  }
 
   // Step 3: Download the compressed image through the proxy
   const downloadResponse = await fetch(`${TINYPNG_BASE}?path=${encodeURIComponent(outputPath)}`, {

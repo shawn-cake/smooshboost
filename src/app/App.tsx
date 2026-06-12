@@ -26,6 +26,7 @@ import { MAX_BATCH_SIZE, getMatchingOutputFormat } from './types';
 
 // Utils
 import { detectInputFormat } from './utils';
+import { isDownloadable } from './services/download';
 
 function App() {
   // Boost Only toggle state (replaces workflow mode selector)
@@ -117,11 +118,11 @@ function App() {
           }
         }
 
-        await addImages(valid);
+        await addImages(valid, boostOnly);
         toast.success(`Added ${valid.length} image${valid.length !== 1 ? 's' : ''}`);
       }
     },
-    [images.length, validateBatch, filterValidFiles, addImages, setConvertFormat, setFormatMode]
+    [images.length, boostOnly, validateBatch, filterValidFiles, addImages, setConvertFormat, setFormatMode]
   );
 
   // Figma plugin bridge — receives exported files via postMessage
@@ -139,21 +140,11 @@ function App() {
     [downloadOne]
   );
 
-  // Get downloadable images based on current state
+  // Get downloadable images — an item has a download blob only once it has
+  // reached a terminal state in either workflow (see isDownloadable)
   const getDownloadableImages = useCallback(() => {
-    return images.filter((img) => {
-      // For boost-only mode, images are ready after boost
-      if (boostOnly) {
-        return (
-          img.boostStatus === 'boosted' ||
-          img.boostStatus === 'boost-skipped' ||
-          img.boostStatus === 'boost-failed'
-        );
-      }
-      // Otherwise, compressed images are downloadable
-      return img.status === 'complete';
-    });
-  }, [images, boostOnly]);
+    return images.filter((img) => isDownloadable(img));
+  }, [images]);
 
   // Handle download (single image or ZIP for multiple)
   const handleDownload = useCallback(async () => {
