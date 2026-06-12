@@ -34,6 +34,27 @@ interface FigmaPluginMessage {
   // Future: batchMetadata?: { ... }
 }
 
+/**
+ * Origins trusted to deliver plugin files via postMessage.
+ *
+ * These mirror the `frame-ancestors` CSP in vercel.json (`'self'` +
+ * figma.com), which already restricts who can embed and message the app:
+ * - `window.location.origin` — same-origin (`'self'`)
+ * - `https://www.figma.com` — the Figma host frame
+ * - `'null'` — Figma renders plugin UI in a sandboxed iframe whose origin
+ *   serializes to the string "null"
+ *
+ * Validating the origin prevents an embedding page from injecting arbitrary
+ * files into the queue.
+ */
+function isTrustedOrigin(origin: string): boolean {
+  return (
+    origin === window.location.origin ||
+    origin === 'https://www.figma.com' ||
+    origin === 'null'
+  );
+}
+
 function isFigmaPluginMessage(data: unknown): data is FigmaPluginMessage {
   if (typeof data !== 'object' || data === null) return false;
   const msg = data as Record<string, unknown>;
@@ -77,6 +98,9 @@ export function useFigmaPluginReceiver(
 
   useEffect(() => {
     function handleWindowMessage(event: MessageEvent) {
+      // Reject messages from untrusted origins before processing any payload
+      if (!isTrustedOrigin(event.origin)) return;
+
       // ── Port handshake from Figma plugin UI shell ──
       if (
         event.data &&

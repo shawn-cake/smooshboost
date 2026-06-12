@@ -95,28 +95,35 @@ function renderResults(): void {
     const row = document.createElement('div');
     row.className = 'result-row';
 
-    row.innerHTML = `
-      <div class="result-info">
-        <span class="result-name" title="${name}">${name}</span>
-        <span class="result-meta">
-          ${formatBytes(item.originalSize)} → ${formatBytes(item.compressedSize)}
-          <strong>(−${pct}%)</strong>
-          via ${engineLabel(item.engine)}
-        </span>
-      </div>
-      <button class="btn-small download-single" data-index="${i}">↓</button>
-    `;
+    // Build with DOM APIs (not innerHTML) — `name` derives from the Figma node
+    // name, which is document-controlled and could contain HTML/script.
+    const info = document.createElement('div');
+    info.className = 'result-info';
 
+    const nameEl = document.createElement('span');
+    nameEl.className = 'result-name';
+    nameEl.title = name;
+    nameEl.textContent = name;
+
+    const metaEl = document.createElement('span');
+    metaEl.className = 'result-meta';
+    metaEl.append(
+      `${formatBytes(item.originalSize)} → ${formatBytes(item.compressedSize)} `
+    );
+    const strong = document.createElement('strong');
+    strong.textContent = `(−${pct}%)`;
+    metaEl.append(strong, ` via ${engineLabel(item.engine)}`);
+
+    info.append(nameEl, metaEl);
+
+    const dlBtn = document.createElement('button');
+    dlBtn.className = 'btn-small download-single';
+    dlBtn.textContent = '↓';
+    dlBtn.addEventListener('click', () => downloadSingle(compressionResults[i]));
+
+    row.append(info, dlBtn);
     resultsList.appendChild(row);
   }
-
-  // Attach download handlers
-  resultsList.querySelectorAll('.download-single').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      const idx = parseInt((e.currentTarget as HTMLElement).dataset.index || '0', 10);
-      downloadSingle(compressionResults[idx]);
-    });
-  });
 
   // Show download bar with summary if there are results
   if (compressionResults.length > 0) {

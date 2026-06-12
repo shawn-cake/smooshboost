@@ -10,18 +10,6 @@ export interface ParseResult {
 }
 
 /**
- * Check if URL is a shortened Google Maps URL
- */
-export function isShortGoogleMapsUrl(url: string): boolean {
-  const trimmed = url.trim().toLowerCase();
-  return (
-    trimmed.includes('goo.gl/maps') ||
-    trimmed.includes('maps.app.goo.gl') ||
-    trimmed.includes('g.co/maps')
-  );
-}
-
-/**
  * Parse Google Maps/Place URL or raw coordinates to extract coordinates
  * Supports multiple URL patterns:
  * - maps.google.com/?q=LAT,LNG
@@ -135,17 +123,5 @@ export function validateCoordinates(coords: ParsedCoordinates): boolean {
     coords.longitude >= -180 &&
     coords.longitude <= 180
   );
-}
-
-/**
- * Format coordinates for display
- */
-export function formatCoordinates(
-  latitude: number,
-  longitude: number
-): string {
-  const latDir = latitude >= 0 ? 'N' : 'S';
-  const lngDir = longitude >= 0 ? 'E' : 'W';
-  return `${Math.abs(latitude).toFixed(4)}° ${latDir}, ${Math.abs(longitude).toFixed(4)}° ${lngDir}`;
 }
 

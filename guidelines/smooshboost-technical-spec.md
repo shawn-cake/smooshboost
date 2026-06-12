@@ -588,7 +588,8 @@ function injectTitleDescription(
 
         exifObj['0th'] = exifObj['0th'] || {};
         exifObj['0th'][piexif.ImageIFD.ImageDescription] = description;
-        exifObj['0th'][piexif.ImageIFD.XPTitle] = title;
+        // DocumentName is used for the title — more widely supported than XPTitle
+        exifObj['0th'][piexif.ImageIFD.DocumentName] = title;
 
         const exifBytes = piexif.dump(exifObj);
         const newDataUrl = piexif.insert(exifBytes, dataUrl);
@@ -868,7 +869,7 @@ The processing pipeline uses composable React hooks rather than batch processing
 
 #### `useCompression` Hook
 - **Auto-starts compression** when new images are added to the queue
-- Processes images **sequentially** (one at a time)
+- Processes up to **3 images concurrently** via a bounded work-stealing pool (`forEachWithConcurrency`); each worker handles its own errors so one failure never aborts the batch
 - Uses `getCompressionEngine()` to select the appropriate engine based on output format
 - Updates each image's status (`compressing` -> `compressed` or `error`) as processing completes
 - Tracks TinyPNG quota exhaustion and falls back to OxiPNG for PNG output
@@ -955,22 +956,40 @@ async function validateFile(file: File): Promise<ValidationResult> {
   };
 }
 
+// `validateBatch` only performs the synchronous batch-count check.
+// Per-file validation (`validateFile`) is async (it awaits magic-byte
+// reads), so it must NOT be called synchronously here — doing so would push
+// unresolved Promises and silently skip the content check. Per-file
+// validation happens separately in `filterValidFiles`, which awaits each
+// `validateFile` via `Promise.all`.
 function validateBatch(files: File[], existingCount: number): ValidationResult {
   const errors: string[] = [];
-  
+
   if (existingCount + files.length > MAX_BATCH_SIZE) {
     errors.push(`Batch limit is ${MAX_BATCH_SIZE} images. You have ${existingCount} and are adding ${files.length}.`);
   }
-  
-  files.forEach(file => {
-    const result = validateFile(file);
-    errors.push(...result.errors);
-  });
-  
+
   return {
     valid: errors.length === 0,
     errors
   };
+}
+
+// Filters valid files, awaiting the async magic-byte check on each.
+async function filterValidFiles(
+  files: File[]
+): Promise<{ valid: File[]; errors: string[] }> {
+  const results = await Promise.all(
+    files.map(async (file) => ({ file, result: await validateFile(file) }))
+  );
+
+  const valid: File[] = [];
+  const errors: string[] = [];
+  for (const { file, result } of results) {
+    if (result.valid) valid.push(file);
+    else errors.push(...result.errors);
+  }
+  return { valid, errors };
 }
 ```
 
@@ -989,7 +1008,7 @@ async function downloadAsZip(images: ImageItem[]): Promise<void> {
   );
   
   completed.forEach(img => {
-    const outputFilename = getOutputFilename(img.filename, img.outputFormat);
+    const outputFilename = getOutputFilename(img.name, img.outputFormat);
     zip.file(outputFilename, img.finalBlob!);
   });
   
@@ -1076,7 +1095,6 @@ src/
 │   │   ├── format/
 │   │   │   └── FormatSelector.tsx         # Format mode + Boost Only toggle
 │   │   ├── layout/
-│   │   │   ├── Header.tsx
 │   │   │   └── Footer.tsx
 │   │   ├── metadata/
 │   │   │   ├── MetadataPanel.tsx           # Wrapper for metadata sections
@@ -1203,7 +1221,7 @@ interface AppNotification {
 ## Performance Considerations
 
 1. **Thumbnail generation:** Create at upload time, not during render
-2. **Concurrent processing:** Max 3 images simultaneously
+2. **Bounded concurrency:** Up to 3 images are compressed at once via a work-stealing pool (`forEachWithConcurrency` in `useCompression`). Network-bound TinyPNG requests parallelize fully; CPU-bound WASM encodes still overlap their async decode/canvas steps. The cap keeps the browser responsive on large batches.
 3. **Web Worker:** Run Squoosh compression off main thread
 4. **Memory management:** Revoke object URLs when no longer needed
 5. **Lazy metadata:** Only inject if options are enabled

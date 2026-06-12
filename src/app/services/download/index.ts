@@ -1,1 +1,6 @@
-export { downloadAsZip, downloadSingleImage } from './zipService';
+export {
+  downloadAsZip,
+  downloadSingleImage,
+  getDownloadBlob,
+  isDownloadable,
+} from './zipService';

@@ -19,9 +19,34 @@ export const config = {
  *   POST /api/tinypng/shrink              -> https://api.tinify.com/shrink
  *   GET  /api/tinypng/output/abc123       -> https://api.tinify.com/output/abc123
  */
+/**
+ * Origins permitted to use this proxy.
+ *
+ * - The deployed web app (same-origin requests don't send an Origin header,
+ *   but this covers any cross-subdomain access).
+ * - `null` — Figma renders plugin UI inside a sandboxed iframe whose origin
+ *   serializes to the string "null". The plugin's outbound domain is locked
+ *   down separately via manifest.json `networkAccess.allowedDomains`.
+ *
+ * A wildcard (`*`) would turn this endpoint into an open relay that any site
+ * could use to drain the (paid) TinyPNG quota.
+ */
+const ALLOWED_ORIGINS = new Set(['https://smshbst.vercel.app', 'null']);
+
+/**
+ * Sub-paths this proxy is allowed to forward to TinyPNG. Anything else (e.g.
+ * crafted `path` values aiming at other API routes) is rejected before the
+ * authenticated upstream request is built.
+ */
+const ALLOWED_SUBPATH = /^(shrink|output\/[A-Za-z0-9._-]+)$/;
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers for Figma plugin requests
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS — reflect the request origin only when it is on the allowlist.
+  const origin = req.headers.origin;
+  if (typeof origin === 'string' && ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Expose-Headers', 'Location, Compression-Count');
@@ -42,6 +67,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({
       error: 'missing_path',
       message: 'Query parameter "path" is required (e.g. ?path=shrink)',
+    });
+  }
+
+  // Only allow known TinyPNG routes — never forward arbitrary paths with the
+  // server-side API key attached.
+  if (!ALLOWED_SUBPATH.test(subPath)) {
+    return res.status(400).json({
+      error: 'invalid_path',
+      message: 'Query parameter "path" must be "shrink" or "output/<id>"',
     });
   }
 

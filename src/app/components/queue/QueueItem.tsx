@@ -6,6 +6,7 @@ import { StatusIndicator } from './StatusIndicator';
 import { ImageMetadataAccordion } from './ImageMetadataAccordion';
 import type { ImageItem, MetadataOptions, OutputFormat } from '../../types';
 import { formatBytes, calculateSavingsPercentage } from '../../utils';
+import { isDownloadable } from '../../services/download';
 
 // Format display labels for download button
 const FORMAT_LABELS: Record<OutputFormat, string> = {
@@ -51,6 +52,10 @@ export const QueueItem = memo(function QueueItem({
   const isComplete = image.status === 'complete';
   const isError = image.status === 'error';
   const isProcessing = image.status === 'compressing';
+
+  // Download is available once the item has a usable blob — true for
+  // completed compressions and for boost-only items that have finished boosting
+  const canDownload = isDownloadable(image);
 
   // Show boost functionality when image is complete (or in boost-only mode)
   const canBoost = isComplete || boostOnly;
@@ -106,7 +111,7 @@ export const QueueItem = memo(function QueueItem({
 
         {/* Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          {isComplete && (
+          {canDownload && (
             <button
               type="button"
               onClick={onDownload}

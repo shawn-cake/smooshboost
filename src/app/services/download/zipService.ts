@@ -5,11 +5,27 @@ import { getOutputFilename, downloadBlob } from '../../utils';
 /**
  * Get the best blob for download - prefer finalBlob (with metadata) over compressedBlob
  */
-function getDownloadBlob(image: ImageItem): Blob | null {
+export function getDownloadBlob(image: ImageItem): Blob | null {
   // After boost: use finalBlob (has metadata)
   // After compression only: use compressedBlob
   // Boost-only mode: use finalBlob or original file
   return image.finalBlob || image.compressedBlob || null;
+}
+
+/**
+ * Determines whether an image is ready to download.
+ *
+ * A downloadable blob only ever exists once an item reaches a terminal state:
+ * - Smoosh/Smoosh+Boost mode: `compressedBlob` is set at `status: 'complete'`
+ *   (and `finalBlob` if it was also boosted).
+ * - Boost-only mode: `finalBlob` is set when boost reaches a terminal state
+ *   (boosted / boost-skipped / boost-failed); `status` stays `queued`.
+ *
+ * Checking blob presence therefore works for both workflows, where a
+ * `status === 'complete'` check silently excludes every boost-only image.
+ */
+export function isDownloadable(image: ImageItem): boolean {
+  return getDownloadBlob(image) !== null;
 }
 
 /**
@@ -74,10 +90,9 @@ export async function downloadAsZip(images: ImageItem[]): Promise<void> {
     console.log(`[ZIP] Image ${i}: ${img.name}, status=${img.status}, boostStatus=${img.boostStatus}, hasFinalBlob=${!!img.finalBlob}, hasCompressedBlob=${!!img.compressedBlob}, blobSize=${blob?.size || 0}`);
   });
 
-  // Filter to only completed images with blobs
-  const completedImages = images.filter(
-    (img) => img.status === 'complete' && getDownloadBlob(img)
-  );
+  // Filter to only images that have a downloadable blob (works for both
+  // Smoosh and Boost-only workflows — see isDownloadable)
+  const completedImages = images.filter((img) => isDownloadable(img));
 
   console.log(`[ZIP] Completed images with blobs: ${completedImages.length}`);
 
