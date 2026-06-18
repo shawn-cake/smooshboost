@@ -49,7 +49,8 @@
       font-family: 'Spline Sans Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
       font-size: 12px;
       color: var(--gray-800);
-      background: var(--gray-100);
+      /* Match the web app's radial blue gradient */
+      background: radial-gradient(circle at 50% 30%, #ffffff, #fefeff, #f6f9fc, #e2ecf4, #d5e2ef, #d1e0ee, #d1e0ee, #cddded, #c0d4e8, #acc7e0, #a4c2dd, #a3c1dd);
       display: flex;
       flex-direction: column;
       height: 100vh;
@@ -63,7 +64,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 10px 16px;
+      padding: 10px 14px;
       background: #ffffff;
       border-bottom: 1px solid var(--gray-200);
       flex-shrink: 0;
@@ -78,20 +79,8 @@
     }
 
     .logo-mark svg {
-      height: 20px;
+      height: 18px;
       width: auto;
-      flex-shrink: 0;
-    }
-
-    .header .divider {
-      width: 1px;
-      height: 20px;
-      background: var(--gray-200);
-    }
-
-    .selection-label {
-      color: var(--gray-500);
-      font-size: 11px;
       flex-shrink: 0;
     }
 
@@ -99,6 +88,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      /* Push the whole controls group to the far right of the header row */
       margin-left: auto;
     }
 
@@ -128,49 +118,61 @@
     }
 
     /* ── Buttons ─────────────────────────────────────────────────── */
+    /* Primary = blue, mirrors the web app's primary Button variant
+       (bg-primary-500, hover-600, active-700, disabled-300). */
     .btn-primary {
-      background: var(--accent-500);
-      color: var(--gray-900);
+      background: var(--primary-500);
+      color: #ffffff;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
       padding: 7px 14px;
-      font-family: 'Syne', sans-serif;
+      font-family: inherit;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
+      transition: background 0.15s;
       white-space: nowrap;
     }
 
     .btn-primary:hover:not(:disabled) {
-      background: var(--accent-400);
-      transform: translateY(-1px);
+      background: var(--primary-600);
     }
 
     .btn-primary:active:not(:disabled) {
-      transform: translateY(0);
+      background: var(--primary-700);
     }
 
     .btn-primary:disabled {
-      opacity: 0.45;
+      background: var(--primary-300);
       cursor: not-allowed;
     }
 
-    .btn-small {
-      background: #ffffff;
-      color: var(--gray-700);
-      border: 1px solid var(--gray-300);
-      border-radius: 4px;
-      padding: 4px 10px;
+    /* Accent = the lighter brand yellow used for "Download All". */
+    .btn-accent {
+      background: var(--accent-400);
+      color: var(--gray-900);
+      border: none;
+      border-radius: 6px;
+      padding: 7px 14px;
       font-family: inherit;
-      font-size: 11px;
+      font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
+      transition: background 0.15s;
+      white-space: nowrap;
     }
 
-    .btn-small:hover {
-      background: var(--gray-50);
-      border-color: var(--gray-400);
+    .btn-accent:hover:not(:disabled) {
+      background: var(--accent-500);
+    }
+
+    .btn-accent:active:not(:disabled) {
+      background: var(--accent-600);
+    }
+
+    .btn-accent:disabled {
+      background: var(--accent-200);
+      cursor: not-allowed;
     }
 
     /* ── Status line ─────────────────────────────────────────────── */
@@ -217,7 +219,10 @@
     .results-list {
       flex: 1;
       overflow-y: auto;
-      padding: 6px 16px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
     .results-list::-webkit-scrollbar { width: 5px; }
@@ -227,30 +232,34 @@
       border-radius: 3px;
     }
 
+    /* Card-style rows (mirrors the web app queue) so separation reads clearly
+       over the gradient instead of relying on a faint divider line. */
     .result-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 10px;
-      border-bottom: 1px solid var(--gray-200);
-      transition: background 0.1s;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #ffffff;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      transition: border-color 0.12s;
     }
 
     .result-row:hover {
-      background: var(--primary-50);
+      border-color: var(--gray-300);
     }
-
-    .result-row:last-child { border-bottom: none; }
 
     .result-info {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 3px;
+      flex: 1;
       min-width: 0;
     }
 
     .result-name {
-      font-size: 11px;
+      font-size: 13px;
       color: var(--gray-800);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -259,13 +268,53 @@
     }
 
     .result-meta {
-      font-size: 10px;
+      font-size: 11px;
       color: var(--gray-500);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .result-meta strong {
       color: var(--primary-500);
       font-weight: 600;
+    }
+
+    /* Per-row actions: download + remove */
+    .result-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: #ffffff;
+      color: var(--gray-500);
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+    }
+
+    .btn-icon svg { width: 14px; height: 14px; display: block; }
+
+    .btn-icon:hover {
+      background: var(--gray-50);
+      border-color: var(--gray-400);
+      color: var(--gray-700);
+    }
+
+    /* Remove button turns red on hover */
+    .btn-icon.remove-single:hover {
+      background: #FEF2F2;
+      border-color: #FCA5A5;
+      color: #DC2626;
     }
 
     /* ── Download bar ─────────────────────────────────────────────── */
@@ -290,36 +339,61 @@
     }
 
     /* ── Empty state ──────────────────────────────────────────────── */
+    /* Mirrors the web app's pre-compression screen: instructional copy
+       centered, smooshBOOST wordmark anchored at the bottom as a footer. */
     .empty-state {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      text-align: center;
+    }
+
+    .empty-state .empty-body {
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100%;
-      text-align: center;
-      padding: 40px 20px;
+      gap: 14px;
+      padding: 32px 24px;
     }
 
-    .empty-state .empty-logo {
-      opacity: 0.18;
-      margin-bottom: 16px;
+    .empty-state .empty-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--gray-700);
+      letter-spacing: -0.01em;
     }
 
-    .empty-state .empty-logo svg {
-      height: 36px;
+    .empty-state .empty-sub {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--gray-500);
+      max-width: 380px;
+    }
+
+    .empty-state .empty-sub strong {
+      color: var(--primary-600);
+      font-weight: 600;
+    }
+
+    .empty-state .empty-footer {
+      flex-shrink: 0;
+      padding: 18px 16px 26px;
+      opacity: 0.4;
+    }
+
+    .empty-state .empty-footer svg {
+      height: 26px;
       width: auto;
     }
 
-    .empty-state p {
-      font-size: 12px;
-      line-height: 1.6;
+    .empty-state .empty-footer .copyright {
+      margin-top: 8px;
+      font-size: 11px;
       color: var(--gray-500);
-      max-width: 320px;
-    }
-
-    .empty-state p strong {
-      color: var(--accent-600);
-      font-weight: 600;
+      letter-spacing: 0.02em;
     }
   </style>
 </head>
@@ -330,13 +404,12 @@
     <div class="logo-mark">
       <!-- INJECT_LOGO -->
     </div>
-    <span class="divider"></span>
-    <span class="selection-label" id="selection-label">No exportable frames selected</span>
 
     <div class="controls">
       <label for="format-select">Format</label>
       <select id="format-select">
-        <option value="JPG" selected>JPG</option>
+        <option value="WEBP" selected>WebP</option>
+        <option value="JPG">JPG</option>
         <option value="PNG">PNG</option>
       </select>
 
@@ -352,8 +425,8 @@
     </div>
   </div>
 
-  <!-- Status line -->
-  <div class="status-line" id="status-line">Select frames and click Export &amp; Smoosh</div>
+  <!-- Status line — single source of truth for selection count + status -->
+  <div class="status-line" id="status-line">No exportable layers selected</div>
 
   <!-- Progress -->
   <div class="progress-area" id="progress-area">
@@ -366,18 +439,22 @@
   <!-- Scrollable results -->
   <div class="results-list" id="results-list">
     <div class="empty-state">
-      <!-- Large faded logo for empty state -->
-      <div class="empty-logo">
-        <!-- INJECT_LOGO_EMPTY -->
+      <div class="empty-body">
+        <div class="empty-title">Select layers to smoosh</div>
+        <p class="empty-sub">Choose your format &amp; scale, then click <strong>Export &amp; Smoosh</strong> to compress your selection.</p>
       </div>
-      <p>Select frames in Figma, choose your format &amp; scale,<br/>then click <strong>Export &amp; Smoosh</strong> to compress.</p>
+      <!-- smooshBOOST wordmark anchored at the bottom, like the web app footer -->
+      <div class="empty-footer">
+        <!-- INJECT_LOGO_EMPTY -->
+        <div class="copyright">© Cake Websites</div>
+      </div>
     </div>
   </div>
 
   <!-- Download bar -->
   <div class="download-bar" id="download-bar">
     <span class="download-summary" id="download-summary"></span>
-    <button class="btn-primary" id="download-all-btn">Download All</button>
+    <button class="btn-accent" id="download-all-btn">Download All</button>
   </div>
 
   <!-- Codec scripts: emscripten factories + oxipng wasm-bindgen.

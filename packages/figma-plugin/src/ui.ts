@@ -11,12 +11,37 @@ import type {
   ExportedFile,
   CompressionResultItem,
 } from './types';
-import { compressJpeg, compressPng } from './compression';
+import { compressJpeg, compressPng, compressWebp } from './compression';
 import { downloadSingle, downloadAsZip } from './download';
+
+/**
+ * Decode encoded image bytes (PNG/JPEG) to raw RGBA ImageData using the
+ * iframe's canvas. Used to feed the WebP encoder, which needs raw pixels.
+ */
+async function bytesToImageData(bytes: ArrayBuffer, mime: string): Promise<ImageData> {
+  const blob = new Blob([bytes], { type: mime });
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('Failed to decode exported image'));
+      el.src = url;
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Could not get canvas 2D context');
+    ctx.drawImage(img, 0, 0);
+    return ctx.getImageData(0, 0, canvas.width, canvas.height);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
 
 // ── DOM references ───────────────────────────────────────────────────
 
-const selectionLabel = document.getElementById('selection-label') as HTMLElement;
 const formatSelect = document.getElementById('format-select') as HTMLSelectElement;
 const scaleSelect = document.getElementById('scale-select') as HTMLSelectElement;
 const exportBtn = document.getElementById('export-btn') as HTMLButtonElement;
@@ -35,6 +60,9 @@ const downloadAllBtn = document.getElementById('download-all-btn') as HTMLButton
 
 let selectionCount = 0;
 let compressionResults: CompressionResultItem[] = [];
+// While true, the status line shows operational status ("Compressing…",
+// "Done! …") and selection changes don't overwrite it.
+let processing = false;
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -58,6 +86,12 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
+// Inline icons (no icon font available in the plugin sandbox)
+const DOWNLOAD_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>';
+const TRASH_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>';
+
 function engineLabel(engine: string): string {
   switch (engine) {
     case 'mozjpeg':
@@ -66,6 +100,8 @@ function engineLabel(engine: string): string {
       return 'TinyPNG';
     case 'oxipng':
       return 'OxiPNG';
+    case 'webp':
+      return 'WebP';
     default:
       return engine;
   }
@@ -74,13 +110,25 @@ function engineLabel(engine: string): string {
 // ── UI update helpers ────────────────────────────────────────────────
 
 function updateSelectionUI(): void {
-  if (selectionCount === 0) {
-    selectionLabel.textContent = 'No exportable frames selected';
-    exportBtn.disabled = true;
-  } else {
-    selectionLabel.textContent = `${selectionCount} frame${selectionCount > 1 ? 's' : ''} selected`;
-    exportBtn.disabled = false;
-  }
+  exportBtn.disabled = processing || selectionCount === 0;
+  // Don't clobber an in-progress / completion message with the selection count.
+  if (processing) return;
+  statusLine.textContent =
+    selectionCount === 0
+      ? 'No exportable layers selected'
+      : `${selectionCount} layer${selectionCount > 1 ? 's' : ''} selected`;
+}
+
+// Status summary for the current set of compressed files. Reused after a run
+// completes and after a row is removed, so the count stays accurate.
+function refreshCompletionStatus(): void {
+  const totalSaved = compressionResults.reduce(
+    (acc, r) => acc + (r.originalSize - r.compressedSize),
+    0
+  );
+  setStatus(
+    `Done! ${compressionResults.length} file${compressionResults.length > 1 ? 's' : ''} compressed, ${formatBytes(totalSaved)} saved`
+  );
 }
 
 function renderResults(): void {
@@ -104,7 +152,10 @@ function renderResults(): void {
           via ${engineLabel(item.engine)}
         </span>
       </div>
-      <button class="btn-small download-single" data-index="${i}">↓</button>
+      <div class="result-actions">
+        <button class="btn-icon download-single" data-index="${i}" title="Download">${DOWNLOAD_ICON}</button>
+        <button class="btn-icon remove-single" data-index="${i}" title="Remove from batch">${TRASH_ICON}</button>
+      </div>
     `;
 
     resultsList.appendChild(row);
@@ -115,6 +166,21 @@ function renderResults(): void {
     btn.addEventListener('click', (e) => {
       const idx = parseInt((e.currentTarget as HTMLElement).dataset.index || '0', 10);
       downloadSingle(compressionResults[idx]);
+    });
+  });
+
+  // Attach remove handlers — lets you drop an accidentally-included layer
+  // before downloading the batch.
+  resultsList.querySelectorAll('.remove-single').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const idx = parseInt((e.currentTarget as HTMLElement).dataset.index || '0', 10);
+      compressionResults.splice(idx, 1);
+      renderResults();
+      if (compressionResults.length > 0) {
+        refreshCompletionStatus();
+      } else {
+        setStatus('No compressed files — select layers and Export & Smoosh');
+      }
     });
   });
 
@@ -152,9 +218,17 @@ async function handleExportReady(files: ExportedFile[]): Promise<void> {
       let compressedData: ArrayBuffer;
       let mimeType: string;
       let extension: string;
-      let engine: 'mozjpeg' | 'tinypng' | 'oxipng';
+      let engine: 'mozjpeg' | 'tinypng' | 'oxipng' | 'webp';
 
-      if (file.type === 'image/jpeg') {
+      if (file.targetFormat === 'WEBP') {
+        // WebP path — Figma exported a lossless PNG; decode to pixels then
+        // encode WebP entirely client-side.
+        const imageData = await bytesToImageData(originalBytes, file.type);
+        compressedData = await compressWebp(imageData);
+        mimeType = 'image/webp';
+        extension = '.webp';
+        engine = 'webp';
+      } else if (file.targetFormat === 'JPG') {
         compressedData = await compressJpeg(originalBytes);
         mimeType = 'image/jpeg';
         extension = '.jpg';
@@ -193,20 +267,15 @@ async function handleExportReady(files: ExportedFile[]): Promise<void> {
   showProgress(false);
 
   if (compressionResults.length > 0) {
-    const totalSaved = compressionResults.reduce(
-      (acc, r) => acc + (r.originalSize - r.compressedSize),
-      0
-    );
-    setStatus(
-      `Done! ${compressionResults.length} file${compressionResults.length > 1 ? 's' : ''} compressed, ${formatBytes(totalSaved)} saved`
-    );
     renderResults();
+    refreshCompletionStatus();
   } else {
     setStatus('Compression failed for all files');
   }
 
-  // Re-enable export button
-  exportBtn.disabled = false;
+  // Done — release the status line and re-enable export.
+  processing = false;
+  exportBtn.disabled = selectionCount === 0;
   exportBtn.textContent = 'Export & Smoosh';
 }
 
@@ -239,9 +308,10 @@ window.addEventListener('message', (event: MessageEvent) => {
 exportBtn.addEventListener('click', () => {
   if (selectionCount === 0) return;
 
+  processing = true;
   exportBtn.disabled = true;
   exportBtn.textContent = 'Exporting…';
-  setStatus(`Exporting ${selectionCount} frame${selectionCount > 1 ? 's' : ''}…`);
+  setStatus(`Exporting ${selectionCount} layer${selectionCount > 1 ? 's' : ''}…`);
 
   // Clear previous results
   resultsList.innerHTML = '';
@@ -275,7 +345,6 @@ downloadAllBtn.addEventListener('click', () => {
 // ── Init ─────────────────────────────────────────────────────────────
 
 updateSelectionUI();
-setStatus('Ready — waiting for selection data…');
 
 // Tell the sandbox we're ready so it can send the current selection count
 parent.postMessage({ pluginMessage: { type: 'UI_READY' } }, '*');

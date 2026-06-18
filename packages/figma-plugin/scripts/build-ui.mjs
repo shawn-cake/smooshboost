@@ -65,11 +65,17 @@ const mozjpegEncSrc = readFileSync(
 const oxipngSrc = readFileSync(
   resolve(root, 'node_modules/@jsquash/oxipng/codec/pkg/squoosh_oxipng.js'), 'utf8'
 );
+const webpEncSrc = readFileSync(
+  resolve(root, 'node_modules/@jsquash/webp/codec/enc/webp_enc.js'), 'utf8'
+);
 
 const codecScripts = [
   { name: 'mozjpeg_dec', code: buildMozjpegScript(mozjpegDecSrc, '__smoosh_mozjpeg_dec') },
   { name: 'mozjpeg_enc', code: buildMozjpegScript(mozjpegEncSrc, '__smoosh_mozjpeg_enc') },
   { name: 'oxipng',      code: buildOxipngScript(oxipngSrc) },
+  // webp_enc.js uses the same emscripten `var Module = (() => {...})()` pattern
+  // as the mozjpeg codecs, so buildMozjpegScript handles it identically.
+  { name: 'webp_enc',    code: buildMozjpegScript(webpEncSrc, '__smoosh_webp_enc') },
 ];
 
 let codecTags = '';
