@@ -1,11 +1,14 @@
 // SmooshBoost Figma Plugin — Sandbox Script
 // Runs in the Figma sandbox (no DOM access, no browser APIs).
 
-const EXPORTABLE_TYPES: NodeType[] = ['FRAME', 'COMPONENT', 'INSTANCE', 'GROUP'];
-
+// Almost every SceneNode supports exportAsync(), so we accept any visible
+// node the user selected — frames, components, groups, rectangles, vectors,
+// images, text, etc. We only drop hidden nodes (they'd export blank).
 function getExportableSelection(): SceneNode[] {
-  return figma.currentPage.selection.filter((node) =>
-    EXPORTABLE_TYPES.includes(node.type as NodeType)
+  return figma.currentPage.selection.filter(
+    (node) => node.visible !== false && typeof (node as SceneNode & {
+      exportAsync?: unknown;
+    }).exportAsync === 'function'
   );
 }
 
@@ -15,7 +18,7 @@ function sendSelectionUpdate(): void {
 }
 
 // Show the plugin UI
-figma.showUI(__html__, { width: 780, height: 680 });
+figma.showUI(__html__, { width: 560, height: 500 });
 
 // Send initial selection after a short delay so the UI JS bundle has time to
 // parse and attach its onmessage listener (~900 KB IIFE).
@@ -29,7 +32,7 @@ figma.on('selectionchange', () => {
 // Handle messages from the plugin UI
 figma.ui.onmessage = async (msg: {
   type: string;
-  format?: 'JPG' | 'PNG';
+  format?: 'JPG' | 'PNG' | 'WEBP';
   scale?: number;
   // Future Boost-phase fields would be added here, e.g.:
   //   metadata?: {
@@ -47,24 +50,35 @@ figma.ui.onmessage = async (msg: {
 
   if (msg.type !== 'EXPORT_REQUEST') return;
 
-  const format = msg.format || 'JPG';
+  const format = msg.format || 'WEBP';
   const scale = msg.scale || 2;
   const nodes = getExportableSelection();
 
   if (nodes.length === 0) {
-    figma.notify('No frames selected');
+    figma.notify('No layers selected');
     return;
   }
 
-  const extension = format === 'PNG' ? '.png' : '.jpg';
-  const mime = format === 'PNG' ? 'image/png' : 'image/jpeg';
+  // Figma can't emit WebP, so WebP targets export a lossless PNG that the UI
+  // transcodes. JPG/PNG export directly in their final format.
+  const figmaFormat: 'PNG' | 'JPG' = format === 'JPG' ? 'JPG' : 'PNG';
+  const extension = figmaFormat === 'JPG' ? '.jpg' : '.png';
+  const mime: 'image/png' | 'image/jpeg' =
+    figmaFormat === 'JPG' ? 'image/jpeg' : 'image/png';
 
-  const files: Array<{ name: string; data: number[]; type: string }> = [];
+  const files: Array<{
+    name: string;
+    data: number[];
+    type: 'image/png' | 'image/jpeg';
+    targetFormat: 'JPG' | 'PNG' | 'WEBP';
+  }> = [];
 
   for (const node of nodes) {
     try {
-      const bytes = await (node as FrameNode).exportAsync({
-        format,
+      const bytes = await (node as SceneNode & {
+        exportAsync: (settings: ExportSettings) => Promise<Uint8Array>;
+      }).exportAsync({
+        format: figmaFormat,
         constraint: { type: 'SCALE', value: scale },
       });
 
@@ -72,6 +86,7 @@ figma.ui.onmessage = async (msg: {
         name: node.name + extension,
         data: Array.from(bytes),
         type: mime,
+        targetFormat: format,
       });
     } catch (err) {
       figma.notify(`Failed to export "${node.name}"`);

@@ -25,6 +25,7 @@ import {
   MOZJPEG_ENC_WASM_BASE64,
   MOZJPEG_DEC_WASM_BASE64,
   OXIPNG_WASM_BASE64,
+  WEBP_ENC_WASM_BASE64,
   base64ToArrayBuffer,
 } from './wasm-data';
 
@@ -34,6 +35,7 @@ declare global {
   interface Window {
     __smoosh_mozjpeg_dec: (opts: any) => Promise<any>;
     __smoosh_mozjpeg_enc: (opts: any) => Promise<any>;
+    __smoosh_webp_enc: (opts: any) => Promise<any>;
     __smoosh_oxipng: {
       initSync: (module: WebAssembly.Module) => any;
       optimise: (data: Uint8Array, level: number, interlace: boolean, optimize_alpha: boolean) => Uint8Array;
@@ -63,11 +65,50 @@ const MOZJPEG_OPTIONS = {
   chroma_quality: 75,
 };
 
+// ── WebP options ─────────────────────────────────────────────────────
+//
+// Full option struct from @jsquash/webp meta.js `defaultOptions`. The raw
+// emscripten module.encode() does NOT merge defaults like the @jsquash
+// wrapper does, so every field is required. Quality is bumped above the web
+// app's 75 — Figma exports are often used at larger display sizes, and 75
+// read as a touch too soft in testing.
+
+const WEBP_OPTIONS = {
+  quality: 85,
+  target_size: 0,
+  target_PSNR: 0,
+  method: 4,
+  sns_strength: 50,
+  filter_strength: 60,
+  filter_sharpness: 0,
+  filter_type: 1,
+  partitions: 0,
+  segments: 4,
+  pass: 1,
+  show_compressed: 0,
+  preprocessing: 0,
+  autofilter: 0,
+  partition_limit: 0,
+  alpha_compression: 1,
+  alpha_filtering: 1,
+  alpha_quality: 100,
+  lossless: 0,
+  exact: 0,
+  image_hint: 0,
+  emulate_jpeg_size: 0,
+  thread_level: 0,
+  low_memory: 0,
+  near_lossless: 100,
+  use_delta_palette: 0,
+  use_sharp_yuv: 0,
+};
+
 // ── Lazy codec cache ────────────────────────────────────────────────
 
 // Emscripten module instances (resolved promises from the factory)
 let jpegDecModule: any = null;
 let jpegEncModule: any = null;
+let webpEncModule: any = null;
 
 // OxiPNG initialised flag
 let oxipngInitialised = false;
@@ -145,6 +186,41 @@ export async function compressJpeg(jpegBytes: ArrayBuffer): Promise<ArrayBuffer>
     imageData.height,
     MOZJPEG_OPTIONS,
   );
+  // Return a copy (avoids wasm memory issues)
+  return resultView.buffer.slice(
+    resultView.byteOffset,
+    resultView.byteOffset + resultView.byteLength,
+  );
+}
+
+// ── WebP ────────────────────────────────────────────────────────────
+
+async function ensureWebpEnc(): Promise<void> {
+  if (webpEncModule) return;
+  const factory = window.__smoosh_webp_enc;
+  if (!factory) throw new Error('WebP encoder codec not loaded');
+  const wasmModule = compileWasm(WEBP_ENC_WASM_BASE64);
+  webpEncModule = await initEmscriptenModule(factory, wasmModule);
+}
+
+/**
+ * Encode raw RGBA pixels to WebP using the WebP encoder WASM (quality 75).
+ *
+ * Figma's exportAsync() cannot emit WebP, so the sandbox exports a lossless
+ * PNG and the UI decodes it to ImageData (via canvas) before calling this.
+ * Mirrors @jsquash/webp encode.js: module.encode(data, width, height, opts).
+ */
+export async function compressWebp(imageData: ImageData): Promise<ArrayBuffer> {
+  await ensureWebpEnc();
+
+  const resultView = webpEncModule.encode(
+    imageData.data,
+    imageData.width,
+    imageData.height,
+    WEBP_OPTIONS,
+  );
+  if (!resultView) throw new Error('WebP encode failed');
+
   // Return a copy (avoids wasm memory issues)
   return resultView.buffer.slice(
     resultView.byteOffset,

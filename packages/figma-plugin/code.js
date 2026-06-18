@@ -1,16 +1,18 @@
 "use strict";
 // SmooshBoost Figma Plugin — Sandbox Script
 // Runs in the Figma sandbox (no DOM access, no browser APIs).
-const EXPORTABLE_TYPES = ['FRAME', 'COMPONENT', 'INSTANCE', 'GROUP'];
+// Almost every SceneNode supports exportAsync(), so we accept any visible
+// node the user selected — frames, components, groups, rectangles, vectors,
+// images, text, etc. We only drop hidden nodes (they'd export blank).
 function getExportableSelection() {
-    return figma.currentPage.selection.filter((node) => EXPORTABLE_TYPES.includes(node.type));
+    return figma.currentPage.selection.filter((node) => node.visible !== false && typeof node.exportAsync === 'function');
 }
 function sendSelectionUpdate() {
     const count = getExportableSelection().length;
     figma.ui.postMessage({ type: 'SELECTION_UPDATE', count });
 }
 // Show the plugin UI
-figma.showUI(__html__, { width: 780, height: 680 });
+figma.showUI(__html__, { width: 560, height: 500 });
 // Send initial selection after a short delay so the UI JS bundle has time to
 // parse and attach its onmessage listener (~900 KB IIFE).
 setTimeout(() => sendSelectionUpdate(), 200);
@@ -27,26 +29,30 @@ figma.ui.onmessage = async (msg) => {
     }
     if (msg.type !== 'EXPORT_REQUEST')
         return;
-    const format = msg.format || 'JPG';
+    const format = msg.format || 'WEBP';
     const scale = msg.scale || 2;
     const nodes = getExportableSelection();
     if (nodes.length === 0) {
-        figma.notify('No frames selected');
+        figma.notify('No layers selected');
         return;
     }
-    const extension = format === 'PNG' ? '.png' : '.jpg';
-    const mime = format === 'PNG' ? 'image/png' : 'image/jpeg';
+    // Figma can't emit WebP, so WebP targets export a lossless PNG that the UI
+    // transcodes. JPG/PNG export directly in their final format.
+    const figmaFormat = format === 'JPG' ? 'JPG' : 'PNG';
+    const extension = figmaFormat === 'JPG' ? '.jpg' : '.png';
+    const mime = figmaFormat === 'JPG' ? 'image/jpeg' : 'image/png';
     const files = [];
     for (const node of nodes) {
         try {
             const bytes = await node.exportAsync({
-                format,
+                format: figmaFormat,
                 constraint: { type: 'SCALE', value: scale },
             });
             files.push({
                 name: node.name + extension,
                 data: Array.from(bytes),
                 type: mime,
+                targetFormat: format,
             });
         }
         catch (err) {
