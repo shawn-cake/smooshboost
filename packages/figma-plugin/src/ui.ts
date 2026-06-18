@@ -158,6 +158,12 @@ function renderResults(): void {
       </div>
     `;
 
+    const dlBtn = document.createElement('button');
+    dlBtn.className = 'btn-small download-single';
+    dlBtn.textContent = '↓';
+    dlBtn.addEventListener('click', () => downloadSingle(compressionResults[i]));
+
+    row.append(info, dlBtn);
     resultsList.appendChild(row);
   }
 

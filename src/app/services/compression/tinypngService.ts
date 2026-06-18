@@ -12,6 +12,8 @@ export interface TinyPNGResult {
   outputSize: number;
   inputType: string;
   outputType: string;
+  /** Monthly compression count reported by TinyPNG (free tier limit is 500). */
+  compressionCount: number | null;
 }
 
 export interface TinyPNGError {
@@ -48,6 +50,13 @@ export async function compressWithTinyPNG(file: File): Promise<TinyPNGResult> {
     throw new Error('TinyPNG did not return a location header');
   }
 
+  // Track monthly usage so the router can switch to OxiPNG before the next
+  // request is rejected with a 429.
+  const compressionCountHeader = uploadResponse.headers.get('Compression-Count');
+  const compressionCount = compressionCountHeader
+    ? parseInt(compressionCountHeader, 10)
+    : null;
+
   // Parse the response to get compression stats
   const uploadResult = await uploadResponse.json();
   console.log('[TinyPNG] Compression complete:', uploadResult);
@@ -55,7 +64,12 @@ export async function compressWithTinyPNG(file: File): Promise<TinyPNGResult> {
   // Step 2: Download the compressed image
   // The location URL is absolute — extract the path (e.g., /output/abc123)
   // and pass it as a query parameter to our proxy.
-  const outputPath = new URL(locationUrl).pathname;
+  let outputPath: string;
+  try {
+    outputPath = new URL(locationUrl).pathname;
+  } catch {
+    throw new Error(`TinyPNG returned an invalid location URL: ${locationUrl}`);
+  }
 
   const downloadResponse = await fetch(`/api/tinypng?path=${encodeURIComponent(outputPath.replace(/^\//, ''))}`, {
     method: 'GET',
@@ -77,6 +91,7 @@ export async function compressWithTinyPNG(file: File): Promise<TinyPNGResult> {
     outputSize: compressedBlob.size,
     inputType: uploadResult.input?.type || file.type,
     outputType: uploadResult.output?.type || file.type,
+    compressionCount,
   };
 }
 
