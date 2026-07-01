@@ -16,13 +16,6 @@ export interface ExportedFile {
   type: 'image/png' | 'image/jpeg';
   // The format the user requested — drives which codec the UI runs.
   targetFormat: OutputFormat;
-  // Future Boost-phase: per-file metadata would be added here, e.g.:
-  //   metadata?: {
-  //     geoTag?: { latitude: number; longitude: number };
-  //     copyright?: string;
-  //     title?: string;
-  //     description?: string;
-  //   }
 }
 
 export interface ExportReadyMsg {
@@ -36,8 +29,6 @@ export interface ExportRequestMsg {
   type: 'EXPORT_REQUEST';
   format: OutputFormat;
   scale: number;
-  // Future Boost-phase: metadata options would be added here, e.g.:
-  //   metadata?: { ... }
 }
 
 // ── Compression result for UI display ──

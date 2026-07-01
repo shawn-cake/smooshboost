@@ -1,11 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { 
-  VALID_MIME_TYPES, 
-  getMatchingOutputFormat,
+import {
+  VALID_MIME_TYPES,
   MAX_FILE_SIZE,
   MAX_BATCH_SIZE,
+  FORMAT_OPTIONS,
 } from './types';
-import type { InputFormat } from './types';
 
 describe('VALID_MIME_TYPES', () => {
   it('should include image/png', () => {
@@ -33,27 +32,13 @@ describe('VALID_MIME_TYPES', () => {
   });
 });
 
-describe('getMatchingOutputFormat', () => {
-  it('should map png input to png output', () => {
-    expect(getMatchingOutputFormat('png')).toBe('png');
-  });
-
-  it('should map jpg input to mozjpg output', () => {
-    expect(getMatchingOutputFormat('jpg')).toBe('mozjpg');
-  });
-
-  it('should map webp input to webp output', () => {
-    expect(getMatchingOutputFormat('webp')).toBe('webp');
-  });
-
-  it('should handle all InputFormat values', () => {
-    const inputFormats: InputFormat[] = ['png', 'jpg', 'webp'];
-    
-    inputFormats.forEach((format) => {
-      const result = getMatchingOutputFormat(format);
-      expect(result).toBeDefined();
-      expect(['png', 'mozjpg', 'webp']).toContain(result);
-    });
+describe('FORMAT_OPTIONS', () => {
+  it('should offer png, mozjpg, and webp outputs', () => {
+    expect(FORMAT_OPTIONS.map((opt) => opt.value)).toEqual([
+      'png',
+      'mozjpg',
+      'webp',
+    ]);
   });
 });
 
@@ -66,4 +51,3 @@ describe('Constants', () => {
     expect(MAX_BATCH_SIZE).toBe(20);
   });
 });
-

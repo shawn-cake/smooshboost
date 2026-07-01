@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { Toaster, toast } from 'sonner';
 
 // Components
@@ -16,41 +16,29 @@ import {
   useImageQueue,
   useCompression,
   useDownload,
-  useMetadataInjection,
   useFigmaPluginReceiver,
 } from './hooks';
 
 // Types
-import type { ImageItem, OutputFormat, WorkflowMode } from './types';
+import type { ImageItem, OutputFormat } from './types';
 import { MAX_BATCH_SIZE, FORMAT_OPTIONS } from './types';
 
 // Utils
 import { isDownloadable } from './services/download';
 
 function App() {
-  // Boost Only toggle state (replaces workflow mode selector)
-  const [boostOnly, setBoostOnly] = useState(false);
-  // Derive workflow mode from boostOnly toggle
-  const workflowMode: WorkflowMode = boostOnly ? 'boost-only' : 'smoosh-only';
-
-  // Track which accordion is expanded (one at a time)
-  const [expandedImageId, setExpandedImageId] = useState<string | null>(null);
-
   // File validation
   const { validateBatch, filterValidFiles } = useFileValidation();
 
   // Image queue state
   const {
     images,
-    setFormatMode,
     convertFormat,
     setConvertFormat,
     addImages,
     removeImage,
     updateImage,
     updateQueuedOutputFormat,
-    updateImageMetadata,
-    applyMetadataToAll,
     clearQueue,
     getTotalSavings,
   } = useImageQueue();
@@ -67,22 +55,10 @@ function App() {
     autoStart: false,
   });
 
-  // Metadata injection processing (per-image)
-  const {
-    isProcessing: isBoosting,
-    processingImageId,
-    processImageBoost,
-  } = useMetadataInjection({
-    images,
-    updateImage,
-    workflowMode,
-  });
-
   // Download handling
   const { downloadAll, downloadOne } = useDownload();
 
   // Computed states
-  const isProcessing = isCompressing || isBoosting;
   const compressProgress = isCompressing
     ? {
         current: images.filter((img) => img.status === 'complete').length,
@@ -112,11 +88,11 @@ function App() {
       }
 
       if (valid.length > 0) {
-        await addImages(valid, boostOnly);
+        await addImages(valid);
         toast.success(`Added ${valid.length} image${valid.length !== 1 ? 's' : ''}`);
       }
     },
-    [images.length, boostOnly, validateBatch, filterValidFiles, addImages]
+    [images.length, validateBatch, filterValidFiles, addImages]
   );
 
   // Start compression of all staged images
@@ -128,21 +104,9 @@ function App() {
   const handleConvertFormatChange = useCallback(
     (format: OutputFormat) => {
       setConvertFormat(format);
-      if (!boostOnly) {
-        updateQueuedOutputFormat(format);
-      }
+      updateQueuedOutputFormat(format);
     },
-    [boostOnly, setConvertFormat, updateQueuedOutputFormat]
-  );
-
-  // Toggling Boost Only re-tags staged images: boost-only output must match
-  // the input format (no conversion happens), normal mode uses the selector
-  const handleBoostOnlyChange = useCallback(
-    (value: boolean) => {
-      setBoostOnly(value);
-      updateQueuedOutputFormat(value ? 'match' : convertFormat);
-    },
-    [convertFormat, updateQueuedOutputFormat]
+    [setConvertFormat, updateQueuedOutputFormat]
   );
 
   // Figma plugin bridge — receives exported files via postMessage
@@ -160,8 +124,7 @@ function App() {
     [downloadOne]
   );
 
-  // Get downloadable images — an item has a download blob only once it has
-  // reached a terminal state in either workflow (see isDownloadable)
+  // Get downloadable images
   const getDownloadableImages = useCallback(() => {
     return images.filter((img) => isDownloadable(img));
   }, [images]);
@@ -188,67 +151,17 @@ function App() {
   // Handle clear queue
   const handleClearQueue = useCallback(() => {
     clearQueue();
-    setExpandedImageId(null);
     toast.info('Queue cleared');
   }, [clearQueue]);
-
-  // Handle accordion toggle (one at a time)
-  const handleToggleExpanded = useCallback((id: string) => {
-    setExpandedImageId((prev) => (prev === id ? null : id));
-  }, []);
-
-  // Auto-expand first image in boost-only mode when images are added
-  useEffect(() => {
-    if (boostOnly && images.length > 0 && expandedImageId === null) {
-      setExpandedImageId(images[0].id);
-    }
-  }, [boostOnly, images, expandedImageId]);
-
-  // Handle apply metadata to all (with toast notification)
-  const handleApplyToAll = useCallback(
-    (sourceId: string) => {
-      applyMetadataToAll(sourceId);
-      toast.success('Metadata settings applied to all images');
-    },
-    [applyMetadataToAll]
-  );
-
-  // Handle reset metadata for a single image
-  const handleResetMetadata = useCallback(
-    (id: string) => {
-      updateImage(id, {
-        boostStatus: 'pending',
-        boostError: null,
-        finalBlob: null,
-        metadata: null,
-        metadataWarnings: [],
-      });
-      toast.info('Metadata reset - you can now edit and re-apply');
-    },
-    [updateImage]
-  );
 
   // Calculate stats
   const savings = getTotalSavings();
   const downloadableImages = getDownloadableImages();
   const hasDownloadableImages = downloadableImages.length > 0;
 
-  // Staged images awaiting the Smoosh confirmation (boost-only skips compression)
-  const stagedCount = boostOnly
-    ? 0
-    : images.filter((img) => img.status === 'queued').length;
+  // Staged images awaiting the Smoosh confirmation
+  const stagedCount = images.filter((img) => img.status === 'queued').length;
   const formatLabel = FORMAT_OPTIONS.find((opt) => opt.value === convertFormat)?.label;
-
-  // Calculate metadata summary
-  const metadataSummary = {
-    geoTaggedCount: images.filter((img) => img.metadata?.geoTag).length,
-    copyrightCount: images.filter((img) => img.metadata?.copyright).length,
-    titleCount: images.filter((img) => img.metadata?.title).length,
-  };
-  const hasAnyMetadata =
-    metadataSummary.geoTaggedCount > 0 ||
-    metadataSummary.copyrightCount > 0 ||
-    metadataSummary.titleCount > 0;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -258,17 +171,14 @@ function App() {
           /* Empty state — open, full-height layout */
           <div className="flex-1 flex flex-col gap-4 py-8">
             <FormatSelector
-              onFormatModeChange={setFormatMode}
               convertFormat={convertFormat}
               onConvertFormatChange={handleConvertFormatChange}
-              disabled={isProcessing}
-              boostOnly={boostOnly}
-              onBoostOnlyChange={handleBoostOnlyChange}
+              disabled={isCompressing}
             />
             <UploadZone
               variant="open"
               onFilesSelected={handleFilesSelected}
-              disabled={isProcessing}
+              disabled={isCompressing}
               maxFiles={MAX_BATCH_SIZE}
               currentCount={images.length}
             />
@@ -277,17 +187,14 @@ function App() {
           /* Queue state — compact upload zone + image list */
           <div className="py-8 space-y-6">
             <FormatSelector
-              onFormatModeChange={setFormatMode}
               convertFormat={convertFormat}
               onConvertFormatChange={handleConvertFormatChange}
-              disabled={isProcessing}
-              boostOnly={boostOnly}
-              onBoostOnlyChange={handleBoostOnlyChange}
+              disabled={isCompressing}
             />
 
             <UploadZone
               onFilesSelected={handleFilesSelected}
-              disabled={isProcessing}
+              disabled={isCompressing}
               maxFiles={MAX_BATCH_SIZE}
               currentCount={images.length}
             />
@@ -297,14 +204,6 @@ function App() {
               onDownload={handleDownloadOne}
               onRemove={removeImage}
               onRetry={retryCompression}
-              onMetadataChange={updateImageMetadata}
-              onApplyToAll={handleApplyToAll}
-              onApplyMetadata={processImageBoost}
-              onResetMetadata={handleResetMetadata}
-              processingImageId={processingImageId}
-              expandedImageId={expandedImageId}
-              onToggleExpanded={handleToggleExpanded}
-              boostOnly={boostOnly}
             />
 
             {/* Processing Buttons - Smoosh confirmation + compression progress */}
@@ -322,9 +221,6 @@ function App() {
               savings={savings}
               completedCount={downloadableImages.length}
               totalCount={images.length}
-              metadataSummary={hasAnyMetadata ? metadataSummary : undefined}
-              pngCount={images.filter((img) => img.outputFormat === 'png').length}
-              geoTagEnabled={images.some((img) => img.metadataOptions.geoTagEnabled)}
               images={images}
             />
 
@@ -333,10 +229,8 @@ function App() {
               onDownload={handleDownload}
               onClear={handleClearQueue}
               hasCompletedImages={hasDownloadableImages}
-              isProcessing={isProcessing}
-              isBoosting={isBoosting}
+              isProcessing={isCompressing}
               completedCount={downloadableImages.length}
-              hasMetadata={hasAnyMetadata}
             />
           </div>
         )}

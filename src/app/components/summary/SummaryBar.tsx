@@ -1,13 +1,10 @@
-import type { Savings, MetadataSummary, ImageItem } from '../../types';
+import type { Savings, ImageItem } from '../../types';
 import { formatBytes } from '../../utils';
 
 interface SummaryBarProps {
   savings: Savings;
   completedCount: number;
   totalCount: number;
-  metadataSummary?: MetadataSummary;
-  pngCount?: number;
-  geoTagEnabled?: boolean;
   images?: ImageItem[];
 }
 
@@ -23,9 +20,6 @@ export function SummaryBar({
   savings,
   completedCount,
   totalCount,
-  metadataSummary,
-  pngCount = 0,
-  geoTagEnabled = false,
   images = [],
 }: SummaryBarProps) {
   const allComplete = completedCount === totalCount && totalCount > 0;
@@ -52,27 +46,7 @@ export function SummaryBar({
     return parts.length > 0 ? parts.join(', ') : null;
   };
 
-  // Build metadata summary text
-  const getMetadataSummaryText = () => {
-    if (!metadataSummary) return null;
-    const parts: string[] = [];
-    if (metadataSummary.geoTaggedCount > 0) {
-      parts.push(`${metadataSummary.geoTaggedCount} geo-tagged`);
-    }
-    if (metadataSummary.copyrightCount > 0) {
-      parts.push(`${metadataSummary.copyrightCount} with copyright`);
-    }
-    if (metadataSummary.titleCount > 0) {
-      parts.push(`${metadataSummary.titleCount} with titles`);
-    }
-    return parts.length > 0 ? parts.join(' · ') : null;
-  };
-
   const formatText = getFormatSummaryText();
-  const metadataText = getMetadataSummaryText();
-
-  // Show PNG geo-tag warning if geo-tagging is enabled and there are PNGs
-  const showPngGeoWarning = geoTagEnabled && pngCount > 0;
 
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
@@ -131,24 +105,6 @@ export function SummaryBar({
         <div className="pt-2 border-t border-gray-200">
           <p className="text-xs text-gray-500">
             <span className="font-medium">Format:</span> {formatText}
-          </p>
-        </div>
-      )}
-
-      {/* Metadata summary row */}
-      {metadataText && (
-        <div className="pt-2 border-t border-gray-200">
-          <p className="text-xs text-gray-500">
-            <span className="font-medium">Metadata:</span> {metadataText}
-          </p>
-        </div>
-      )}
-
-      {/* PNG geo-tag warning */}
-      {showPngGeoWarning && (
-        <div className="pt-2 border-t border-gray-200">
-          <p className="text-xs text-amber-600">
-            <span className="font-medium">⚠ Note:</span> {pngCount} PNG image{pngCount !== 1 ? 's' : ''} cannot have geo-location data. PNG does not support GPS coordinates.
           </p>
         </div>
       )}

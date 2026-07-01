@@ -1,42 +1,33 @@
-# SmooshBoost
+# Smoosh
 
-**Smoosh & Boost Images** — A browser-based image optimization suite for Cake Website, a digital marketing agency. Also available as a [Figma plugin](#figma-plugin) for compressing frames directly from your design files.
+**Smoosh Images** — A browser-based image compression tool for Cake Websites, a digital marketing agency. Also available as a [Figma plugin](#figma-plugin) for compressing frames directly from your design files.
+
+> Formerly **SmooshBoost**. The "Boost" (SEO metadata injection) feature was removed in v0.4.0 — see [logs/CHANGELOG.md](logs/CHANGELOG.md).
 
 ## Overview
 
-SmooshBoost combines best-in-class lossless compression techniques with SEO metadata optimization. The tool follows a two-phase workflow:
-
-1. **Smoosh (Compression)** — Strip images down to optimal file size using intelligent compression
-2. **Boost (Metadata Injection)** — Selectively inject SEO-relevant metadata for local search and attribution
+Smoosh strips images down to optimal file size using best-in-class compression engines. Drop images in, confirm the output format, hit **Smoosh**, download the results.
 
 ## Features
 
-### Compression (Smoosh Phase)
 - **MozJPEG** — Superior JPEG compression with quality preservation
-- **OxiPNG** — Lossless PNG optimization
-- **WebP** — Modern format with excellent compression ratios
-- **Automatic engine selection** based on input format
-- **Batch processing** up to 20 images at once
-- **Client-side processing** — Your images never leave your browser
-
-### Metadata Injection (Boost Phase)
-- **Geo-tagging** — Add GPS coordinates for local SEO (JPG/WebP only)
-- **Copyright & Author** — Proper attribution embedded in image files
-- **Title & Description** — SEO-optimized metadata for image search
-- **Per-image configuration** — Customize metadata for each image individually
-- **Apply to All** — Copy settings across your entire batch
-
-### Output Options
+- **OxiPNG** — Lossless PNG optimization (WASM, in-browser)
+- **TinyPNG** — Best-ratio PNG compression via API, with automatic OxiPNG fallback
+- **WebP** — Modern format with excellent compression ratios (default output)
 - **Format conversion** — Convert between JPG, PNG, and WebP
-- **Individual downloads** — Download images one at a time
-- **ZIP export** — Download all images in a single archive
-- **Boost Only mode** — Add metadata without compression
+- **Staged flow** — Images queue up; compression starts when you confirm via the Smoosh button
+- **Batch processing** — Up to 20 images at once, 3 compressed concurrently
+- **Downloads** — Individual files or a single ZIP archive
+
+Note on privacy: JPG and WebP compression run entirely in your browser via WASM. PNG output is uploaded to the TinyPNG API through our proxy (falling back to in-browser OxiPNG if TinyPNG is unavailable or over quota).
 
 ### Figma Plugin
-- **One-click export** — Select frames in Figma, choose format & scale, hit Export & Smoosh
-- **MozJPEG WASM** — JPG compression (quality 75, progressive) runs entirely client-side
+
+- **One-click export** — Select any layers in Figma, choose format & scale, hit Export & Smoosh
+- **MozJPEG WASM** — JPG compression runs entirely client-side
+- **WebP output** — Figma exports lossless PNG, the plugin transcodes to WebP
 - **TinyPNG API** — PNG compression via Vercel proxy with automatic OxiPNG WASM fallback
-- **Batch processing** — Compress multiple frames with per-file progress tracking
+- **Batch processing** — Compress multiple layers with progress tracking
 - **Download options** — Individual files or a single ZIP archive
 - **Self-contained** — All WASM codecs are inlined in the plugin; no external dependencies at runtime
 
@@ -45,22 +36,21 @@ SmooshBoost combines best-in-class lossless compression techniques with SEO meta
 ### Web App
 - **React 18** with TypeScript
 - **Vite** for fast development and optimized builds
-- **Tailwind CSS** for styling
+- **Tailwind CSS v4** for styling
 - **@jsquash** libraries for WASM-based compression
-- **piexifjs** for EXIF metadata manipulation
 - **JSZip** for archive generation
 
 ### Figma Plugin
-- **Figma Plugin API** for frame selection and export
+- **Figma Plugin API** for layer selection and export
 - **esbuild** for bundling the plugin UI
-- **@jsquash WASM codecs** inlined as base64 (MozJPEG encoder/decoder, OxiPNG)
+- **@jsquash WASM codecs** inlined as base64 (MozJPEG, OxiPNG, WebP)
 - **JSZip** for batch ZIP downloads
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
-- npm or yarn
+- Node.js 18+
+- npm
 
 ### Installation
 
@@ -81,7 +71,7 @@ npm run dev
 
 ### TinyPNG API Key Setup
 
-SmooshBoost uses the [TinyPNG API](https://tinypng.com/developers) for optimal PNG compression. The API key is **not included** in this repository for security reasons.
+Smoosh uses the [TinyPNG API](https://tinypng.com/developers) for optimal PNG compression. The API key is **not included** in this repository for security reasons.
 
 **To enable TinyPNG compression:**
 
@@ -121,26 +111,14 @@ npm run preview
 
 ### Deployment (Vercel)
 
-SmooshBoost is deployed on Vercel. The TinyPNG API proxy runs as a Vercel serverless function (`api/tinypng.ts`) that serves both the web app and the Figma plugin. Set `TINYPNG_API_KEY` in the Vercel dashboard environment variables.
+Smoosh is deployed on Vercel. The TinyPNG API proxy runs as a Vercel serverless function (`api/tinypng.ts`) that serves both the web app and the Figma plugin. Set `TINYPNG_API_KEY` in the Vercel dashboard environment variables.
 
 ## Usage
 
 1. **Upload images** — Drag & drop or click to select (supports JPG, PNG, WebP)
-2. **Compression starts automatically** — Watch progress in the queue
-3. **Configure Boost options** — Click the accordion on each image
-4. **Apply metadata** — Click "Apply Metadata" for each image
-5. **Download** — Get individual files or download all as ZIP
-
-## Format Support
-
-| Feature | JPG/MozJPG | PNG | WebP |
-|---------|------------|-----|------|
-| Compression | Yes | Yes | Yes |
-| Geo-tagging | Yes | No | Yes |
-| Copyright | Yes | Yes | Yes |
-| Author | Yes | Yes | Yes |
-| Title | Yes | Yes | Yes |
-| Description | Yes | Yes | Yes |
+2. **Pick an output format** — WebP is the default
+3. **Hit Smoosh** — Compression starts on your confirmation
+4. **Download** — Get individual files or download all as ZIP
 
 ## Project Structure
 
@@ -152,7 +130,7 @@ smooshboost/
 │   ├── app/
 │   │   ├── components/       # React components
 │   │   ├── hooks/            # Custom React hooks
-│   │   ├── services/         # Compression & metadata services
+│   │   ├── services/         # Compression & download services
 │   │   ├── utils/            # Utility functions
 │   │   └── types.ts          # TypeScript types
 │   ├── styles/               # Tailwind CSS v4 theme
@@ -163,7 +141,7 @@ smooshboost/
 │       ├── code.ts           # Figma sandbox (selection tracking, export)
 │       ├── src/
 │       │   ├── ui.ts         # Plugin UI entry point
-│       │   └── compression.ts # MozJPEG/OxiPNG WASM + TinyPNG proxy
+│       │   └── compression.ts # MozJPEG/OxiPNG/WebP WASM + TinyPNG proxy
 │       ├── scripts/          # Build tooling (esbuild, WASM base64 encoding)
 │       └── ui-template.html  # HTML shell (codecs + bundle injected at build)
 ├── public/                   # Static assets
@@ -174,9 +152,5 @@ smooshboost/
 
 - **Primary Color:** Cake Blue (#4074A8)
 - **Accent Color:** Cake Yellow (#F2A918)
-- **Font:** Roboto
+- **Fonts:** Spline Sans Mono + Syne
 - **Spacing:** 8px base grid
-
-## License
-
-MIT License — See [LICENSE](LICENSE) for details.

@@ -1,5 +1,5 @@
 "use strict";
-// SmooshBoost Figma Plugin — Sandbox Script
+// Smoosh Figma Plugin — Sandbox Script
 // Runs in the Figma sandbox (no DOM access, no browser APIs).
 // Almost every SceneNode supports exportAsync(), so we accept any visible
 // node the user selected — frames, components, groups, rectangles, vectors,
@@ -60,8 +60,6 @@ figma.ui.onmessage = async (msg) => {
         }
     }
     if (files.length > 0) {
-        // Future Boost-phase: per-file metadata would be attached to each
-        // entry in the files array here before sending to the UI.
         figma.ui.postMessage({ type: 'EXPORT_READY', files });
     }
 };

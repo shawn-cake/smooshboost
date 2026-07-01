@@ -1,7 +1,7 @@
 {
-  "name": "smooshboost",
+  "name": "smoosh",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -20,10 +20,6 @@
     "@jsquash/oxipng": "^2.3.0",
     "@jsquash/webp": "^1.5.0",
     "jszip": "^3.10.1",
-    "piexifjs": "^1.0.6",
-    "png-chunk-text": "^1.0.0",
-    "png-chunks-encode": "^1.0.0",
-    "png-chunks-extract": "^1.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sonner": "^2.0.7"

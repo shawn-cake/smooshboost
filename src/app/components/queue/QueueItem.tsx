@@ -3,8 +3,7 @@ import { faDownload, faTrash, faRotateRight } from '@fortawesome/free-solid-svg-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button } from '../ui';
 import { StatusIndicator } from './StatusIndicator';
-import { ImageMetadataAccordion } from './ImageMetadataAccordion';
-import type { ImageItem, MetadataOptions, OutputFormat } from '../../types';
+import type { ImageItem, OutputFormat } from '../../types';
 import { formatBytes, calculateSavingsPercentage } from '../../utils';
 import { isDownloadable } from '../../services/download';
 
@@ -20,15 +19,6 @@ interface QueueItemProps {
   onDownload: () => void;
   onRemove: () => void;
   onRetry?: () => void;
-  // Boost props (always available when complete)
-  onMetadataChange?: (metadataOptions: MetadataOptions) => void;
-  onApplyToAll?: () => void;
-  onApplyMetadata?: () => void;
-  onResetMetadata?: () => void;
-  isProcessingBoost?: boolean;
-  isExpanded?: boolean;
-  onToggleExpanded?: () => void;
-  boostOnly?: boolean;
 }
 
 /**
@@ -40,25 +30,12 @@ export const QueueItem = memo(function QueueItem({
   onDownload,
   onRemove,
   onRetry,
-  onMetadataChange,
-  onApplyToAll,
-  onApplyMetadata,
-  onResetMetadata,
-  isProcessingBoost = false,
-  isExpanded = false,
-  onToggleExpanded,
-  boostOnly = false,
 }: QueueItemProps) {
   const isComplete = image.status === 'complete';
   const isError = image.status === 'error';
   const isProcessing = image.status === 'compressing';
 
-  // Download is available once the item has a usable blob — true for
-  // completed compressions and for boost-only items that have finished boosting
   const canDownload = isDownloadable(image);
-
-  // Show boost functionality when image is complete (or in boost-only mode)
-  const canBoost = isComplete || boostOnly;
 
   const savings =
     isComplete && image.compressedSize
@@ -146,22 +123,6 @@ export const QueueItem = memo(function QueueItem({
           </Button>
         </div>
       </div>
-
-      {/* Metadata Accordion - always visible when canBoost, accordion controls expand/collapse */}
-      {canBoost && onMetadataChange && onApplyToAll && onApplyMetadata && onToggleExpanded && (
-        <div className="px-3 pb-3">
-          <ImageMetadataAccordion
-            image={image}
-            onMetadataChange={onMetadataChange}
-            onApplyToAll={onApplyToAll}
-            onApplyMetadata={onApplyMetadata}
-            onResetMetadata={onResetMetadata}
-            isExpanded={isExpanded}
-            onToggle={onToggleExpanded}
-            isProcessing={isProcessingBoost}
-          />
-        </div>
-      )}
     </div>
   );
 });

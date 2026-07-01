@@ -1,5 +1,5 @@
 /**
- * SmooshBoost Figma Plugin — UI Entry Point
+ * Smoosh Figma Plugin — UI Entry Point
  *
  * Runs inside the plugin UI iframe (has DOM access).
  * Handles messages from the sandbox, drives compression, and renders results.
@@ -158,12 +158,6 @@ function renderResults(): void {
       </div>
     `;
 
-    const dlBtn = document.createElement('button');
-    dlBtn.className = 'btn-small download-single';
-    dlBtn.textContent = '↓';
-    dlBtn.addEventListener('click', () => downloadSingle(compressionResults[i]));
-
-    row.append(info, dlBtn);
     resultsList.appendChild(row);
   }
 
@@ -260,7 +254,7 @@ async function handleExportReady(files: ExportedFile[]): Promise<void> {
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
       const errStack = err instanceof Error && err.stack ? err.stack : '';
-      console.error(`[SmooshBoost] Failed to compress ${file.name}:`, err);
+      console.error(`[Smoosh] Failed to compress ${file.name}:`, err);
       setStatus(`Error compressing ${file.name}: ${errMsg}`);
       // Render error visibly in results area
       const errEl = document.createElement('div');
@@ -356,4 +350,4 @@ updateSelectionUI();
 parent.postMessage({ pluginMessage: { type: 'UI_READY' } }, '*');
 
 // Debug: confirm the script actually ran to completion
-console.log('[SmooshBoost UI] Initialised, UI_READY sent');
+console.log('[Smoosh UI] Initialised, UI_READY sent');

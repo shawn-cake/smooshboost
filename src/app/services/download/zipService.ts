@@ -3,26 +3,14 @@ import type { ImageItem } from '../../types';
 import { getOutputFilename, downloadBlob } from '../../utils';
 
 /**
- * Get the best blob for download - prefer finalBlob (with metadata) over compressedBlob
+ * Get the blob for download — present once compression completes.
  */
 export function getDownloadBlob(image: ImageItem): Blob | null {
-  // After boost: use finalBlob (has metadata)
-  // After compression only: use compressedBlob
-  // Boost-only mode: use finalBlob or original file
-  return image.finalBlob || image.compressedBlob || null;
+  return image.compressedBlob || null;
 }
 
 /**
  * Determines whether an image is ready to download.
- *
- * A downloadable blob only ever exists once an item reaches a terminal state:
- * - Smoosh/Smoosh+Boost mode: `compressedBlob` is set at `status: 'complete'`
- *   (and `finalBlob` if it was also boosted).
- * - Boost-only mode: `finalBlob` is set when boost reaches a terminal state
- *   (boosted / boost-skipped / boost-failed); `status` stays `queued`.
- *
- * Checking blob presence therefore works for both workflows, where a
- * `status === 'complete'` check silently excludes every boost-only image.
  */
 export function isDownloadable(image: ImageItem): boolean {
   return getDownloadBlob(image) !== null;
@@ -53,7 +41,7 @@ function getUniqueFilename(filename: string, usedNames: Set<string>): string {
 }
 
 /**
- * Formats a date like Mac screenshots: "SmooshBoost 2026-02-03 at 10.17.43 PM"
+ * Formats a date like Mac screenshots: "Smoosh 2026-02-03 at 10.17.43 PM"
  */
 function formatZipFilename(): string {
   const now = new Date();
@@ -73,28 +61,17 @@ function formatZipFilename(): string {
   hours = hours ? hours : 12; // 0 becomes 12
   const timePart = `${hours}.${minutes}.${seconds} ${ampm}`;
 
-  return `SmooshBoost ${datePart} at ${timePart}.zip`;
+  return `Smoosh ${datePart} at ${timePart}.zip`;
 }
 
 /**
  * Creates a ZIP file from completed images and triggers download
- * Uses finalBlob (with metadata) when available, falls back to compressedBlob
  */
 export async function downloadAsZip(images: ImageItem[]): Promise<void> {
   const zip = new JSZip();
   const usedNames = new Set<string>();
 
-  console.log(`[ZIP] Input images: ${images.length}`);
-  images.forEach((img, i) => {
-    const blob = getDownloadBlob(img);
-    console.log(`[ZIP] Image ${i}: ${img.name}, status=${img.status}, boostStatus=${img.boostStatus}, hasFinalBlob=${!!img.finalBlob}, hasCompressedBlob=${!!img.compressedBlob}, blobSize=${blob?.size || 0}`);
-  });
-
-  // Filter to only images that have a downloadable blob (works for both
-  // Smoosh and Boost-only workflows — see isDownloadable)
   const completedImages = images.filter((img) => isDownloadable(img));
-
-  console.log(`[ZIP] Completed images with blobs: ${completedImages.length}`);
 
   if (completedImages.length === 0) {
     throw new Error('No completed images to download');
@@ -107,8 +84,6 @@ export async function downloadAsZip(images: ImageItem[]): Promise<void> {
       const baseFilename = getOutputFilename(image.name, image.outputFormat);
       const uniqueFilename = getUniqueFilename(baseFilename, usedNames);
       usedNames.add(uniqueFilename);
-
-      console.log(`[ZIP] Adding: ${uniqueFilename} (${blob.size} bytes, hasMetadata=${!!image.finalBlob})`);
       zip.file(uniqueFilename, blob);
     }
   }
@@ -131,7 +106,6 @@ export async function downloadAsZip(images: ImageItem[]): Promise<void> {
 
 /**
  * Downloads a single image
- * Uses finalBlob (with metadata) when available, falls back to compressedBlob
  */
 export function downloadSingleImage(image: ImageItem): void {
   const blob = getDownloadBlob(image);
