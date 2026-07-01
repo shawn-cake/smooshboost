@@ -1,4 +1,4 @@
-// SmooshBoost Figma Plugin — Sandbox Script
+// Smoosh Figma Plugin — Sandbox Script
 // Runs in the Figma sandbox (no DOM access, no browser APIs).
 
 // Almost every SceneNode supports exportAsync(), so we accept any visible
@@ -34,13 +34,6 @@ figma.ui.onmessage = async (msg: {
   type: string;
   format?: 'JPG' | 'PNG' | 'WEBP';
   scale?: number;
-  // Future Boost-phase fields would be added here, e.g.:
-  //   metadata?: {
-  //     geoTag?: { latitude: number; longitude: number };
-  //     copyright?: string;
-  //     title?: string;
-  //     description?: string;
-  //   }
 }) => {
   // UI signals it has finished loading — send current selection immediately
   if (msg.type === 'UI_READY') {
@@ -94,8 +87,6 @@ figma.ui.onmessage = async (msg: {
   }
 
   if (files.length > 0) {
-    // Future Boost-phase: per-file metadata would be attached to each
-    // entry in the files array here before sending to the UI.
     figma.ui.postMessage({ type: 'EXPORT_READY', files });
   }
 };

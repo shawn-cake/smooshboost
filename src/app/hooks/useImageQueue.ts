@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { ImageItem, OutputFormat, Savings, FormatMode } from '../types';
-import { getMatchingOutputFormat, DEFAULT_METADATA_OPTIONS } from '../types';
+import type { ImageItem, OutputFormat, Savings } from '../types';
 import { generateId, generateThumbnail, detectInputFormat } from '../utils';
 import { resetTinypngQuota } from '../services/compression/compressionRouter';
 
@@ -9,28 +8,18 @@ import { resetTinypngQuota } from '../services/compression/compressionRouter';
  */
 export function useImageQueue() {
   const [images, setImages] = useState<ImageItem[]>([]);
-  const [formatMode, setFormatMode] = useState<FormatMode>('convert');
   const [convertFormat, setConvertFormat] = useState<OutputFormat>('webp');
 
   /**
    * Adds files to the queue
    */
   const addImages = useCallback(
-    async (files: File[], boostOnly = false) => {
+    async (files: File[]) => {
       const newImages: ImageItem[] = [];
 
       for (const file of files) {
         const inputFormat = detectInputFormat(file);
         if (!inputFormat) continue;
-
-        // Determine output format based on mode. In boost-only mode no
-        // compression/conversion happens, so the output is the original file —
-        // its format (and therefore download extension) must match the input.
-        const outputFormat = boostOnly
-          ? getMatchingOutputFormat(inputFormat)
-          : formatMode === 'match'
-            ? getMatchingOutputFormat(inputFormat)
-            : convertFormat;
 
         // Generate thumbnail
         let thumbnail: string | null = null;
@@ -46,43 +35,28 @@ export function useImageQueue() {
           name: file.name,
           originalSize: file.size,
           inputFormat,
-          outputFormat,
+          outputFormat: convertFormat,
           status: 'queued',
           engine: null,
           thumbnail,
           compressedBlob: null,
           compressedSize: null,
           error: null,
-          // Boost phase fields
-          boostStatus: 'pending',
-          boostError: null,
-          finalBlob: null,
-          metadata: null,
-          metadataWarnings: [],
-          // Per-image metadata options (deep copy to avoid shared references)
-          metadataOptions: structuredClone(DEFAULT_METADATA_OPTIONS),
         });
       }
 
       setImages((prev) => [...prev, ...newImages]);
     },
-    [formatMode, convertFormat]
+    [convertFormat]
   );
 
   /**
    * Re-tags images that haven't been compressed yet with a new output format.
-   * 'match' resets each image to the format of its original file (boost-only).
    */
-  const updateQueuedOutputFormat = useCallback((format: OutputFormat | 'match') => {
+  const updateQueuedOutputFormat = useCallback((format: OutputFormat) => {
     setImages((prev) =>
       prev.map((img) =>
-        img.status === 'queued'
-          ? {
-              ...img,
-              outputFormat:
-                format === 'match' ? getMatchingOutputFormat(img.inputFormat) : format,
-            }
-          : img
+        img.status === 'queued' ? { ...img, outputFormat: format } : img
       )
     );
   }, []);
@@ -102,42 +76,6 @@ export function useImageQueue() {
       setImages((prev) =>
         prev.map((img) => (img.id === id ? { ...img, ...updates } : img))
       );
-    },
-    []
-  );
-
-  /**
-   * Updates metadata options for a specific image
-   */
-  const updateImageMetadata = useCallback(
-    (id: string, metadataOptions: ImageItem['metadataOptions']) => {
-      setImages((prev) =>
-        prev.map((img) =>
-          img.id === id ? { ...img, metadataOptions } : img
-        )
-      );
-    },
-    []
-  );
-
-  /**
-   * Applies metadata options from one image to all other images
-   */
-  const applyMetadataToAll = useCallback(
-    (sourceId: string) => {
-      setImages((prev) => {
-        const sourceImage = prev.find((img) => img.id === sourceId);
-        if (!sourceImage) return prev;
-
-        return prev.map((img) =>
-          img.id === sourceId
-            ? img
-            : {
-                ...img,
-                metadataOptions: structuredClone(sourceImage.metadataOptions),
-              }
-        );
-      });
     },
     []
   );
@@ -201,16 +139,12 @@ export function useImageQueue() {
 
   return {
     images,
-    formatMode,
-    setFormatMode,
     convertFormat,
     setConvertFormat,
     addImages,
     removeImage,
     updateImage,
     updateQueuedOutputFormat,
-    updateImageMetadata,
-    applyMetadataToAll,
     clearQueue,
     getCompletedImages,
     getQueuedImages,

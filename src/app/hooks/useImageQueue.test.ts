@@ -18,44 +18,62 @@ function makeFile(name: string, type: string): File {
 }
 
 describe('useImageQueue.addImages output format', () => {
-  it('boost-only: PNG keeps PNG output regardless of convert format', async () => {
+  it('tags new images with the selected convert format (webp default)', async () => {
     const { result } = renderHook(() => useImageQueue());
 
-    // Default convertFormat is 'webp' — a non-boost upload would convert to webp.
     await act(async () => {
-      await result.current.addImages([makeFile('photo.png', 'image/png')], true);
+      await result.current.addImages([makeFile('photo.png', 'image/png')]);
     });
 
     expect(result.current.images).toHaveLength(1);
-    expect(result.current.images[0].outputFormat).toBe('png');
+    expect(result.current.images[0].outputFormat).toBe('webp');
   });
 
-  it('boost-only: JPG maps to mozjpg (.jpg extension)', async () => {
+  it('honors a changed convert format for subsequent adds', async () => {
+    const { result } = renderHook(() => useImageQueue());
+
+    act(() => {
+      result.current.setConvertFormat('png');
+    });
+
+    await act(async () => {
+      await result.current.addImages([makeFile('photo.jpg', 'image/jpeg')]);
+    });
+
+    expect(result.current.images[0].outputFormat).toBe('png');
+  });
+});
+
+describe('useImageQueue.updateQueuedOutputFormat', () => {
+  it('re-tags queued images with the new format', async () => {
     const { result } = renderHook(() => useImageQueue());
 
     await act(async () => {
-      await result.current.addImages([makeFile('photo.jpg', 'image/jpeg')], true);
+      await result.current.addImages([makeFile('photo.png', 'image/png')]);
+    });
+
+    act(() => {
+      result.current.updateQueuedOutputFormat('mozjpg');
     });
 
     expect(result.current.images[0].outputFormat).toBe('mozjpg');
   });
 
-  it('boost-only: WebP keeps WebP output', async () => {
+  it('leaves already-compressed images untouched', async () => {
     const { result } = renderHook(() => useImageQueue());
 
     await act(async () => {
-      await result.current.addImages([makeFile('photo.webp', 'image/webp')], true);
+      await result.current.addImages([makeFile('photo.png', 'image/png')]);
     });
 
-    expect(result.current.images[0].outputFormat).toBe('webp');
-  });
+    act(() => {
+      result.current.updateImage(result.current.images[0].id, {
+        status: 'complete',
+      });
+    });
 
-  it('non-boost: still honors the selected convert format', async () => {
-    const { result } = renderHook(() => useImageQueue());
-
-    // Default mode is convert + 'webp'
-    await act(async () => {
-      await result.current.addImages([makeFile('photo.png', 'image/png')], false);
+    act(() => {
+      result.current.updateQueuedOutputFormat('mozjpg');
     });
 
     expect(result.current.images[0].outputFormat).toBe('webp');

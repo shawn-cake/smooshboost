@@ -62,5 +62,5 @@ export async function downloadAsZip(
     .replace(/[/,]/g, '-')
     .replace(/\s+/g, '-');
 
-  triggerDownload(blob, `SmooshBoost-${timestamp}.zip`);
+  triggerDownload(blob, `Smoosh-${timestamp}.zip`);
 }

@@ -17,7 +17,6 @@ interface ProcessingButtonsProps {
 /**
  * Shows the Smoosh confirmation button while images are staged, and the
  * compression progress indicator while compressing.
- * Boost phase buttons are now in DownloadSection.
  */
 export function ProcessingButtons({
   hasImages,

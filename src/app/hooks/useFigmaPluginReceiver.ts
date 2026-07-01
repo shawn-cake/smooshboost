@@ -2,36 +2,19 @@ import { useEffect, useRef } from 'react';
 
 /**
  * Shape of a single file entry in the Figma plugin message.
- *
- * Future Boost-phase fields (per-file metadata options such as geo-tag
- * coordinates, copyright text, title/description) would be added here
- * as optional properties — e.g.:
- *   metadata?: {
- *     geoTag?: { latitude: number; longitude: number };
- *     copyright?: string;
- *     title?: string;
- *     description?: string;
- *   }
  */
 interface FigmaPluginFileEntry {
   name: string;
   data: number[];
   type: 'image/png' | 'image/jpeg';
-  // Future: metadata?: { ... }
 }
 
 /**
  * Shape of the postMessage payload sent from the Figma plugin UI shell.
- *
- * Future top-level fields (e.g. batch-wide boost settings, workflow
- * mode overrides) would be added alongside `files` without changing
- * the existing contract:
- *   batchMetadata?: { ... }
  */
 interface FigmaPluginMessage {
   type: 'FIGMA_PLUGIN_FILES';
   files: FigmaPluginFileEntry[];
-  // Future: batchMetadata?: { ... }
 }
 
 /**

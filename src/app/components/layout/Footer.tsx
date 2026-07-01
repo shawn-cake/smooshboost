@@ -8,10 +8,10 @@ export function Footer() {
 
   return (
     <footer className="py-8 text-center space-y-3">
-      <img src={logo} alt="SmooshBoost - Image Compression + Optimization" width={240} className="mx-auto opacity-50" />
+      <img src={logo} alt="Smoosh - Image Compression" width={160} className="mx-auto opacity-50" />
       <div className="flex items-center justify-center gap-2">
         <p className="text-xs text-gray-700">
-          © Cake Websites · v0.3.0
+          © Cake Websites · v0.4.0
         </p>
         <div className="relative">
           <button
@@ -29,7 +29,7 @@ export function Footer() {
             <div className="absolute bottom-full right-0 mb-2 w-64 p-3 bg-primary-900 text-white text-xs rounded-lg shadow-lg z-50">
               <div className="absolute -bottom-1.5 right-4 w-3 h-3 bg-primary-900 rotate-45" />
               <p className="relative z-10">
-                A custom image compression tool built with lossless compression techniques, bundled with SEO metadata optimization for digital marketing.
+                A custom image compression tool built with best-in-class compression engines for digital marketing work.
               </p>
             </div>
           )}

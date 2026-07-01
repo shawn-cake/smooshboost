@@ -309,10 +309,10 @@ export async function compressPng(
       return { data, engine: 'tinypng' };
     } catch (error) {
       if (error instanceof Error && error.message.includes('429')) {
-        console.warn('[SmooshBoost] TinyPNG quota exhausted, using OxiPNG');
+        console.warn('[Smoosh] TinyPNG quota exhausted, using OxiPNG');
         tinypngQuotaExhausted = true;
       } else {
-        console.warn('[SmooshBoost] TinyPNG failed, using OxiPNG:', error);
+        console.warn('[Smoosh] TinyPNG failed, using OxiPNG:', error);
       }
     }
   }
